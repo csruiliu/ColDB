@@ -1,4 +1,4 @@
-# CoDB
+# ColDB
 
 UChicago CMSC33500 Project: A main-memory optimized column-store, [using c only with Berkeley BSC]
 

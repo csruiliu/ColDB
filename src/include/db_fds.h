@@ -1,6 +1,6 @@
 /*
  *  Created by Rui Liu on 3/18/18.
- *  Header file for ColDB fundamental data structure (DFS)
+ *  Header file for ColDB fundamental data structure (FDS)
  */
 #ifndef COLDB_DB_FDS_H
 #define COLDB_DB_FDS_H
@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stddef.h>
 
 
 typedef enum IndexType {
@@ -93,5 +94,16 @@ typedef struct Db {
 } Db;
 
 extern Db *current_db;
+
+void init_db_store(size_t size);
+void init_tbl_store(size_t size);
+void init_col_store(size_t size);
+void init_rls_store(size_t size);
+void init_idx_store(size_t size);
+
+void put_db(char* db_name, Db* db);
+Db* get_db(char *db_name);
+
+void free_db_store();
 
 #endif //COLDB_DB_FDS_H

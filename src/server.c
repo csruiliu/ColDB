@@ -57,6 +57,32 @@ void handle_client(int client_socket) {
     // create the client context here
     ClientContext* client_context = NULL;
 
+    init_db_store(100000);
+    //init_tbl_store(500000);
+    //init_col_store(2500000);
+    //init_rls_store(2500000);
+    //init_idx_store(2500000);
+
+    Db* db = malloc(sizeof(Db));
+    db->db_name = "sdsd";
+    db->tables_size = 0;
+    db->tables = NULL;
+    db->tables_capacity = 0;
+    put_db("zzz",db);
+
+    Db* db1 = malloc(sizeof(Db));
+    db1->db_name = "cccc";
+    db1->tables_size = 0;
+    db1->tables = NULL;
+    db1->tables_capacity = 0;
+    put_db("xxx",db1);
+
+    Db* dbs1 = get_db("zzz");
+    log_info("db_name:%s\n",dbs1->db_name);
+    Db* dbs2 = get_db("xxx");
+    log_info("db_name:%s\n",dbs2->db_name);
+    free_db_store();
+
     // Continually receive messages from client and execute queries.
     // 1. Parse the command
     // 2. Handle request if appropriate
@@ -76,6 +102,9 @@ void handle_client(int client_socket) {
             length = recv(client_socket, recv_buffer, recv_message.length,0);
             recv_message.payload = recv_buffer;
             recv_message.payload[recv_message.length] = '\0';
+            if(strncmp(recv_message.payload,"shutdown",8) == 0) {
+                break;
+            }
 
             // 1. Parse command
             DbOperator* query = parse_command(recv_message.payload, &send_message, client_socket, client_context);

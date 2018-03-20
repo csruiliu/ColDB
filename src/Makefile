@@ -14,7 +14,7 @@ O ?= 0
 # Flags and other libraries
 override CFLAGS += -Wall -Wextra -pedantic -pthread -O$(O) -I$(INCLUDES)
 LDFLAGS =
-LIBS =
+LIBS = -lm
 INCLUDES = include
 EXPLAIN = -lexplain
 
@@ -55,7 +55,7 @@ $(DEPSDIR)/stamp $(BUILDSTAMP):
 client: client.o utils.o
 	$(CC) $(CFLAGS) $(DEPCFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS) $(EXPLAIN)
 
-server: server.o parse.o utils.o db_manager.o db_kvs.o
+server: server.o parse.o utils.o db_manager.o db_kvs.o db_fds.o
 	$(CC) $(CFLAGS) $(DEPCFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS) $(EXPLAIN)
 
 clean:

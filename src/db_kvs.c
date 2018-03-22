@@ -128,7 +128,7 @@ int hash_func(const char* s, const int a, const int m) {
 int deallocate(KVStore* kvStore) {
     for(int i = 0; i < kvStore->size; ++i) {
         KV* ikv = &(kvStore->kvs[i]);
-        if(ikv->key != NULL) {
+        if(ikv != NULL) {
             free(ikv->key);
             free(ikv->value);
         }

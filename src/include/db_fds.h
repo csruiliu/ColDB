@@ -62,20 +62,13 @@ typedef struct Column {
     ClsType cls_type;
 } Column;
 
-/**
- * Table
- * Defines a table structure, which is composed of multiple columns.
- * - tbl_name, the name associated with the table, which follows the format [db-name.table-name].
- *   Thus, table names must be unique.
- * - col_count, the number of columns in the table
- * - columns, this is the pointer to an array of columns contained in the table.
- * - table_length, the size of the columns in the table.
- **/
 typedef struct Table {
     char* tbl_name;
-    Column* columns;
-    size_t col_count;
-    size_t table_length;
+    char* pricls_col_name;
+    int hasCls;
+    Column** columns;
+    size_t table_size;
+    size_t table_capacity;
 } Table;
 
 /**
@@ -83,14 +76,14 @@ typedef struct Table {
  * Defines a database structure, which is composed of multiple tables.
  * - db_name: the name of the associated database.
  * - tables: the pointer to the array of tables contained in the db.
- * - tables_size: the size of the array holding table objects
- * - tables_capacity: the amount of pointers that can be held in the currently allocated memory slot
+ * - db_size: the size of the array holding table objects
+ * - db_capacity: the amount of pointers that can be held in the currently allocated memory slot
  **/
 typedef struct Db {
     char* db_name;
-    Table* tables;
-    size_t tables_size;
-    size_t tables_capacity;
+    Table** tables;
+    size_t db_size;
+    size_t db_capacity;
 } Db;
 
 extern Db *current_db;
@@ -102,8 +95,15 @@ void init_rls_store(size_t size);
 void init_idx_store(size_t size);
 
 void put_db(char* db_name, Db* db);
+int put_tbl(char* tbl_name, Table* tbl);
+
 Db* get_db(char *db_name);
+Table* get_tbl(char* tbl_name);
 
 void free_db_store();
+void free_tbl_store();
+void free_col_store();
+void free_rsl_store();
+void free_idx_store();
 
 #endif //COLDB_DB_FDS_H

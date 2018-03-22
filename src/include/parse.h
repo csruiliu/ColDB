@@ -8,10 +8,50 @@
  * tells the databaase what type of operator this is
  */
 typedef enum OperatorType {
-    CREATE,
+    ERROR_CMD,
+    CREATE_DB,
+    CREATE_TBL,
     INSERT,
-    OPEN,
+    OPEN
 } OperatorType;
+
+/*
+ * necessary fields for insertion
+ */
+typedef struct InsertOperator {
+    Table* table;
+    int* values;
+} InsertOperator;
+
+/*
+ * necessary fields for open
+ */
+typedef struct OpenOperator {
+    char* db_name;
+} OpenOperator;
+
+/*
+ * necessary fields for error command
+ */
+typedef struct ErrCmdOperator {
+    char* err_info;
+} ErrCmdOperator;
+
+/*
+ * necessary fields for error command
+ */
+typedef struct CreateDbOperator {
+    char* db_name;
+} CreateDbOperator;
+
+/*
+ * necessary fields for error command
+ */
+typedef struct CreateTblOperator {
+    char* db_name;
+    char* tbl_name;
+    size_t col_count;
+} CreateTblOperator;
 
 /*
  * an enum which allows us to differentiate between columns and results
@@ -55,21 +95,6 @@ typedef struct ClientContext {
     int chandle_slots;
 } ClientContext;
 
-/*
- * necessary fields for insertion
- */
-typedef struct InsertOperator {
-    Table* table;
-    int* values;
-} InsertOperator;
-
-/*
- * necessary fields for open
- */
-typedef struct OpenOperator {
-    char* db_name;
-} OpenOperator;
-
 
 /*
  * union type holding the fields of any operator
@@ -77,6 +102,9 @@ typedef struct OpenOperator {
 typedef union OperatorFields {
     InsertOperator insert_operator;
     OpenOperator open_operator;
+    ErrCmdOperator err_cmd_operator;
+    CreateDbOperator create_db_operator;
+    CreateTblOperator create_tbl_operator;
 } OperatorFields;
 
 typedef struct DbOperator {

@@ -8,8 +8,8 @@
 #include "db_fds.h"
 #include "parse.h"
 
-Status add_db(const char* db_name, bool new);
+Db* create_db(const char* db_name);
 
-Table* create_table(Db* db, const char* name, size_t num_columns, Status *status);
+Table* create_table(char* db_name, char* tbl_name, size_t num_columns);
 
 #endif //COLDB_DB_MANAGER_H

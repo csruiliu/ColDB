@@ -14,4 +14,6 @@ Table* create_table(char* db_name, char* tbl_name, size_t num_columns);
 
 Column* create_column(char* tbl_name, char* col_name);
 
+int load_data_csv(char* data_path);
+
 #endif //COLDB_DB_MANAGER_H

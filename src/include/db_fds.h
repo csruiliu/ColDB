@@ -57,6 +57,7 @@ typedef struct Result {
 typedef struct Column {
     char* col_name;
     int* data;
+    int* rowId;
     size_t col_size;
     size_t col_capacity;
     IndexType idx_type;

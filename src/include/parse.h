@@ -12,6 +12,7 @@ typedef enum OperatorType {
     CREATE_DB,
     CREATE_TBL,
     CREATE_COL,
+    LOAD,
     INSERT,
     OPEN
 } OperatorType;
@@ -61,6 +62,14 @@ typedef struct CreateColOperator {
     char* tbl_name;
     char* col_name;
 } CreateColOperator;
+
+/*
+ * necessary fields for load data command
+ */
+typedef struct LoadOperator {
+    char* data_path;
+} LoadOperator;
+
 
 /*
  * an enum which allows us to differentiate between columns and results
@@ -115,8 +124,16 @@ typedef union OperatorFields {
     CreateDbOperator create_db_operator;
     CreateTblOperator create_tbl_operator;
     CreateColOperator create_col_operator;
+    LoadOperator load_operator;
 } OperatorFields;
 
+/*
+ * DbOperator holds the following fields:
+ * type: the type of operator to perform (i.e. insert, select, ...)
+ * operator fields: the fields of the operator in question
+ * client_fd: the file descriptor of the client that this operator will return to
+ * context: the context of the operator in question. This context holds the local results of the client in question.
+ */
 typedef struct DbOperator {
     OperatorType type;
     OperatorFields operator_fields;

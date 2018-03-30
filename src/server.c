@@ -54,6 +54,7 @@ char* execute_DbOperator(DbOperator* query) {
             return "create database failed.\n";
         }
         else{
+            free_query(query);
             return "create database successfully.\n";
         }
     }
@@ -63,8 +64,10 @@ char* execute_DbOperator(DbOperator* query) {
         size_t col_count = query->operator_fields.create_tbl_operator.col_count;
         Table* tbl = create_table(db_name, tbl_name, col_count);
         if(tbl == NULL) {
+            free_query(query);
             return "create table failed.\n";
         }
+        free_query(query);
         return "create table successfully.\n";
     }
     else if (query->type == CREATE_COL){
@@ -72,13 +75,24 @@ char* execute_DbOperator(DbOperator* query) {
         char* full_col_name = query->operator_fields.create_col_operator.col_name;
         Column* col = create_column(full_tbl_name, full_col_name);
         if(col == NULL) {
+            free_query(query);
             return "create column failed.\n";
         }
+        free_query(query);
         return "create column successfully.\n";
+    }
+    else if (query->type == LOAD) {
+        char* data_path = query->operator_fields.load_operator.data_path;
+        if(load_data_csv(data_path) != 0) {
+            free_query(query);
+            return "load data into database failed.\n";
+        }
+        free_query(query);
+        return "load data into database successfully.\n";
     }
     else {
         free(query);
-        return "165";
+        return "unsupported command, try again";
     }
 }
 
@@ -106,32 +120,6 @@ void handle_client(int client_socket) {
     //init_rls_store(2500000);
     //init_idx_store(2500000);
 
-    /*
-    Db* db = malloc(sizeof(Db));
-    db->db_name = "sdsd";
-    db->db_size = 0;
-    db->tables = NULL;
-    db->db_capacity = 0;
-    put_db("zzz",db);
-
-    Db* db1 = malloc(sizeof(Db));
-    db1->db_name = "cccc";
-    db1->db_size = 0;
-    db1->tables = NULL;
-    db1->db_capacity = 0;
-    put_db("xxx",db1);
-
-    Db* dbs1 = get_db("zzz");
-    log_info("db_name:%s\n",dbs1->db_name);
-    Db* dbs2 = get_db("xxx");
-    log_info("db_name:%s\n",dbs2->db_name);
-    */
-
-    //free_tbl_store();
-    //free_col_store();
-    //free_rsl_store();
-    //free_idx_store();
-
     // Continually receive messages from client and execute queries.
     // 1. Parse the command
     // 2. Handle request if appropriate
@@ -153,6 +141,8 @@ void handle_client(int client_socket) {
             recv_message.payload[recv_message.length] = '\0';
             if(strncmp(recv_message.payload,"shutdown",8) == 0) {
                 free_db_store();
+                free_tbl_store();
+                free_col_store();
                 break;
             }
 

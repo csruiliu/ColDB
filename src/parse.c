@@ -40,6 +40,36 @@ DbOperator* error_dbo(char* error_info) {
     return dbo;
 }
 
+DbOperator* parse_create_col(char* query_command) {
+    message_status status = OK_DONE;
+    DbOperator* dbo;
+    char** create_arguments_index = &query_command;
+    char* col_name = next_token_comma(create_arguments_index, &status);
+    col_name = trim_quotes(col_name);
+    char* full_tbl_name = next_token_comma(create_arguments_index,&status);
+    if (status == INCORRECT_FORMAT) {
+        log_err("Create column command is error\n");
+        dbo = error_dbo("Create column command is error, use command like [create(col,\"col_name\",full_tbl_name)]");
+        return dbo;
+    }
+    int last_char = (int)strlen(full_tbl_name) - 1;
+    if (full_tbl_name[last_char] != ')') {
+        log_err("Create column command is error\n");
+        dbo = error_dbo("Create column command is error, use command like [create(col,\"col_name\",full_tbl_name)]");
+        return dbo;
+    }
+    full_tbl_name[last_char] = '\0';
+    dbo = malloc(sizeof(DbOperator));
+    dbo->type = CREATE_COL;
+    dbo->operator_fields.create_col_operator.tbl_name = malloc((strlen(full_tbl_name)+1)* sizeof(char));
+    strcpy(dbo->operator_fields.create_col_operator.tbl_name,full_tbl_name);
+    dbo->operator_fields.create_col_operator.col_name = malloc((strlen(col_name)+strlen(full_tbl_name)+2)* sizeof(char));
+    strcpy(dbo->operator_fields.create_col_operator.col_name,full_tbl_name);
+    strcat(dbo->operator_fields.create_col_operator.col_name,".");
+    strcat(dbo->operator_fields.create_col_operator.col_name,col_name);
+    return dbo;
+}
+
 DbOperator* parse_create_tbl(char* query_command) {
     message_status status = OK_DONE;
     DbOperator* dbo;
@@ -143,6 +173,10 @@ DbOperator* parse_command(char* query_command, message* send_message, int client
     else if (strncmp(query_command, "create(tbl,", 11) == 0) {
         query_command += 11;
         dbo = parse_create_tbl(query_command);
+    }
+    else if(strncmp(query_command, "create(col,", 11) == 0) {
+        query_command += 11;
+        dbo = parse_create_col(query_command);
     }
     else if (strncmp(query_command, "relational_insert", 17) == 0) {
         query_command += 17;

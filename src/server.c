@@ -67,6 +67,15 @@ char* execute_DbOperator(DbOperator* query) {
         }
         return "create table successfully.\n";
     }
+    else if (query->type == CREATE_COL){
+        char* full_tbl_name = query->operator_fields.create_col_operator.tbl_name;
+        char* full_col_name = query->operator_fields.create_col_operator.col_name;
+        Column* col = create_column(full_tbl_name, full_col_name);
+        if(col == NULL) {
+            return "create column failed.\n";
+        }
+        return "create column successfully.\n";
+    }
     else {
         free(query);
         return "165";
@@ -92,8 +101,8 @@ void handle_client(int client_socket) {
     ClientContext* client_context = NULL;
 
     init_db_store(100000);
-    //init_tbl_store(500000);
-    //init_col_store(2500000);
+    init_tbl_store(500000);
+    init_col_store(2500000);
     //init_rls_store(2500000);
     //init_idx_store(2500000);
 

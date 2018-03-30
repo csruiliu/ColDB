@@ -46,29 +46,40 @@ typedef struct Result {
 /**
  * Column
  * Defines a column structure, which is composed of col-name and data record.
- * - col_name, the name associated with the column, which follows the format [db-name.table-name.column-name].
- *   Thus, column names must be unique.
- * - data_count, the number of data in the column
- * - data, this is the pointer to an array of data contained in the .
- * - data_size, the current max size of the data records in the column.
+ * - col_name: the name associated with the column, which follows the format [db-name.table-name.column-name].
+ *   Thus column names must be unique.
+ * - data: this is the pointer to an array of data contained in the column.
+ * - col_size: the size of the current data in the column
+ * - col_capacity: the max amount of data in the column
+ * - idx_type: the index type of the column
+ * - cls_type: the clustering type of the index in the column
  **/
 typedef struct Column {
     char* col_name;
     int* data;
-    size_t data_count;
-    size_t data_size;
-    void* index;
+    size_t col_size;
+    size_t col_capacity;
     IndexType idx_type;
     ClsType cls_type;
 } Column;
 
+/**
+ * Table
+ * Defines a table structure, which is composed of multiple columns.
+ * - tbl_name: the name of the associated table, which follows the format [db-name.table-name]
+ * - columns: the pointer to the array of tables contained in the db.
+ * - tbl_size: the size of the current column objects
+ * - tbl_capacity: the max amount of column objects in table
+ * - pricls_col_name: the name of primary clustering column
+ * - hasCls: the table has primary clustering column or not, 1 means has primary clustring column, 0 is not.
+ **/
 typedef struct Table {
     char* tbl_name;
+    Column** columns;
+    size_t tbl_size;
+    size_t tbl_capacity;
     char* pricls_col_name;
     int hasCls;
-    Column** columns;
-    size_t table_size;
-    size_t table_capacity;
 } Table;
 
 /**
@@ -76,8 +87,8 @@ typedef struct Table {
  * Defines a database structure, which is composed of multiple tables.
  * - db_name: the name of the associated database.
  * - tables: the pointer to the array of tables contained in the db.
- * - db_size: the size of the array holding table objects
- * - db_capacity: the amount of pointers that can be held in the currently allocated memory slot
+ * - db_size: the size of the current table objects
+ * - db_capacity: the max amount of table objects in database
  **/
 typedef struct Db {
     char* db_name;
@@ -95,10 +106,12 @@ void init_rls_store(size_t size);
 void init_idx_store(size_t size);
 
 void put_db(char* db_name, Db* db);
-int put_tbl(char* tbl_name, Table* tbl);
+void put_tbl(char* tbl_name, Table* tbl);
+void put_col(char* col_name, Column* col);
 
 Db* get_db(char *db_name);
 Table* get_tbl(char* tbl_name);
+Column* get_col(char* col_name);
 
 void free_db_store();
 void free_tbl_store();

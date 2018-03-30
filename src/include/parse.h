@@ -11,6 +11,7 @@ typedef enum OperatorType {
     ERROR_CMD,
     CREATE_DB,
     CREATE_TBL,
+    CREATE_COL,
     INSERT,
     OPEN
 } OperatorType;
@@ -38,20 +39,28 @@ typedef struct ErrCmdOperator {
 } ErrCmdOperator;
 
 /*
- * necessary fields for error command
+ * necessary fields for create db command
  */
 typedef struct CreateDbOperator {
     char* db_name;
 } CreateDbOperator;
 
 /*
- * necessary fields for error command
+ * necessary fields for create table command
  */
 typedef struct CreateTblOperator {
     char* db_name;
     char* tbl_name;
     size_t col_count;
 } CreateTblOperator;
+
+/*
+ * necessary fields for create column command
+ */
+typedef struct CreateColOperator {
+    char* tbl_name;
+    char* col_name;
+} CreateColOperator;
 
 /*
  * an enum which allows us to differentiate between columns and results
@@ -105,6 +114,7 @@ typedef union OperatorFields {
     ErrCmdOperator err_cmd_operator;
     CreateDbOperator create_db_operator;
     CreateTblOperator create_tbl_operator;
+    CreateColOperator create_col_operator;
 } OperatorFields;
 
 typedef struct DbOperator {

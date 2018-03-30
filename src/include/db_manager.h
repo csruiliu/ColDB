@@ -12,4 +12,6 @@ Db* create_db(const char* db_name);
 
 Table* create_table(char* db_name, char* tbl_name, size_t num_columns);
 
+Column* create_column(char* tbl_name, char* col_name);
+
 #endif //COLDB_DB_MANAGER_H

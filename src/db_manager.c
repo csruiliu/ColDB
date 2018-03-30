@@ -42,7 +42,6 @@ Table* create_table(char* db_name, char* tbl_name, size_t num_columns) {
 		return tbl;
 	}
 	else {
-		tbl = malloc(sizeof(Table));
 		if(cur_db->db_capacity - cur_db->db_size <= 0) {
 			log_info("no enough table space in database %s, creating more table space.\n", cur_db->db_name);
 			size_t more_table_capacity = RESIZE * cur_db->db_capacity + 1;
@@ -65,15 +64,47 @@ Table* create_table(char* db_name, char* tbl_name, size_t num_columns) {
 			}
 			cur_db->db_capacity = more_table_capacity;
 		}
-		cur_db->tables[cur_db->db_size] = tbl;
-		cur_db->db_size++;
+		tbl = malloc(sizeof(Table));
 		tbl->tbl_name = malloc((strlen(tbl_name)+1)* sizeof(char));
 		strcpy(tbl->tbl_name,tbl_name);
-		tbl->table_capacity = 0;
-		tbl->table_size = 0;
+		tbl->tbl_capacity = num_columns;
+		tbl->tbl_size = 0;
 		tbl->pricls_col_name = NULL;
 		tbl->hasCls = 0;
-		put_tbl(tbl_name,);
+		tbl->columns = calloc(num_columns, sizeof(Column*));
+		put_tbl(tbl_name,tbl);
+		cur_db->tables[cur_db->db_size] = tbl;
+		cur_db->db_size++;
+	    return tbl;
+	}
+}
+
+Column* create_column(char* tbl_name, char* col_name) {
+	Table* cur_tbl = get_tbl(tbl_name);
+	if(cur_tbl == NULL) {
+        log_err("the associated table doesn't exist, create table %s", tbl_name);
+        return NULL;
 	}
 
+	if(cur_tbl->tbl_size < cur_tbl->tbl_capacity) {
+        Column* col = get_col(col_name);
+        if(col != NULL) {
+            log_info("column %s exists\n", col_name);
+            return col;
+        }
+        col = malloc(sizeof(Column));
+        col->col_name = malloc((strlen(col_name)+1)* sizeof(char));
+        strcpy(col->col_name, col_name);
+        col->cls_type = UNCLSR;
+        col->idx_type = UNIDX;
+        col->data = NULL;
+        put_col(col_name,col);
+        cur_tbl->columns[cur_tbl->tbl_size] = col;
+        cur_tbl->tbl_size++;
+        return col;
+	}
+	else {
+	    log_err("the associated table is full, cannot create new column %s", col_name);
+	    return NULL;
+	}
 }

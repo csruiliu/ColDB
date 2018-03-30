@@ -56,20 +56,31 @@ void put_db(char* db_name, Db* db) {
     }
 }
 
-void put_db(char* db_name, Db* db) {
-    int flag = put(db_store,db_name,db,sizeof(Db));
+void put_tbl(char* tbl_name, Table* tbl) {
+    int flag = put(tbl_store,tbl_name,tbl,sizeof(Table));
     if(flag == 1) {
-        log_info("persistent database %s failed", db_name);
+        log_err("persistent table %s failed", tbl_name);
     }
     else if(flag == 2) {
-        log_info("a rehash has been done, re-put db into kv store\n");
-        if(put(db_store,db_name,db,sizeof(Db)) == 1) {
-            log_info("persistent database %s failed\n", db_name);
+        log_info("a rehash has been done, re-put table into kv store\n");
+        if(put(tbl_store,tbl_name,tbl,sizeof(Table)) == 1) {
+            log_err("persistent table %s failed", tbl_name);
         }
     }
 }
 
-
+void put_col(char* col_name, Column* col) {
+    int flag = put(col_store,col_name,col,sizeof(Column));
+    if(flag == 1) {
+        log_err("persistent column %s failed", col_name);
+    }
+    else if(flag == 2) {
+        log_info("a rehash has been done, re-put column into kv store\n");
+        if(put(col_store,col_name,col,sizeof(Column)) == 1) {
+            log_err("persistent column %s failed", col_name);
+        }
+    }
+}
 
 Db* get_db(char* db_name) {
     Db* Db = get(db_store, db_name);
@@ -79,6 +90,11 @@ Db* get_db(char* db_name) {
 Table* get_tbl(char* tbl_name) {
     Table* tbl = get(tbl_store,tbl_name);
     return tbl;
+}
+
+Column* get_col(char* col_name) {
+    Column* col = get(col_store,col_name);
+    return col;
 }
 
 void free_db_store() {

@@ -102,7 +102,7 @@ void* get(KVStore* kvStore, char* key) {
             return ikv->value;
         }
         index++;
-        if(prob > PRIME) {
+        if(prob > MAX_PROB) {
             log_err("cannot find the kv pair given the key.\n");
             break;
         }

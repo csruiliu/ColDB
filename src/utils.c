@@ -1,8 +1,8 @@
 #include <stdio.h>
-#include <string.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 #include "message.h"
 #include "utils.h"
 
@@ -14,21 +14,6 @@
 #define LOG_ERR 1
 #define LOG_INFO 1
 
-char* next_token_comma(char **tokenizer, message_status *status) {
-    char* token = strsep(tokenizer, ",");
-    if (token == NULL) {
-        *status= INCORRECT_FORMAT;
-    }
-    return token;
-}
-
-char* next_token_period(char **tokenizer, message_status *status) {
-    char* token = strsep(tokenizer, ".");
-    if (token == NULL) {
-        *status= INCORRECT_FORMAT;
-    }
-    return token;
-}
 
 /* removes newline characters from the input string.
  * Shifts characters over and shortens the length of

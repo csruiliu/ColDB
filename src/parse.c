@@ -15,8 +15,21 @@
 #include "parse.h"
 #include "utils.h"
 
+char* next_token_comma(char **tokenizer, message_status *status) {
+    char* token = strsep(tokenizer, ",");
+    if (token == NULL) {
+        *status= INCORRECT_FORMAT;
+    }
+    return token;
+}
 
-
+char* next_token_period(char **tokenizer, message_status *status) {
+    char* token = strsep(tokenizer, ".");
+    if (token == NULL) {
+        *status= INCORRECT_FORMAT;
+    }
+    return token;
+}
 
 DbOperator* error_dbo(char* error_info) {
     DbOperator* dbo = malloc(sizeof(DbOperator));
@@ -59,16 +72,15 @@ DbOperator* parse_create_col(char* query_command) {
 DbOperator* parse_create_tbl(char* query_command) {
     message_status status = OK_DONE;
     DbOperator* dbo;
-    char** create_arguments_index = &query_command;
-    char* table_name = next_token_comma(create_arguments_index, &status);
-    char* db_name = next_token_comma(create_arguments_index, &status);
-    char* col_cnt = next_token_comma(create_arguments_index, &status);
+    char* tbl_name = next_token_comma(&query_command, &status);
+    char* db_name = next_token_comma(&query_command, &status);
+    char* col_cnt = next_token_comma(&query_command, &status);
     if (status == INCORRECT_FORMAT) {
         log_err("create table command is error\n");
         dbo = error_dbo("create table command is error, use command like [create(tbl,\"grades\",name,2)]");
         return dbo;
     }
-    table_name = trim_quotes(table_name);
+    tbl_name = trim_quotes(tbl_name);
     int last_char = (int)strlen(col_cnt) - 1;
     if (col_cnt[last_char] != ')') {
         log_err("create table command is error\n");
@@ -86,10 +98,10 @@ DbOperator* parse_create_tbl(char* query_command) {
     dbo->type = CREATE_TBL;
     dbo->operator_fields.create_tbl_operator.db_name = malloc((strlen(db_name)+1)* sizeof(char));
     strcpy(dbo->operator_fields.create_tbl_operator.db_name,db_name);
-    dbo->operator_fields.create_tbl_operator.tbl_name = malloc((strlen(table_name)+strlen(db_name)+2)* sizeof(char));
+    dbo->operator_fields.create_tbl_operator.tbl_name = malloc((strlen(tbl_name)+strlen(db_name)+2)* sizeof(char));
     strcpy(dbo->operator_fields.create_tbl_operator.tbl_name,db_name);
     strcat(dbo->operator_fields.create_tbl_operator.tbl_name,".");
-    strcat(dbo->operator_fields.create_tbl_operator.tbl_name,table_name);
+    strcat(dbo->operator_fields.create_tbl_operator.tbl_name,tbl_name);
     dbo->operator_fields.create_tbl_operator.col_count = column_cnt;
     return dbo;
 }

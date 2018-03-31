@@ -41,7 +41,7 @@ Db* create_db(const char* db_name) {
 Table* create_table(char* db_name, char* tbl_name, size_t num_columns) {
 	Db* cur_db = get_db(db_name);
 	if(cur_db == NULL) {
-		log_err("the database doesn't exist, create/switch db %s", db_name);
+		log_err("the database doesn't exist, create/switch db %s\n", db_name);
 		return NULL;
 	}
 	Table* tbl = get_tbl(tbl_name);
@@ -93,7 +93,6 @@ Column* create_column(char* tbl_name, char* col_name) {
         log_err("the associated table doesn't exist, create table %s", tbl_name);
         return NULL;
 	}
-
 	if(cur_tbl->tbl_size < cur_tbl->tbl_capacity) {
         Column* col = get_col(col_name);
         if(col != NULL) {
@@ -145,45 +144,33 @@ int load_data_csv(char* data_path) {
 		}
 	}
 	log_info("%d columns in the loading file\n", headerCount);
-	if (headerCount == 1) {
-		char* header = line;
-		int slen = strlen(header);
-		char* header_op = malloc((slen+1)* sizeof(char));
-		strcpy(header_op,header);
-		char* db_name = next_token_period(&header_op,&mes_status);
-		char* tbl_name = next_token_period(&header_op,&mes_status);
-		char* tbl_full_name = malloc((strlen(tbl_name)+strlen(db_name)+2)* sizeof(char));
-		strcpy(tbl_full_name,db_name);
-		strcat(tbl_full_name,".");
-		strcat(tbl_full_name,tbl_name);
-		for (int i = 0; i < slen; ++i) {
-			if(header[i] == '\n') {
-				header[i] = '\0';
-			}
-		}
-		Column *lcol = get_col(header);
-		if (lcol == NULL) {
-			log_err("cannot find column %s\n", header);
-			free(line_copy);
-			free(header_op);
-			free(tbl_full_name);
-			return 1;
-		}
-		if(lcol->cls_type == UNCLSR) {
-			int rowId_load = 0;
-			while ((getline(&line, &len, fp)) != -1) {
-				char *va = line;
-				int lv = atoi(va);
-				if(insert_data_col(lcol,lv,rowId_load) != 0) {
-					return 1;
-				}
-				rowId_load++;
-			}
-		}
-	}
-	else {
-
-	}
+    if (headerCount == 1) {
+        char* header = trim_newline(line);
+        Column* lcol = get_col(header);
+        if (lcol == NULL) {
+            log_err("[db_manager.c:load_data_csv] cannot find column %s in database\n", header);
+            free(line_copy);
+            fclose(fp);
+            return 1;
+        }
+        if(lcol->cls_type == UNCLSR) {
+            int rowId_load = 0;
+            while ((getline(&line, &len, fp)) != -1) {
+                char *va = line;
+                int lv = atoi(va);
+                if(insert_data_col(lcol,lv,rowId_load) != 0) {
+                    free(line_copy);
+                    fclose(fp);
+                    return 1;
+                }
+                rowId_load++;
+            }
+        }
+        //TODO
+    }
+    else {
+        //TODO
+    }
 	return 0;
 }
 

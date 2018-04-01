@@ -5,7 +5,7 @@
 #include "db_fds.h"
 
 /*
- * tells the databaase what type of operator this is
+ * tells the database what type of operator this is
  */
 typedef enum OperatorType {
     ERROR_CMD,
@@ -13,6 +13,7 @@ typedef enum OperatorType {
     CREATE_TBL,
     CREATE_COL,
     LOAD,
+    SHUTDOWN,
     INSERT,
     OPEN
 } OperatorType;

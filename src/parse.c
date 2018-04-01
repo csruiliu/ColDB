@@ -242,6 +242,10 @@ DbOperator* parse_command(char* query_command, message* send_message, int client
         query_command += 17;
         dbo = parse_insert(query_command, send_message);
     }
+    else if (strncmp(query_command, "shutdown", 8) == 0) {
+        dbo = malloc(sizeof(DbOperator));
+        dbo->type = SHUTDOWN;
+    }
     else {
         log_err("[parse.c/parse_command] error command.\n");
         dbo = error_dbo("error command, please try again.\n");

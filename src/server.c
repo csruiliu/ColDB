@@ -26,7 +26,6 @@
 
 #define DEFAULT_QUERY_BUFFER_SIZE 1024
 
-
 void free_query(DbOperator* query) {
     if(query->type == ERROR_CMD) {
         free(query->operator_fields.err_cmd_operator.err_info);
@@ -53,10 +52,8 @@ char* execute_DbOperator(DbOperator* query) {
             free_query(query);
             return "create database failed.\n";
         }
-        else{
-            free_query(query);
-            return "create database successfully.\n";
-        }
+        free_query(query);
+        return "create database successfully.\n";
     }
     else if (query->type == CREATE_TBL) {
         char* db_name = query->operator_fields.create_tbl_operator.db_name;
@@ -90,9 +87,18 @@ char* execute_DbOperator(DbOperator* query) {
         free_query(query);
         return "load data into database successfully.\n";
     }
+    else if (query->type == SHUTDOWN) {
+        if(persist_data_csv() != 0) {
+            log_err("persist all the data failed.\n");
+        }
+        free_db_store();
+        free_tbl_store();
+        free_col_store();
+        return "persist all the data and shutdown the server.\n";
+    }
     else {
         free(query);
-        return "unsupported command, try again";
+        return "unsupported command, try again.\n";
     }
 }
 
@@ -139,19 +145,16 @@ void handle_client(int client_socket) {
             length = recv(client_socket, recv_buffer, recv_message.length,0);
             recv_message.payload = recv_buffer;
             recv_message.payload[recv_message.length] = '\0';
-            if(strncmp(recv_message.payload,"shutdown",8) == 0) {
-                free_db_store();
-                free_tbl_store();
-                free_col_store();
-                break;
-            }
+
 
             // 1. Parse command
             DbOperator* query = parse_command(recv_message.payload, &send_message, client_socket, client_context);
 
             // 2. Handle request
             char* result = execute_DbOperator(query);
-
+            if(strncmp(recv_message.payload,"shutdown",8) == 0) {
+                break;
+            }
             send_message.length = strlen(result);
             char send_buffer[send_message.length + 1];
             strcpy(send_buffer, result);

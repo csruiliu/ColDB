@@ -56,6 +56,7 @@ typedef struct Result {
  **/
 typedef struct Column {
     char* col_name;
+    char* tbl_name_aff;
     int* data;
     int* rowId;
     size_t col_size;
@@ -76,6 +77,7 @@ typedef struct Column {
  **/
 typedef struct Table {
     char* tbl_name;
+    char* db_name_aff;
     Column** columns;
     size_t tbl_size;
     size_t tbl_capacity;

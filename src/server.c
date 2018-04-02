@@ -126,6 +126,16 @@ void handle_client(int client_socket) {
     //init_rls_store(2500000);
     //init_idx_store(2500000);
 
+
+    if(setup_db_csv() != 0) {
+        free_db_store();
+        free_tbl_store();
+        free_col_store();
+        log_err("setup db from csv data failed, exit.\n");
+        exit(1);
+    }
+
+
     // Continually receive messages from client and execute queries.
     // 1. Parse the command
     // 2. Handle request if appropriate

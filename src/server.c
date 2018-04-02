@@ -27,8 +27,16 @@
 #define DEFAULT_QUERY_BUFFER_SIZE 1024
 
 void free_query(DbOperator* query) {
-    if(query->type == ERROR_CMD) {
-        free(query->operator_fields.err_cmd_operator.err_info);
+    if (query->type == CREATE_TBL) {
+        free(query->operator_fields.create_tbl_operator.db_name);
+        free(query->operator_fields.create_tbl_operator.tbl_name);
+    }
+    else if (query->type == CREATE_COL) {
+        free(query->operator_fields.create_col_operator.col_name);
+        free(query->operator_fields.create_col_operator.tbl_name);
+    }
+    else if (query->type == LOAD) {
+        free(query->operator_fields.load_operator.data_path);
     }
     else if (query->type == CREATE_DB){
         free(query->operator_fields.create_db_operator.db_name);
@@ -41,9 +49,8 @@ void free_query(DbOperator* query) {
  * It is currently here so that you can verify that your server and client can send messages.
  **/
 char* execute_DbOperator(DbOperator* query) {
-    if(query->type == ERROR_CMD) {
-        free_query(query);
-        return "error command, please try again.\n";
+    if (query == NULL) {
+        return "unsupported command, try again.\n";
     }
     else if (query->type == CREATE_DB) {
         char* db_name = query->operator_fields.create_db_operator.db_name;
@@ -86,6 +93,15 @@ char* execute_DbOperator(DbOperator* query) {
         }
         free_query(query);
         return "load data into database successfully.\n";
+    }
+    else if (query->type == INSERT) {
+        Table* insert_tbl = query->operator_fields.insert_operator.insert_tbl;
+        if(insert_data_tbl(insert_tbl,query->operator_fields.insert_operator.values)) {
+            free_query(query);
+            return "insert data into database failed.\n";
+        }
+        free_query(query);
+        return "insert data into database successfully.\n";
     }
     else if (query->type == SHUTDOWN) {
         if(persist_data_csv() != 0) {

@@ -24,4 +24,6 @@ int set_column_idx_cls(Column* slcol, char* idx_type, char* cls_type);
 
 int insert_data_col(Column* col, int data, int rowId);
 
+int insert_data_tbl(Table* itbl, int* row_values);
+
 #endif //COLDB_DB_MANAGER_H

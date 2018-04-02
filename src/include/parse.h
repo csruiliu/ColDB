@@ -8,7 +8,6 @@
  * tells the database what type of operator this is
  */
 typedef enum OperatorType {
-    ERROR_CMD,
     CREATE_DB,
     CREATE_TBL,
     CREATE_COL,
@@ -22,7 +21,7 @@ typedef enum OperatorType {
  * necessary fields for insertion
  */
 typedef struct InsertOperator {
-    Table* table;
+    Table* insert_tbl;
     int* values;
 } InsertOperator;
 
@@ -32,13 +31,6 @@ typedef struct InsertOperator {
 typedef struct OpenOperator {
     char* db_name;
 } OpenOperator;
-
-/*
- * necessary fields for error command
- */
-typedef struct ErrCmdOperator {
-    char* err_info;
-} ErrCmdOperator;
 
 /*
  * necessary fields for create db command
@@ -121,7 +113,6 @@ typedef struct ClientContext {
 typedef union OperatorFields {
     InsertOperator insert_operator;
     OpenOperator open_operator;
-    ErrCmdOperator err_cmd_operator;
     CreateDbOperator create_db_operator;
     CreateTblOperator create_tbl_operator;
     CreateColOperator create_col_operator;

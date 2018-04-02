@@ -427,3 +427,13 @@ int set_column_idx_cls(Column* slcol, char* idx_type, char* cls_type) {
     }
     return 0;
 }
+
+int insert_data_tbl(Table* itbl, int* row_values) {
+	for(int i = 0; i < itbl->tbl_size; ++i) {
+		Column* icol = get_col(itbl->columns[i]->col_name);
+		if(insert_data_col(icol,row_values[i],icol->col_size+i) != 0) {
+			return 1;
+		}
+	}
+	return 0;
+}

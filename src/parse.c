@@ -18,7 +18,7 @@
 char* next_token_comma(char **tokenizer, message_status *status) {
     char* token = strsep(tokenizer, ",");
     if (token == NULL) {
-        *status= INCORRECT_FORMAT;
+        *status = INCORRECT_FORMAT;
     }
     return token;
 }

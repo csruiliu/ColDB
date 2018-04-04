@@ -4,6 +4,7 @@
 #include <zconf.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include "db_index_sort.h"
 #include "db_manager.h"
 #include "utils.h"
 
@@ -28,19 +29,20 @@ int* resize_int(int* data, size_t oc, size_t nc) {
 }
 
 Db* create_db(char* db_name) {
-	current_db = get_db(db_name);
-	if(current_db != NULL) {
+	Db* db = get_db(db_name);
+	if(db != NULL) {
 		log_info("database %s exists, open database %s\n", db_name, db_name);
 		return current_db;
 	}
-	current_db = malloc(sizeof(Db));
-	current_db->db_name = malloc((strlen(db_name)+1)* sizeof(char));
-	strcpy(current_db->db_name,db_name);
-	current_db->db_capacity = 0;
-	current_db->db_size = 0;
-	current_db->tables = NULL;
-	put_db(db_name,current_db);
-	return current_db;
+	db = malloc(sizeof(Db));
+	db->db_name = malloc((strlen(db_name)+1)* sizeof(char));
+	strcpy(db->db_name,db_name);
+	db->db_capacity = 0;
+	db->db_size = 0;
+	db->tables = NULL;
+	put_db(db_name,db);
+	log_info("create db %s successfully.\n",db_name);
+	return db;
 }
 
 Table* create_table(char* db_name, char* tbl_name, size_t num_columns) {
@@ -50,7 +52,7 @@ Table* create_table(char* db_name, char* tbl_name, size_t num_columns) {
 	}
 	Table* tbl = get_tbl(tbl_name);
 	if(tbl != NULL) {
-		log_info("the table %s exists", tbl_name);
+		log_info("the table %s exists.\n", tbl_name);
 		return tbl;
 	}
 	else {
@@ -96,13 +98,13 @@ Table* create_table(char* db_name, char* tbl_name, size_t num_columns) {
 Column* create_column(char* tbl_name, char* col_name) {
 	Table* cur_tbl = get_tbl(tbl_name);
 	if(cur_tbl == NULL) {
-        log_err("the associated table doesn't exist, create table %s", tbl_name);
+        log_err("the associated table doesn't exist, create table %s.\n", tbl_name);
         return NULL;
 	}
 	if(cur_tbl->tbl_size < cur_tbl->tbl_capacity) {
         Column* col = get_col(col_name);
         if(col != NULL) {
-            log_info("column %s exists\n", col_name);
+            log_info("column %s exists.\n", col_name);
             return col;
         }
         col = malloc(sizeof(Column));
@@ -128,7 +130,7 @@ Column* create_column(char* tbl_name, char* col_name) {
 }
 
 int load_data_csv(char* data_path) {
-	message_status mes_status;
+	message_status mes_status = OK_DONE;
 	FILE *fp;
 	if((fp=fopen(data_path,"r"))==NULL) {
 		log_err("cannot load data %s\n", data_path);
@@ -180,6 +182,39 @@ int load_data_csv(char* data_path) {
         //TODO
     }
     else {
+        char* header = trim_newline(line);
+        Column** colSet = calloc(headerCount, sizeof(Column*));
+        SortLink** slSet = calloc(headerCount, sizeof(SortLink*));
+        for(int i = 0; i < headerCount; ++i) {
+            char* col_name = next_token_comma(&header, &mes_status);
+            colSet[i] = get_col(col_name);
+            if (colSet[i] == NULL) {
+                log_err("[db_manager.c:load_data_csv] cannot find column %s in database\n", col_name);
+                free(line_copy);
+                fclose(fp);
+                return 1;
+            }
+            slSet[i] = sortlink_init();
+        }
+        int rowId_load = 0;
+        while ((getline(&line, &len, fp)) != -1) {
+            for (int i = 0; i < headerCount; ++i) {
+                char *va = next_token_comma(&line, &mes_status);
+                int lv = atoi(va);
+                sortlink_insert(lv,rowId_load,slSet[i]);
+            }
+            rowId_load++;
+        }
+        for(int j = 0; j < headerCount; ++j) {
+            if(colSet[j]->cls_type == UNCLSR) {
+                if(sortlink_load(slSet[j],colSet[j]) != 0) {
+					log_err("[db_manager.c:load_data_csv] load column %s in database failed.\n", colSet[j]->col_name);
+					free(line_copy);
+					fclose(fp);
+					return 1;
+                }
+            }
+        }
         //TODO
     }
 	return 0;
@@ -239,13 +274,13 @@ int persist_data_csv() {
 		log_err("cannot open the database store");
 		return 1;
 	}
-	fprintf(fp, "%s", current_db->db_name);
 	for(int i = 0; i < current_db->db_size; ++i) {
-		Table* stbl = get_tbl(current_db->tables[i]->tbl_name);
-		fprintf(fp, ",%s", stbl->tbl_name);
-		fprintf(fp, ",%d", stbl->tbl_capacity);
+	    Table* stbl = get_tbl(current_db->tables[i]->tbl_name);
 		for(int j = 0; j < stbl->tbl_size; ++j) {
-			Column* scol = get_col(stbl->columns[j]->col_name);
+            fprintf(fp, "%s", current_db->db_name);
+		    fprintf(fp, ",%s", stbl->tbl_name);
+            fprintf(fp, ",%d", stbl->tbl_capacity);
+		    Column* scol = get_col(stbl->columns[j]->col_name);
 			fprintf(fp, ",%s", scol->col_name);
 			if(scol->idx_type == BTREE) {
 				fprintf(fp, ",btree");
@@ -293,7 +328,6 @@ int setup_db_csv() {
         return 1;
     }
     message_status mes_status;
-    mes_status = OK_DONE;
     while((filename = readdir(pDir)) != NULL) {
         if(strcmp(filename->d_name,".") != 0 && strcmp(filename->d_name,"..") != 0) {
             log_info("loading data %s into database\n", filename->d_name);
@@ -308,22 +342,23 @@ int setup_db_csv() {
             char* line = NULL;
             size_t len = 0;
             while ((getline(&line, &len, fp)) != -1) {
-                line = trim_newline(line);
+				line = trim_newline(line);
+				mes_status = OK_DONE;
                 char* db_name = next_token_comma(&line,&mes_status);
-                char* tbl_name = next_token_comma(&line,&mes_status);
-                char* tbl_capacity = next_token_comma(&line,&mes_status);
-                char* col_name = next_token_comma(&line,&mes_status);
-                char* idx_type = next_token_comma(&line,&mes_status);
+				char* tbl_name = next_token_comma(&line,&mes_status);
+				char* tbl_capacity = next_token_comma(&line,&mes_status);
+				char* col_name = next_token_comma(&line,&mes_status);
+				char* idx_type = next_token_comma(&line,&mes_status);
 				char* cls_type = next_token_comma(&line,&mes_status);
                 if(mes_status == INCORRECT_FORMAT) {
-					log_err("tokenizing data failed.\n");
+					log_err("[db_manager.c:setup_db_csv()] tokenizing data failed.\n");
                 	return 1;
                 }
-				Db* setup_db = create_db(db_name);
-                if(setup_db == NULL) {
-                	log_err("[db_manager.c:setup_db_csv()] setup database failed.\n");
-                	return 1;
-                }
+				current_db = create_db(db_name);
+				if(current_db == NULL) {
+					log_err("[db_manager.c:setup_db_csv()] setup database failed.\n");
+					return 1;
+				}
 				Table* setup_tbl = create_table(db_name,tbl_name, atoi(tbl_capacity));
 				if(setup_tbl == NULL) {
 					log_err("[db_manager.c:setup_db_csv()] setup table failed.\n");
@@ -334,6 +369,7 @@ int setup_db_csv() {
 					log_err("[db_manager.c:setup_db_csv()] setup column failed.\n");
 					return 1;
             	}
+            	log_info("table size:%d\n",setup_tbl->tbl_size);
             	Column* setup_col = get_col(col_name);
             	if(set_column_idx_cls(setup_col,idx_type,cls_type) != 0) {
 					log_err("[db_manager.c:setup_db_csv()] setup column index and clustering failed.\n");
@@ -374,6 +410,7 @@ int setup_db_csv() {
 					else {
 						int slv = atoi(slvle);
 						setup_col->data[setup_col->col_size] = slv;
+
 						setup_col->col_size++;
 					}
 					count++;

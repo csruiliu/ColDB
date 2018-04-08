@@ -119,10 +119,8 @@ DbOperator* parse_load(char* query_command) {
     return dbo;
 }
 
-
 /**
- * parse_insert reads in the arguments for a create statement and 
- * then passes these arguments to a database function to insert a row.
+ * parse_insert
  **/
 DbOperator* parse_insert(char* query_command, message* send_message) {
     unsigned int columns_inserted = 0;
@@ -149,6 +147,123 @@ DbOperator* parse_insert(char* query_command, message* send_message) {
         send_message->status = INCORRECT_FORMAT;
         free (dbo);
         return NULL;
+    }
+    return dbo;
+}
+
+/**
+ * parse_select
+ **/
+DbOperator* parse_select(char* query_command, char* handle, message* send_message) {
+    char* select_name = next_token_comma(&query_command,&send_message->status);
+    if(has_period(select_name)) {
+        char* pre_range = next_token_comma(&query_command,&send_message->status);
+        char* post_range = next_token_comma(&query_command,&send_message->status);
+        if(send_message->status == INCORRECT_FORMAT) {
+            return NULL;
+        }
+        int last_char = (int)strlen(post_range) - 1;
+        if (last_char < 0 || post_range[last_char] != ')') {
+            return NULL;
+        }
+        post_range[last_char] = '\0';
+        DbOperator* dbo = malloc(sizeof(DbOperator));
+        dbo->type = SELECT;
+        dbo->operator_fields.select_operator.selectType = SELECT_COL;
+        dbo->operator_fields.select_operator.handle = malloc((strlen(handle)+1)* sizeof(char));
+        strcpy(dbo->operator_fields.select_operator.handle,handle);
+        dbo->operator_fields.select_operator.pre_range = malloc((strlen(pre_range)+1)* sizeof(char));
+        strcpy(dbo->operator_fields.select_operator.pre_range,pre_range);
+        dbo->operator_fields.select_operator.post_range = malloc((strlen(post_range)+1)* sizeof(char));
+        strcpy(dbo->operator_fields.select_operator.post_range,post_range);
+        dbo->operator_fields.select_operator.select_col = malloc((strlen(select_name)+1)* sizeof(char));
+        strcpy(dbo->operator_fields.select_operator.select_col,select_name);
+        return dbo;
+    }
+    else {
+        char* select_val = next_token_comma(&query_command,&send_message->status);
+        char* pre_range = next_token_comma(&query_command,&send_message->status);
+        char* post_range = next_token_comma(&query_command,&send_message->status);
+        if(send_message->status == INCORRECT_FORMAT) {
+            return NULL;
+        }
+        int last_char = (int)strlen(post_range) - 1;
+        if (last_char < 0 || post_range[last_char] != ')') {
+            return NULL;
+        }
+        post_range[last_char] = '\0';
+        DbOperator* dbo = malloc(sizeof(DbOperator));
+        dbo->type = SELECT;
+        dbo->operator_fields.select_operator.selectType = SELECT_RSL;
+        dbo->operator_fields.select_operator.handle = malloc((strlen(handle)+1)* sizeof(char));
+        strcpy(dbo->operator_fields.select_operator.handle,handle);
+        dbo->operator_fields.select_operator.pre_range = malloc((strlen(pre_range)+1)* sizeof(char));
+        strcpy(dbo->operator_fields.select_operator.pre_range,pre_range);
+        dbo->operator_fields.select_operator.post_range = malloc((strlen(post_range)+1)* sizeof(char));
+        strcpy(dbo->operator_fields.select_operator.post_range,post_range);
+        dbo->operator_fields.select_operator.select_rsl_pos = malloc((strlen(select_name)+1)* sizeof(char));
+        strcpy(dbo->operator_fields.select_operator.select_rsl_pos,select_name);
+        dbo->operator_fields.select_operator.select_rsl_val = malloc((strlen(select_val)+1)* sizeof(char));
+        strcpy(dbo->operator_fields.select_operator.select_rsl_val,select_val);
+        return dbo;
+    }
+}
+
+/**
+ * parse_fetch
+ **/
+DbOperator* parse_fetch(char* query_command, char* handle, message* send_message) {
+    char* col_var_name = next_token_comma(&query_command, &send_message->status);
+    char* rsl_vec_pos = next_token_comma(&query_command, &send_message->status);
+    if (send_message->status == INCORRECT_FORMAT) {
+        return NULL;
+    }
+    int last_char = (int)strlen(rsl_vec_pos) - 1;
+    if (last_char < 0 || rsl_vec_pos[last_char] != ')') {
+        return NULL;
+    }
+    rsl_vec_pos[last_char] = '\0';
+    DbOperator* dbo = malloc(sizeof(DbOperator));
+    dbo->type = FETCH;
+    dbo->operator_fields.fetch_operator.col_var_name = malloc((strlen(col_var_name)+1)* sizeof(char));
+    strcpy(dbo->operator_fields.fetch_operator.col_var_name, col_var_name);
+    dbo->operator_fields.fetch_operator.rsl_vec_pos = malloc((strlen(rsl_vec_pos)+1)* sizeof(char));
+    strcpy(dbo->operator_fields.fetch_operator.rsl_vec_pos, rsl_vec_pos);
+    dbo->operator_fields.fetch_operator.handle = malloc((strlen(handle)+1)* sizeof(char));
+    strcpy(dbo->operator_fields.fetch_operator.handle,handle);
+    return dbo;
+}
+
+DbOperator* parse_print(char* query_command, message* send_message) {
+    char* cmd_copy = malloc((strlen(query_command)+1)* sizeof(char));
+    strcpy(cmd_copy,query_command);
+    size_t count = 0;
+    while(1) {
+        char* tmp = strsep(&cmd_copy, ",");
+        if(tmp != NULL) {
+            count++;
+        }
+        else {
+            break;
+        }
+    }
+    log_info("print count:%d\n", count);
+    int last_char = (int)strlen(query_command) - 1;
+    if (last_char < 0 || query_command[last_char] != ')') {
+        return NULL;
+    }
+    query_command[last_char] = '\0';
+    DbOperator* dbo = malloc(sizeof(DbOperator));
+    dbo->type = PRINT;
+    dbo->operator_fields.print_operator.print_num = count;
+    dbo->operator_fields.print_operator.print_name = calloc(count, sizeof(char*));
+    for(int i = 0; i < count; ++i) {
+        char* pitem = next_token_comma(&query_command, &send_message->status);
+        if(send_message->status == INCORRECT_FORMAT) {
+            return NULL;
+        }
+        dbo->operator_fields.print_operator.print_name[i] = malloc((strlen(pitem)+1)* sizeof(char));
+        strcpy(dbo->operator_fields.print_operator.print_name[i],pitem);
     }
     return dbo;
 }
@@ -202,6 +317,18 @@ DbOperator* parse_command(char* query_command, message* send_message, int client
         query_command += 18;
         dbo = parse_insert(query_command, send_message);
     }
+    else if (strncmp(query_command, "select(", 7) == 0) {
+        query_command += 7;
+        dbo = parse_select(query_command, handle, send_message);
+    }
+    else if (strncmp(query_command, "fetch(", 6) == 0) {
+        query_command += 6;
+        dbo = parse_fetch(query_command, handle, send_message);
+    }
+    else if (strncmp(query_command, "print(", 6) == 0) {
+        query_command += 6;
+        dbo = parse_print(query_command, send_message);
+    }
     else if (strncmp(query_command, "shutdown", 8) == 0) {
         dbo = malloc(sizeof(DbOperator));
         dbo->type = SHUTDOWN;
@@ -209,7 +336,7 @@ DbOperator* parse_command(char* query_command, message* send_message, int client
     else {
         return NULL;
     }
-    //dbo->client_fd = client_socket;
+    dbo->client_fd = client_socket;
     //dbo->context = context;
     return dbo;
 }

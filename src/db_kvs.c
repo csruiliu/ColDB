@@ -53,6 +53,33 @@ int put(KVStore* kvStore, char* key, void* value, size_t value_size) {
     return 0;
 }
 
+int put_replace(KVStore* kvStore, char* key, void* value, size_t value_size) {
+    int index = hash_func(key, PRIME, kvStore->size);
+    KV* cur_ikv = &(kvStore->kvs[index]);
+    if(cur_ikv->key == NULL) {
+        kvStore->kvs[index].key = malloc(sizeof(char)*(strlen(key)+1));
+        kvStore->kvs[index].value = malloc(value_size);
+        if(kvStore->kvs[index].key == NULL || kvStore->kvs[index].value == NULL) {
+            return 1;
+        }
+        strcpy(kvStore->kvs[index].key,key);
+        memcpy(kvStore->kvs[index].value,value,value_size);
+        kvStore->count++;
+    }
+    else {
+        free(kvStore->kvs[index].key);
+        free(kvStore->kvs[index].value);
+        kvStore->kvs[index].key = malloc(sizeof(char)*(strlen(key)+1));
+        kvStore->kvs[index].value = malloc(value_size);
+        if(kvStore->kvs[index].key == NULL || kvStore->kvs[index].value == NULL) {
+            return 1;
+        }
+        strcpy(kvStore->kvs[index].key,key);
+        memcpy(kvStore->kvs[index].value,value,value_size);
+    }
+    return 0;
+}
+
 int rehash(KVStore** kvStore, size_t nc, size_t value_size) {
     log_info("rehash start.\n");
     KVStore* new_db_store;

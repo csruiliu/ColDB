@@ -103,23 +103,39 @@ typedef struct Db {
 extern Db *current_db;
 
 void init_db_store(size_t size);
+
 void init_tbl_store(size_t size);
+
 void init_col_store(size_t size);
+
 void init_rls_store(size_t size);
+
 void init_idx_store(size_t size);
 
 void put_db(char* db_name, Db* db);
+
 void put_tbl(char* tbl_name, Table* tbl);
+
 void put_col(char* col_name, Column* col);
 
+void put_rsl_replace(char* rsl_name, Result* rsl);
+
 Db* get_db(char *db_name);
+
 Table* get_tbl(char* tbl_name);
+
 Column* get_col(char* col_name);
 
+Result* get_rsl(char* rsl_name);
+
 void free_db_store();
+
 void free_tbl_store();
+
 void free_col_store();
+
 void free_rsl_store();
+
 void free_idx_store();
 
 #endif //COLDB_DB_FDS_H

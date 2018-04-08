@@ -82,6 +82,14 @@ void put_col(char* col_name, Column* col) {
     }
 }
 
+void put_rsl_replace(char* rsl_name, Result* rsl) {
+    int flag = put_replace(rsl_store,rsl_name,rsl,sizeof(Result));
+    if(flag != 0) {
+        log_err("persistent result %s failed", rsl_name);
+    }
+}
+
+
 Db* get_db(char* db_name) {
     Db* Db = get(db_store, db_name);
     return Db;
@@ -95,6 +103,11 @@ Table* get_tbl(char* tbl_name) {
 Column* get_col(char* col_name) {
     Column* col = get(col_store,col_name);
     return col;
+}
+
+Result* get_rsl(char* rsl_name) {
+    Result* rsl = get(rsl_store,rsl_name);
+    return rsl;
 }
 
 void free_db_store() {

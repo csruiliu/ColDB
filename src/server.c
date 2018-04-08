@@ -57,9 +57,11 @@ char* execute_DbOperator(DbOperator* query) {
         current_db = create_db(db_name);
         if(current_db == NULL) {
             free_query(query);
+            log_err("[server.c:execute_DbOperator()] create database failed.\n");
             return "create database failed.\n";
         }
         free_query(query);
+        log_info("create database successfully.\n");
         return "create database successfully.\n";
     }
     else if (query->type == CREATE_TBL) {
@@ -69,9 +71,11 @@ char* execute_DbOperator(DbOperator* query) {
         Table* tbl = create_table(db_name, tbl_name, col_count);
         if(tbl == NULL) {
             free_query(query);
+            log_err("[server.c:execute_DbOperator()] create table failed.\n");
             return "create table failed.\n";
         }
         free_query(query);
+        log_info("create table successfully.\n");
         return "create table successfully.\n";
     }
     else if (query->type == CREATE_COL){
@@ -80,28 +84,101 @@ char* execute_DbOperator(DbOperator* query) {
         Column* col = create_column(full_tbl_name, full_col_name);
         if(col == NULL) {
             free_query(query);
+            log_err("[server.c:execute_DbOperator()] create column failed.\n");
             return "create column failed.\n";
         }
         free_query(query);
+        log_info("create column successfully.\n");
         return "create column successfully.\n";
     }
     else if (query->type == LOAD) {
         char* data_path = query->operator_fields.load_operator.data_path;
         if(load_data_csv(data_path) != 0) {
             free_query(query);
+            log_err("[server.c:execute_DbOperator()] load data into database failed.\n");
             return "load data into database failed.\n";
         }
         free_query(query);
+        log_info("load data into database successfully.\n");
         return "load data into database successfully.\n";
     }
     else if (query->type == INSERT) {
         Table* insert_tbl = query->operator_fields.insert_operator.insert_tbl;
         if(insert_data_tbl(insert_tbl,query->operator_fields.insert_operator.values)) {
             free_query(query);
+            log_err("[server.c:execute_DbOperator()] insert data into database failed.");
             return "insert data into database failed.\n";
         }
         free_query(query);
+        log_info("insert data into database successfully.\n");
         return "insert data into database successfully.\n";
+    }
+    else if (query->type == SELECT) {
+        if(query->operator_fields.select_operator.selectType == SELECT_COL) {
+            char* select_col_name = query->operator_fields.select_operator.select_col;
+            char* handle = query->operator_fields.select_operator.handle;
+            char* pre_range = query->operator_fields.select_operator.pre_range;
+            char* post_range = query->operator_fields.select_operator.post_range;
+            Column* scol = get_col(select_col_name);
+            if(scol == NULL) {
+                log_err("[server.c:execute_DbOperator()] column didn't exist in the database.\n");
+                return "column didn't exist in the database.\n";
+            }
+            if (scol->idx_type == UNIDX) {
+                if(select_data_col_unidx(scol, handle, pre_range, post_range) != 0) {
+                    free_query(query);
+                    log_err("[server.c:execute_DbOperator()] select data from column in database failed.\n");
+                    return "select data from column in database failed.\n";
+                }
+            }
+            free_query(query);
+            log_info("select data from column in database successfully.\n");
+            return "select data from column in database successfully.\n";
+        }
+        else {
+            char* select_rsl_pos = query->operator_fields.select_operator.select_rsl_pos;
+            char* select_rsl_val = query->operator_fields.select_operator.select_rsl_val;
+            char* handle = query->operator_fields.select_operator.handle;
+            char* pre_range = query->operator_fields.select_operator.pre_range;
+            char* post_range = query->operator_fields.select_operator.post_range;
+            Result* srsl_pos = get_rsl(select_rsl_pos);
+            Result* srsl_val = get_rsl(select_rsl_val);
+            if(select_data_rsl(srsl_pos, srsl_val, handle, pre_range, post_range) != 0) {
+                free_query(query);
+                log_err("[server.c:execute_DbOperator()] select data from result in database failed.\n");
+                return "select data from result in database failed.\n";
+            }
+            free_query(query);
+            log_info("select data from result in database successfully.\n");
+            return "select data from result in database successfully.\n";
+        }
+    }
+    else if (query->type == FETCH) {
+        char* col_val_name = query->operator_fields.fetch_operator.col_var_name;
+        char* rsl_vec_pos = query->operator_fields.fetch_operator.rsl_vec_pos;
+        char* handle = query->operator_fields.fetch_operator.handle;
+        if(fetch_col_data(col_val_name,rsl_vec_pos,handle) != 0) {
+            free_query(query);
+            log_err("[server.c:execute_DbOperator()] fetch data failed.\n");
+            return "fetch data failed.\n";
+        }
+        free_query(query);
+        log_info("[server.c:execute_DbOperator()] fetch data successfully.\n");
+        return "fetch data successfully.\n";
+    }
+    else if (query->type == PRINT) {
+        size_t print_num = query->operator_fields.print_operator.print_num;
+        char** print_name = query->operator_fields.print_operator.print_name;
+        char* print_result = generate_print_result(print_num, print_name);
+        log_info("zzz:%s\n",print_result);
+        if (print_result == NULL){
+            free_query(query);
+            log_err("[server.c:execute_DbOperator()] fetch data failed.\n");
+            return "fetch data failed.\n";
+        }
+
+        //return print_result;
+        return "print\n";
     }
     else if (query->type == SHUTDOWN) {
         if(persist_data_csv() != 0) {
@@ -110,10 +187,13 @@ char* execute_DbOperator(DbOperator* query) {
         free_db_store();
         free_tbl_store();
         free_col_store();
+        free_rsl_store();
+        log_info("persist all the data and shutdown the server.\n");
         return "persist all the data and shutdown the server.\n";
     }
     else {
         free(query);
+        log_info("unsupported command, try again.\n");
         return "unsupported command, try again.\n";
     }
 }
@@ -139,13 +219,14 @@ void handle_client(int client_socket) {
     init_db_store(100000);
     init_tbl_store(500000);
     init_col_store(2500000);
-    //init_rls_store(2500000);
+    init_rls_store(2500000);
     //init_idx_store(2500000);
 
     if(setup_db_csv() != 0) {
         free_db_store();
         free_tbl_store();
         free_col_store();
+        free_rsl_store();
         log_err("setup db from csv data failed, exit.\n");
         log_info("Connection closed at socket %d!\n", client_socket);
         close(client_socket);

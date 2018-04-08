@@ -26,4 +26,12 @@ int insert_data_col(Column* col, int data, int rowId);
 
 int insert_data_tbl(Table* itbl, int* row_values);
 
+int select_data_col_unidx(Column* scol, char* handle, char* pre_range, char* post_range);
+
+int select_data_rsl(Result* srsl_pos, Result* srsl_val, char* handle, char* pre_range, char* post_range);
+
+int fetch_col_data(char* col_val_name, char* rsl_vec_pos, char* handle);
+
+char* generate_print_result(size_t print_num, char** print_name);
+
 #endif //COLDB_DB_MANAGER_H

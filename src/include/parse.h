@@ -7,6 +7,14 @@
 /*
  * tells the database what type of operator this is
  */
+typedef enum SelectType {
+    SELECT_COL,
+    SELECT_RSL
+} SelectType;
+
+/*
+ * tells the database what type of operator this is
+ */
 typedef enum OperatorType {
     CREATE_DB,
     CREATE_TBL,
@@ -14,8 +22,42 @@ typedef enum OperatorType {
     LOAD,
     SHUTDOWN,
     INSERT,
-    OPEN
+    SELECT,
+    FETCH,
+    PRINT
 } OperatorType;
+
+
+/*
+ * necessary fields for print
+ */
+typedef struct PrintOperator {
+    size_t print_num;
+    char** print_name;
+} PrintOperator;
+
+
+/*
+ * necessary fields for fetch
+ */
+typedef struct FetchOperator {
+    char* col_var_name;
+    char* rsl_vec_pos;
+    char* handle;
+} FetchOperator;
+
+/*
+ * necessary fields for select
+ */
+typedef struct SelectOperator {
+    char* select_col;
+    char* select_rsl_pos;
+    char* select_rsl_val;
+    char* pre_range;
+    char* post_range;
+    char* handle;
+    SelectType selectType;
+} SelectOperator;
 
 /*
  * necessary fields for insertion
@@ -62,6 +104,7 @@ typedef struct CreateColOperator {
 typedef struct LoadOperator {
     char* data_path;
 } LoadOperator;
+
 
 
 /*
@@ -112,11 +155,13 @@ typedef struct ClientContext {
  */
 typedef union OperatorFields {
     InsertOperator insert_operator;
-    OpenOperator open_operator;
     CreateDbOperator create_db_operator;
     CreateTblOperator create_tbl_operator;
     CreateColOperator create_col_operator;
     LoadOperator load_operator;
+    SelectOperator select_operator;
+    FetchOperator fetch_operator;
+    PrintOperator print_operator;
 } OperatorFields;
 
 /*

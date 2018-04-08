@@ -9,8 +9,11 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include "message.h"
 
+
+bool has_period(char *str);
 
 char* next_token_comma(char **tokenizer, message_status *status);
 

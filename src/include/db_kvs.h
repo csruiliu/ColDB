@@ -13,8 +13,15 @@ typedef struct KVStore {
 } KVStore;
 
 int allocate(KVStore** kvStore, size_t size);
+
 int put(KVStore* kvStore, char* key, void* value, size_t value_size);
+
 void* get(KVStore* kvStore, char* key);
+
 int deallocate(KVStore* kvStore);
+
 int rehash(KVStore** kvStore, size_t nc, size_t value_size);
+
+int put_replace(KVStore* kvStore, char* key, void* value, size_t value_size);
+
 #endif

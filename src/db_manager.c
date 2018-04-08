@@ -614,29 +614,14 @@ int fetch_col_data(char* col_val_name, char* rsl_vec_pos, char* handle) {
 }
 
 char* generate_print_result(size_t print_num, char** print_name) {
-    /*
 	size_t row_num = get_rsl(print_name[0])->num_tuples;
-	int** rsl_payload_set = malloc(print_num*sizeof(int*));
-	Result** rsl_set = malloc(print_num* sizeof(Result*));
-	char* print_rsl = malloc(print_num*row_num*(sizeof(int) + print_num));
-	*/
-	/*
 	for(int i = 0; i < print_num; ++i) {
-		rsl_set[i] = get_rsl(print_name[i]);
-		if(rsl_set[i] == NULL) {
-			free(rsl_payload_set);
-			free(rsl_set);
-			log_err("[db_manager.c:generate_print_result] fetch col didn't exist.\n");
-			return NULL;
-		}
-		rsl_payload_set[i] = rsl_set[i]->payload;
-	}
-	for(int i = 0; i < row_num; ++i) {
-		for(int j = 0; j < print_num; ++j) {
-			int* tmp_payload = rsl_payload_set[i];
-			strcat(print_rsl,tmp_payload[j]);
+		Result* rsl = get_rsl(print_name[i]);
+		int* int_rsl_payload = rsl->payload;
+		for(int j = 0; j < row_num; ++j) {
+			log_info("%d\n",int_rsl_payload[j]);
 		}
 	}
-	 */
-	return print_rsl;
+	return "print\n";
+	//return print_rsl;
 }

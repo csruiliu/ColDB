@@ -170,15 +170,12 @@ char* execute_DbOperator(DbOperator* query) {
         size_t print_num = query->operator_fields.print_operator.print_num;
         char** print_name = query->operator_fields.print_operator.print_name;
         char* print_result = generate_print_result(print_num, print_name);
-        log_info("zzz:%s\n",print_result);
         if (print_result == NULL){
             free_query(query);
             log_err("[server.c:execute_DbOperator()] fetch data failed.\n");
             return "fetch data failed.\n";
         }
-
-        //return print_result;
-        return "print\n";
+        return print_result;
     }
     else if (query->type == SHUTDOWN) {
         if(persist_data_csv() != 0) {

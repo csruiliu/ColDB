@@ -247,7 +247,6 @@ DbOperator* parse_print(char* query_command, message* send_message) {
             break;
         }
     }
-    log_info("print count:%d\n", count);
     int last_char = (int)strlen(query_command) - 1;
     if (last_char < 0 || query_command[last_char] != ')') {
         return NULL;

@@ -615,13 +615,62 @@ int fetch_col_data(char* col_val_name, char* rsl_vec_pos, char* handle) {
 
 char* generate_print_result(size_t print_num, char** print_name) {
 	size_t row_num = get_rsl(print_name[0])->num_tuples;
+	int* data_payload_id = malloc(print_num* sizeof(int));
+	void** data_payload_set = malloc(print_num * sizeof(void*));
+	size_t row_total_length = 0;
 	for(int i = 0; i < print_num; ++i) {
 		Result* rsl = get_rsl(print_name[i]);
-		int* int_rsl_payload = rsl->payload;
-		for(int j = 0; j < row_num; ++j) {
-			log_info("%d\n",int_rsl_payload[j]);
+		if(rsl->data_type == INT) {
+			row_total_length += sizeof(int);
+			data_payload_id[i] = 1;
+			data_payload_set[i] = calloc(row_num, sizeof(int));
+			memcpy(data_payload_set[i], rsl->payload, row_num* sizeof(int));
+		}
+		else if (rsl->data_type == FLOAT) {
+			row_total_length += sizeof(float);
+			data_payload_id[i] = 2;
+			data_payload_set[i] = calloc(row_num, sizeof(float));
+			memcpy(data_payload_set[i], rsl->payload, row_num* sizeof(float));
+		}
+		else if (rsl->data_type == LONG) {
+			row_total_length += sizeof(long);
+			data_payload_id[i] = 3;
+			data_payload_set[i] = calloc(row_num, sizeof(long));
+			memcpy(data_payload_set[i], rsl->payload, row_num* sizeof(long));
 		}
 	}
-	return "print\n";
-	//return print_rsl;
+	char* print_rsl = malloc(row_num*(row_total_length+print_num+1) * sizeof(char));
+	strcpy(print_rsl,"");
+	int* int_playload;
+	float* float_playload;
+	long* long_playload;
+	for(int j = 0; j < row_num; ++j) {
+		char* payload_tmp = malloc((row_total_length+print_num+1) * sizeof(char));
+		int len = 0;
+		for(int k = 0; k < print_num; ++k) {
+			switch (data_payload_id[k]) {
+				case 1:
+					int_playload = data_payload_set[k];
+					len += sprintf(payload_tmp+len, "%d,", int_playload[j]);
+					break;
+				case 2:
+					float_playload = data_payload_set[k];
+					len += sprintf(payload_tmp+len, "%f,", float_playload[j]);
+					break;
+				case 3:
+					long_playload = data_payload_set[k];
+					len += sprintf(payload_tmp+len, "%ld,", long_playload[j]);
+					break;
+				default:
+					break;
+			}
+		}
+		payload_tmp[len-1] = '\n';
+		strcat(print_rsl,payload_tmp);
+		free(payload_tmp);
+	}
+	size_t lastchar = strlen(print_rsl);
+	print_rsl[lastchar] = '\0';
+
+	return print_rsl;
 }

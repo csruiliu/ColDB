@@ -34,4 +34,8 @@ int fetch_col_data(char* col_val_name, char* rsl_vec_pos, char* handle);
 
 char* generate_print_result(size_t print_num, char** print_name);
 
+int avg_col_data(char* avg_name, char* handle);
+
+int avg_rsl_data(char* avg_rsl_name, char* handle);
+
 #endif //COLDB_DB_MANAGER_H

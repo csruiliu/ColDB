@@ -627,10 +627,11 @@ char* generate_print_result(size_t print_num, char** print_name) {
 			memcpy(data_payload_set[i], rsl->payload, row_num* sizeof(int));
 		}
 		else if (rsl->data_type == FLOAT) {
-			row_total_length += sizeof(float);
+			row_total_length += sizeof(double);
 			data_payload_id[i] = 2;
-			data_payload_set[i] = calloc(row_num, sizeof(float));
-			memcpy(data_payload_set[i], rsl->payload, row_num* sizeof(float));
+			data_payload_set[i] = calloc(row_num, sizeof(double));
+			log_info("ss:%0.2f\n",((double *) rsl->payload)[0]);
+			memcpy(data_payload_set[i], rsl->payload, row_num* sizeof(double));
 		}
 		else if (rsl->data_type == LONG) {
 			row_total_length += sizeof(long);
@@ -641,25 +642,25 @@ char* generate_print_result(size_t print_num, char** print_name) {
 	}
 	char* print_rsl = malloc(row_num*(row_total_length+print_num+1) * sizeof(char));
 	strcpy(print_rsl,"");
-	int* int_playload;
-	float* float_playload;
-	long* long_playload;
+
+	void* data_payload;
+
 	for(int j = 0; j < row_num; ++j) {
 		char* payload_tmp = malloc((row_total_length+print_num+1) * sizeof(char));
 		int len = 0;
 		for(int k = 0; k < print_num; ++k) {
 			switch (data_payload_id[k]) {
 				case 1:
-					int_playload = data_payload_set[k];
-					len += sprintf(payload_tmp+len, "%d,", int_playload[j]);
+					data_payload = data_payload_set[k];
+					len += sprintf(payload_tmp+len, "%d,", ((int *)data_payload)[j]);
 					break;
 				case 2:
-					float_playload = data_payload_set[k];
-					len += sprintf(payload_tmp+len, "%f,", float_playload[j]);
+					data_payload = data_payload_set[k];
+					len += sprintf(payload_tmp+len, "%0.2f,", ((double *)data_payload)[j]);
 					break;
 				case 3:
-					long_playload = data_payload_set[k];
-					len += sprintf(payload_tmp+len, "%ld,", long_playload[j]);
+					data_payload = data_payload_set[k];
+					len += sprintf(payload_tmp+len, "%ld,", ((long *)data_payload)[j]);
 					break;
 				default:
 					break;
@@ -673,4 +674,73 @@ char* generate_print_result(size_t print_num, char** print_name) {
 	print_rsl[lastchar] = '\0';
 
 	return print_rsl;
+}
+
+int avg_col_data(char* avg_col_name, char* handle) {
+	Column* acol = get_col(avg_col_name);
+	if (acol == NULL) {
+		log_err("[db_manager.c:avg_col_data()]: column didn't exist in the database.\n");
+		return 1;
+	}
+	int sum = 0;
+	int* acol_data = acol->data;
+	for(int i = 0; i < acol->col_size; ++i) {
+		sum += acol_data[i];
+	}
+	double avg = (double) sum / (double) acol->col_size;
+	Result* arsl = malloc(sizeof(Result));
+	if(arsl == NULL) {
+		log_err("[db_manager.c:avg_col_data()]: init new result failed.\n");
+		return 1;
+	}
+	arsl->data_type = FLOAT;
+	arsl->num_tuples = 1;
+	arsl->payload = calloc(1, sizeof(double));
+	memcpy(arsl->payload, &avg, sizeof(double));
+	put_rsl_replace(handle,arsl);
+	return 0;
+}
+
+int avg_rsl_data(char* avg_rsl_name, char* handle) {
+	Result* avg_rsl = get_rsl(avg_rsl_name);
+	double avg = 0;
+	if (avg_rsl == NULL) {
+		log_err("[db_manager.c:avg_col_data()]: result didn't exist in the database.\n");
+		return 1;
+	}
+	if(avg_rsl->data_type == INT) {
+		int* int_avg_payload = avg_rsl->payload;
+		int sum = 0;
+		for(int i = 0; i < avg_rsl->num_tuples; ++i) {
+			sum += int_avg_payload[i];
+		}
+		avg = (double) sum / (double) avg_rsl->num_tuples;
+	}
+	else if(avg_rsl->data_type == FLOAT) {
+		float* float_avg_payload = avg_rsl->payload;
+		float sum = 0;
+		for(int i = 0; i < avg_rsl->num_tuples; ++i) {
+			sum += float_avg_payload[i];
+		}
+		avg = (double) sum / (double) avg_rsl->num_tuples;
+	}
+	else if(avg_rsl->data_type == LONG) {
+		long* long_avg_payload = avg_rsl->payload;
+		long sum = 0;
+		for(int i = 0; i < avg_rsl->num_tuples; ++i) {
+			sum += long_avg_payload[i];
+		}
+		avg = (double) sum / (double) avg_rsl->num_tuples;
+	}
+	Result* rsl = malloc(sizeof(Result));
+	if(rsl == NULL) {
+		log_err("[db_manager.c:avg_col_data()]: init new result failed.\n");
+		return 1;
+	}
+	rsl->data_type = FLOAT;
+	rsl->num_tuples = 1;
+	rsl->payload = calloc(1, sizeof(double));
+	memcpy(rsl->payload, &avg, sizeof(double));
+	put_rsl_replace(handle,rsl);
+	return 0;
 }

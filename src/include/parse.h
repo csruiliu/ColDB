@@ -7,10 +7,10 @@
 /*
  * tells the database what type of operator this is
  */
-typedef enum SelectType {
-    SELECT_COL,
-    SELECT_RSL
-} SelectType;
+typedef enum HandleType {
+    HANDLE_COL,
+    HANDLE_RSL
+} HandleType;
 
 /*
  * tells the database what type of operator this is
@@ -24,9 +24,19 @@ typedef enum OperatorType {
     INSERT,
     SELECT,
     FETCH,
-    PRINT
+    PRINT,
+    AVG
 } OperatorType;
 
+
+/*
+ * necessary fields for avg
+ */
+typedef struct AvgOperator {
+    HandleType handle_type;
+    char* avg_name;
+    char* handle;
+} AvgOperator;
 
 /*
  * necessary fields for print
@@ -56,7 +66,7 @@ typedef struct SelectOperator {
     char* pre_range;
     char* post_range;
     char* handle;
-    SelectType selectType;
+    HandleType selectType;
 } SelectOperator;
 
 /*
@@ -162,6 +172,7 @@ typedef union OperatorFields {
     SelectOperator select_operator;
     FetchOperator fetch_operator;
     PrintOperator print_operator;
+    AvgOperator avg_operator;
 } OperatorFields;
 
 /*

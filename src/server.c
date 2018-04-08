@@ -114,7 +114,7 @@ char* execute_DbOperator(DbOperator* query) {
         return "insert data into database successfully.\n";
     }
     else if (query->type == SELECT) {
-        if(query->operator_fields.select_operator.selectType == SELECT_COL) {
+        if(query->operator_fields.select_operator.selectType == HANDLE_COL) {
             char* select_col_name = query->operator_fields.select_operator.select_col;
             char* handle = query->operator_fields.select_operator.handle;
             char* pre_range = query->operator_fields.select_operator.pre_range;
@@ -159,12 +159,28 @@ char* execute_DbOperator(DbOperator* query) {
         char* handle = query->operator_fields.fetch_operator.handle;
         if(fetch_col_data(col_val_name,rsl_vec_pos,handle) != 0) {
             free_query(query);
-            log_err("[server.c:execute_DbOperator()] fetch data failed.\n");
             return "fetch data failed.\n";
         }
         free_query(query);
         log_info("[server.c:execute_DbOperator()] fetch data successfully.\n");
         return "fetch data successfully.\n";
+    }
+    else if (query->type == AVG) {
+        char* avg_name = query->operator_fields.avg_operator.avg_name;
+        char* handle = query->operator_fields.avg_operator.handle;
+        if (query->operator_fields.avg_operator.handle_type == HANDLE_COL) {
+            if (avg_col_data(avg_name,handle) != 0) {
+                free_query(query);
+                return "get ave of data failed.\n";
+            }
+        }
+        else {
+            if (avg_rsl_data(avg_name,handle) != 0) {
+                free_query(query);
+                return "get ave of data failed.\n";
+            }
+        }
+        return "calculate ave of data successfully.\n";
     }
     else if (query->type == PRINT) {
         size_t print_num = query->operator_fields.print_operator.print_num;

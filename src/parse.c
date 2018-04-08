@@ -169,7 +169,7 @@ DbOperator* parse_select(char* query_command, char* handle, message* send_messag
         post_range[last_char] = '\0';
         DbOperator* dbo = malloc(sizeof(DbOperator));
         dbo->type = SELECT;
-        dbo->operator_fields.select_operator.selectType = SELECT_COL;
+        dbo->operator_fields.select_operator.selectType = HANDLE_COL;
         dbo->operator_fields.select_operator.handle = malloc((strlen(handle)+1)* sizeof(char));
         strcpy(dbo->operator_fields.select_operator.handle,handle);
         dbo->operator_fields.select_operator.pre_range = malloc((strlen(pre_range)+1)* sizeof(char));
@@ -194,7 +194,7 @@ DbOperator* parse_select(char* query_command, char* handle, message* send_messag
         post_range[last_char] = '\0';
         DbOperator* dbo = malloc(sizeof(DbOperator));
         dbo->type = SELECT;
-        dbo->operator_fields.select_operator.selectType = SELECT_RSL;
+        dbo->operator_fields.select_operator.selectType = HANDLE_RSL;
         dbo->operator_fields.select_operator.handle = malloc((strlen(handle)+1)* sizeof(char));
         strcpy(dbo->operator_fields.select_operator.handle,handle);
         dbo->operator_fields.select_operator.pre_range = malloc((strlen(pre_range)+1)* sizeof(char));
@@ -267,6 +267,27 @@ DbOperator* parse_print(char* query_command, message* send_message) {
     return dbo;
 }
 
+DbOperator* parse_avg(char* handle, char* query_command) {
+    DbOperator* dbo = malloc(sizeof(DbOperator));
+    if(has_period(query_command)) {
+        dbo->operator_fields.avg_operator.handle_type = HANDLE_COL;
+    }
+    else {
+        dbo->operator_fields.avg_operator.handle_type = HANDLE_RSL;
+    }
+    int last_char = (int)strlen(query_command) - 1;
+    if (last_char < 0 || query_command[last_char] != ')') {
+        return NULL;
+    }
+    query_command[last_char] = '\0';
+    dbo->type = AVG;
+    dbo->operator_fields.avg_operator.avg_name = malloc((strlen(query_command)+1)* sizeof(char));
+    strcpy(dbo->operator_fields.avg_operator.avg_name,query_command);
+    dbo->operator_fields.avg_operator.handle = malloc((strlen(handle)+1)* sizeof(char));
+    strcpy(dbo->operator_fields.avg_operator.handle, handle);
+    return dbo;
+}
+
 /**
  * parse_command takes as input the send_message from the client and then
  * parses it into the appropriate query. Stores into send_message the
@@ -327,6 +348,10 @@ DbOperator* parse_command(char* query_command, message* send_message, int client
     else if (strncmp(query_command, "print(", 6) == 0) {
         query_command += 6;
         dbo = parse_print(query_command, send_message);
+    }
+    else if (strncmp(query_command, "avg(", 4) == 0) {
+        query_command += 4;
+        dbo = parse_avg(handle, query_command);
     }
     else if (strncmp(query_command, "shutdown", 8) == 0) {
         dbo = malloc(sizeof(DbOperator));

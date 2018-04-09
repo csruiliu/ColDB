@@ -288,6 +288,99 @@ DbOperator* parse_avg(char* handle, char* query_command) {
     return dbo;
 }
 
+DbOperator* parse_sum(char* handle, char* query_command) {
+    DbOperator* dbo = malloc(sizeof(DbOperator));
+    if(has_period(query_command)) {
+        dbo->operator_fields.sum_operator.handle_type = HANDLE_COL;
+    }
+    else {
+        dbo->operator_fields.sum_operator.handle_type = HANDLE_RSL;
+    }
+    int last_char = (int)strlen(query_command) - 1;
+    if (last_char < 0 || query_command[last_char] != ')') {
+        return NULL;
+    }
+    query_command[last_char] = '\0';
+    dbo->type = SUM;
+    dbo->operator_fields.sum_operator.sum_name = malloc((strlen(query_command)+1)* sizeof(char));
+    strcpy(dbo->operator_fields.sum_operator.sum_name,query_command);
+    dbo->operator_fields.sum_operator.handle = malloc((strlen(handle)+1)* sizeof(char));
+    strcpy(dbo->operator_fields.sum_operator.handle, handle);
+    return dbo;
+}
+
+DbOperator* parse_add(char* handle, char* query_command, message* send_message) {
+    char* vec_val1 = next_token_comma(&query_command, &send_message->status);
+    char* vec_val2 = next_token_comma(&query_command, &send_message->status);
+    if (send_message->status == INCORRECT_FORMAT) {
+        return NULL;
+    }
+    int last_char = (int)strlen(vec_val2) - 1;
+    if (last_char < 0 || vec_val2[last_char] != ')') {
+        return NULL;
+    }
+    vec_val2[last_char] = '\0';
+    DbOperator* dbo = malloc(sizeof(DbOperator));
+
+    if(has_period(vec_val1)) {
+        dbo->operator_fields.add_operator.add_type1 = HANDLE_COL;
+    }
+    else {
+        dbo->operator_fields.add_operator.add_type1 = HANDLE_RSL;
+    }
+
+    if(has_period(vec_val2)) {
+        dbo->operator_fields.add_operator.add_type2 = HANDLE_COL;
+    }
+    else {
+        dbo->operator_fields.add_operator.add_type2 = HANDLE_RSL;
+    }
+    dbo->type = ADD;
+    dbo->operator_fields.add_operator.add_name1 = malloc((strlen(vec_val1)+1)* sizeof(char));
+    strcpy(dbo->operator_fields.add_operator.add_name1,vec_val1);
+    dbo->operator_fields.add_operator.add_name2 = malloc((strlen(vec_val2)+1)* sizeof(char));
+    strcpy(dbo->operator_fields.add_operator.add_name2,vec_val2);
+    dbo->operator_fields.add_operator.handle = malloc((strlen(handle)+1)* sizeof(char));
+    strcpy(dbo->operator_fields.add_operator.handle, handle);
+    return dbo;
+}
+
+DbOperator* parse_sub(char* handle, char* query_command, message* send_message) {
+    char* vec_val1 = next_token_comma(&query_command, &send_message->status);
+    char* vec_val2 = next_token_comma(&query_command, &send_message->status);
+    if (send_message->status == INCORRECT_FORMAT) {
+        return NULL;
+    }
+    int last_char = (int)strlen(vec_val2) - 1;
+    if (last_char < 0 || vec_val2[last_char] != ')') {
+        return NULL;
+    }
+    vec_val2[last_char] = '\0';
+    DbOperator* dbo = malloc(sizeof(DbOperator));
+
+    if(has_period(vec_val1)) {
+        dbo->operator_fields.sub_operator.sub_type1 = HANDLE_COL;
+    }
+    else {
+        dbo->operator_fields.sub_operator.sub_type1 = HANDLE_RSL;
+    }
+
+    if(has_period(vec_val2)) {
+        dbo->operator_fields.sub_operator.sub_type2 = HANDLE_COL;
+    }
+    else {
+        dbo->operator_fields.sub_operator.sub_type2 = HANDLE_RSL;
+    }
+    dbo->type = SUB;
+    dbo->operator_fields.sub_operator.sub_name1 = malloc((strlen(vec_val1)+1)* sizeof(char));
+    strcpy(dbo->operator_fields.sub_operator.sub_name1,vec_val1);
+    dbo->operator_fields.sub_operator.sub_name2 = malloc((strlen(vec_val2)+1)* sizeof(char));
+    strcpy(dbo->operator_fields.sub_operator.sub_name2,vec_val2);
+    dbo->operator_fields.sub_operator.handle = malloc((strlen(handle)+1)* sizeof(char));
+    strcpy(dbo->operator_fields.sub_operator.handle, handle);
+    return dbo;
+}
+
 /**
  * parse_command takes as input the send_message from the client and then
  * parses it into the appropriate query. Stores into send_message the
@@ -352,6 +445,18 @@ DbOperator* parse_command(char* query_command, message* send_message, int client
     else if (strncmp(query_command, "avg(", 4) == 0) {
         query_command += 4;
         dbo = parse_avg(handle, query_command);
+    }
+    else if (strncmp(query_command, "sum(", 4) == 0) {
+        query_command += 4;
+        dbo = parse_sum(handle, query_command);
+    }
+    else if (strncmp(query_command, "add(", 4) == 0) {
+        query_command += 4;
+        dbo = parse_add(handle, query_command, send_message);
+    }
+    else if (strncmp(query_command, "sub(", 4) == 0) {
+        query_command += 4;
+        dbo = parse_sub(handle, query_command, send_message);
     }
     else if (strncmp(query_command, "shutdown", 8) == 0) {
         dbo = malloc(sizeof(DbOperator));

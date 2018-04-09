@@ -36,6 +36,22 @@ char* generate_print_result(size_t print_num, char** print_name);
 
 int avg_col_data(char* avg_name, char* handle);
 
-int avg_rsl_data(char* avg_rsl_name, char* handle);
+int avg_rsl_data(char* avg_name, char* handle);
+
+int sum_col_data(char* sum_name, char* handle);
+
+int sum_rsl_data(char* sum_name, char* handle);
+
+int add_col_col(char* add_name1, char* add_name2, char* handle);
+
+int add_rsl_rsl(char* add_name1, char* add_name2, char* handle);
+
+int add_col_rsl(char* add_name1, char* add_name2, char* handle);
+
+int add_rsl_col(char* add_name1, char* add_name2, char* handle);
+
+int sub_col_col(char* sub_name1, char* sub_name2, char* handle);
+
+int sub_rsl_rsl(char* sub_name1, char* sub_name2, char* handle);
 
 #endif //COLDB_DB_MANAGER_H

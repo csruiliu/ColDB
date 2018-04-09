@@ -98,13 +98,13 @@ Table* create_table(char* db_name, char* tbl_name, size_t num_columns) {
 Column* create_column(char* tbl_name, char* col_name) {
 	Table* cur_tbl = get_tbl(tbl_name);
 	if(cur_tbl == NULL) {
-        log_err("the associated table doesn't exist, create table %s.\n", tbl_name);
+        log_err("[db_manager.c:create_column()] the associated table doesn't exist, create table %s.\n", tbl_name);
         return NULL;
 	}
 	if(cur_tbl->tbl_size < cur_tbl->tbl_capacity) {
         Column* col = get_col(col_name);
         if(col != NULL) {
-            log_info("column %s exists.\n", col_name);
+            log_info("[db_manager.c:create_column()] column %s exists.\n", col_name);
             return col;
         }
         col = malloc(sizeof(Column));
@@ -124,7 +124,7 @@ Column* create_column(char* tbl_name, char* col_name) {
         return col;
 	}
 	else {
-	    log_err("the associated table is full, cannot create new column %s", col_name);
+	    log_err("[db_manager.c:create_column()] the associated table is full, cannot create new column %s", col_name);
 	    return NULL;
 	}
 }
@@ -133,14 +133,14 @@ int load_data_csv(char* data_path) {
 	message_status mes_status = OK_DONE;
 	FILE *fp;
 	if((fp=fopen(data_path,"r"))==NULL) {
-		log_err("cannot load data %s\n", data_path);
+		log_err("[db_manager.c:load_data_csv()] cannot load data %s\n", data_path);
 		return 1;
 	}
 	char *line = NULL;
 	size_t len = 0;
 	int read = getline(&line, &len, fp);
 	if (read == -1) {
-		log_err("read file header failed.\n");
+		log_err("[db_manager.c:load_data_csv()] read file header failed.\n");
 		return 1;
 	}
 	char* line_copy = malloc((strlen(line)+1)* sizeof(char));
@@ -469,6 +469,7 @@ int insert_data_tbl(Table* itbl, int* row_values) {
 	for(int i = 0; i < itbl->tbl_size; ++i) {
 		Column* icol = get_col(itbl->columns[i]->col_name);
 		if(insert_data_col(icol,row_values[i],icol->col_size+i) != 0) {
+			log_err("[db_manager.c:insert_data_tbl()] insert table failed.\n");
 			return 1;
 		}
 	}
@@ -743,4 +744,274 @@ int avg_rsl_data(char* avg_rsl_name, char* handle) {
 	memcpy(rsl->payload, &avg, sizeof(double));
 	put_rsl_replace(handle,rsl);
 	return 0;
+}
+
+int sum_col_data(char* sum_col_name, char* handle) {
+	Column* sum_col = get_col(sum_col_name);
+	if (sum_col == NULL) {
+		log_err("[db_manager.c:sum_col_data()]: column didn't exist in the database.\n");
+		return 1;
+	}
+	long sum = 0;
+	int* sum_payload = sum_col->data;
+	for(int i = 0; i < sum_col->col_size; ++i) {
+		sum += sum_payload[i];
+	}
+	Result* rsl = malloc(sizeof(Result));
+	if(rsl == NULL) {
+		log_err("[db_manager.c:avg_col_data()]: init new result failed.\n");
+		return 1;
+	}
+	rsl->data_type = LONG;
+	rsl->num_tuples = 1;
+	rsl->payload = calloc(1, sizeof(long));
+	memcpy(rsl->payload, &sum, sizeof(long));
+	put_rsl_replace(handle,rsl);
+	return 0;
+}
+
+int sum_rsl_data(char* sum_rsl_name, char* handle) {
+	Result* sum_rsl = get_rsl(sum_rsl_name);
+	if (sum_rsl == NULL) {
+		log_err("[db_manager.c:sum_rsl_data()]: result didn't exist.\n");
+		return 1;
+	}
+	if(sum_rsl->data_type == FLOAT) {
+		double sum = 0;
+		double* float_sum_payload = sum_rsl->payload;
+		for(int i = 0; i < sum_rsl->num_tuples; ++i) {
+			sum += float_sum_payload[i];
+		}
+		Result* rsl = malloc(sizeof(Result));
+		if(rsl == NULL) {
+			log_err("[db_manager.c:avg_col_data()]: init new result failed.\n");
+			return 1;
+		}
+		rsl->data_type = FLOAT;
+		rsl->num_tuples = 1;
+		rsl->payload = calloc(1, sizeof(double));
+		memcpy(rsl->payload, &sum, sizeof(double));
+		put_rsl_replace(handle,rsl);
+	}
+	else {
+		long sum = 0;
+		int* int_sum_payload = sum_rsl->payload;
+		for(int i = 0; i < sum_rsl->num_tuples; ++i) {
+			sum += int_sum_payload[i];
+		}
+		Result* rsl = malloc(sizeof(Result));
+		if(rsl == NULL) {
+			log_err("[db_manager.c:avg_col_data()]: init new result failed.\n");
+			return 1;
+		}
+		rsl->data_type = LONG;
+		rsl->num_tuples = 1;
+		rsl->payload = calloc(1, sizeof(long));
+		memcpy(rsl->payload, &sum, sizeof(long));
+		put_rsl_replace(handle,rsl);
+	}
+	return 0;
+}
+
+int add_col_col(char* add_name1, char* add_name2, char* handle) {
+	Column* add1 = get_col(add_name1);
+	Column* add2 = get_col(add_name2);
+	if(add1->col_size != add2->col_size) {
+		log_err("two items in add operation have different number records.\n");
+		return 1;
+	}
+	size_t count = add1->col_size;
+	long* add_sum = calloc(count, sizeof(long));
+	for(int i = 0; i < count; ++i) {
+		add_sum[i] = add1->data[i] + add2->data[2];
+	}
+	Result* rsl = malloc(sizeof(Result));
+	rsl->num_tuples = count;
+	rsl->data_type = LONG;
+	rsl->payload = calloc(count, sizeof(long));
+	memcpy(rsl->payload, add_sum, count* sizeof(long));
+	put_rsl_replace(handle,rsl);
+	return 0;
+}
+
+int add_rsl_rsl(char* add_name1, char* add_name2, char* handle) {
+	Result* add1 = get_rsl(add_name1);
+	Result* add2 = get_rsl(add_name2);
+	if(add1->num_tuples != add2->num_tuples) {
+		log_err("two items in add operation have different number records.\n");
+		return 1;
+	}
+	size_t count = add1->num_tuples;
+	if(add1->data_type == INT && add2->data_type == INT) {
+		long* add_sum = calloc(count, sizeof(long));
+		int* add1_payload = add1->payload;
+		int* add2_payload = add2->payload;
+		for(int i = 0; i < count; ++i) {
+			add_sum[i] = add1_payload[i] + add2_payload[i];
+		}
+		Result* rsl = malloc(sizeof(Result));
+		rsl->num_tuples = count;
+		rsl->data_type = LONG;
+		rsl->payload = calloc(count, sizeof(long));
+		memcpy(rsl->payload, add_sum, count* sizeof(long));
+		put_rsl_replace(handle,rsl);
+		return 0;
+	}
+	else if (add1->data_type == FLOAT || add2->data_type == FLOAT) {
+		double* add_sum = calloc(count, sizeof(double));
+		double* add1_payload = add1->payload;
+		double* add2_payload = add2->payload;
+		for(int i = 0; i < count; ++i) {
+			add_sum[i] = add1_payload[i] + add2_payload[i];
+		}
+		Result* rsl = malloc(sizeof(Result));
+		rsl->num_tuples = count;
+		rsl->data_type = FLOAT;
+		rsl->payload = calloc(count, sizeof(double));
+		memcpy(rsl->payload, add_sum, count* sizeof(double));
+		put_rsl_replace(handle,rsl);
+		return 0;
+	}
+}
+
+int add_col_rsl(char* add_name1, char* add_name2, char* handle) {
+	Column* add1 = get_col(add_name1);
+	Result* add2 = get_rsl(add_name2);
+	if(add1->col_size != add2->num_tuples) {
+		log_err("two items in add operation have different number records.\n");
+		return 1;
+	}
+	size_t count = add1->col_size;
+	if (add2->data_type == INT) {
+		long* add_sum = calloc(count, sizeof(long));
+		int* add1_payload = add1->data;
+		int* add2_payload = add2->payload;
+		for(int i = 0; i < count; ++i) {
+			add_sum[i] = add1_payload[i] + add2_payload[i];
+		}
+		Result* rsl = malloc(sizeof(Result));
+		rsl->num_tuples = count;
+		rsl->data_type = LONG;
+		rsl->payload = calloc(count, sizeof(long));
+		memcpy(rsl->payload, add_sum, count* sizeof(long));
+		put_rsl_replace(handle,rsl);
+		return 0;
+	}
+	else if (add2->data_type == FLOAT) {
+		double* add_sum = calloc(count, sizeof(double));
+		double* add1_payload = add1->data;
+		double* add2_payload = add2->payload;
+		for(int i = 0; i < count; ++i) {
+			add_sum[i] = add1_payload[i] + add2_payload[i];
+		}
+		Result* rsl = malloc(sizeof(Result));
+		rsl->num_tuples = count;
+		rsl->data_type = FLOAT;
+		rsl->payload = calloc(count, sizeof(double));
+		memcpy(rsl->payload, add_sum, count* sizeof(double));
+		put_rsl_replace(handle,rsl);
+		return 0;
+	}
+}
+
+int add_rsl_col(char* add_name1, char* add_name2, char* handle) {
+	Result* add1 = get_rsl(add_name1);
+	Column* add2 = get_col(add_name2);
+	if(add1->num_tuples != add2->col_size) {
+		log_err("two items in add operation have different number records.\n");
+		return 1;
+	}
+	size_t count = add1->num_tuples;
+	if (add1->data_type == INT) {
+		long* add_sum = calloc(count, sizeof(long));
+		int* add1_payload = add1->payload;
+		int* add2_payload = add2->data;
+		for(int i = 0; i < count; ++i) {
+			add_sum[i] = add1_payload[i] + add2_payload[i];
+		}
+		Result* rsl = malloc(sizeof(Result));
+		rsl->num_tuples = count;
+		rsl->data_type = LONG;
+		rsl->payload = calloc(count, sizeof(long));
+		memcpy(rsl->payload, add_sum, count* sizeof(long));
+		put_rsl_replace(handle,rsl);
+		return 0;
+	}
+	else if (add1->data_type == FLOAT) {
+		double* add_sum = calloc(count, sizeof(double));
+		double* add1_payload = add1->payload;
+		double* add2_payload = (double *) add2->data;
+		for(int i = 0; i < count; ++i) {
+			add_sum[i] = add1_payload[i] + add2_payload[i];
+		}
+		Result* rsl = malloc(sizeof(Result));
+		rsl->num_tuples = count;
+		rsl->data_type = FLOAT;
+		rsl->payload = calloc(count, sizeof(double));
+		memcpy(rsl->payload, add_sum, count* sizeof(double));
+		put_rsl_replace(handle,rsl);
+		return 0;
+	}
+	return 0;
+}
+
+int sub_col_col(char* sub_name1, char* sub_name2, char* handle) {
+	Column* sub1 = get_col(sub_name1);
+	Column* sub2 = get_col(sub_name2);
+	if(sub1->col_size != sub2->col_size) {
+		log_err("two items in sub operation have different number records.\n");
+		return 1;
+	}
+	size_t count = sub1->col_size;
+	long* sub_sum = calloc(count, sizeof(long));
+	for(int i = 0; i < count; ++i) {
+		sub_sum[i] = sub1->data[i] - sub2->data[i];
+	}
+	Result* rsl = malloc(sizeof(Result));
+	rsl->num_tuples = count;
+	rsl->data_type = LONG;
+	rsl->payload = calloc(count, sizeof(long));
+	memcpy(rsl->payload, sub_sum, count* sizeof(long));
+	put_rsl_replace(handle,rsl);
+	return 0;
+}
+
+int sub_rsl_rsl(char* sub_name1, char* sub_name2, char* handle) {
+	Result* sub1 = get_rsl(sub_name1);
+	Result* sub2 = get_rsl(sub_name2);
+	if(sub1->num_tuples != sub2->num_tuples) {
+		log_err("two items in add operation have different number records.\n");
+		return 1;
+	}
+	size_t count = sub1->num_tuples;
+	if(sub1->data_type == INT && sub2->data_type == INT) {
+		long* sub_sum = calloc(count, sizeof(long));
+		int* sub1_payload = sub1->payload;
+		int* sub2_payload = sub2->payload;
+		for(int i = 0; i < count; ++i) {
+			sub_sum[i] = sub1_payload[i] - sub2_payload[i];
+		}
+		Result* rsl = malloc(sizeof(Result));
+		rsl->num_tuples = count;
+		rsl->data_type = LONG;
+		rsl->payload = calloc(count, sizeof(long));
+		memcpy(rsl->payload, sub_sum, count* sizeof(long));
+		put_rsl_replace(handle,rsl);
+		return 0;
+	}
+	else if (sub1->data_type == FLOAT || sub2->data_type == FLOAT) {
+		double* sub_sum = calloc(count, sizeof(double));
+		double* sub1_payload = sub1->payload;
+		double* sub2_payload = sub2->payload;
+		for(int i = 0; i < count; ++i) {
+			sub_sum[i] = sub1_payload[i] - sub2_payload[i];
+		}
+		Result* rsl = malloc(sizeof(Result));
+		rsl->num_tuples = count;
+		rsl->data_type = FLOAT;
+		rsl->payload = calloc(count, sizeof(double));
+		memcpy(rsl->payload, sub_sum, count* sizeof(double));
+		put_rsl_replace(handle,rsl);
+		return 0;
+	}
 }

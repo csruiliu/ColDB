@@ -25,9 +25,43 @@ typedef enum OperatorType {
     SELECT,
     FETCH,
     PRINT,
-    AVG
+    AVG,
+    SUM,
+    ADD,
+    SUB
 } OperatorType;
 
+
+/*
+ * necessary fields for Sub
+ */
+typedef struct SubOperator {
+    HandleType sub_type1;
+    HandleType sub_type2;
+    char* sub_name1;
+    char* sub_name2;
+    char* handle;
+} SubOperator;
+
+/*
+ * necessary fields for add
+ */
+typedef struct AddOperator {
+    HandleType add_type1;
+    HandleType add_type2;
+    char* add_name1;
+    char* add_name2;
+    char* handle;
+} AddOperator;
+
+/*
+ * necessary fields for sum
+ */
+typedef struct SumOperator {
+    HandleType handle_type;
+    char* sum_name;
+    char* handle;
+} SumOperator;
 
 /*
  * necessary fields for avg
@@ -173,6 +207,9 @@ typedef union OperatorFields {
     FetchOperator fetch_operator;
     PrintOperator print_operator;
     AvgOperator avg_operator;
+    SumOperator sum_operator;
+    AddOperator add_operator;
+    SubOperator sub_operator;
 } OperatorFields;
 
 /*

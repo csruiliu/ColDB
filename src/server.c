@@ -84,7 +84,6 @@ char* execute_DbOperator(DbOperator* query) {
         Column* col = create_column(full_tbl_name, full_col_name);
         if(col == NULL) {
             free_query(query);
-            log_err("[server.c:execute_DbOperator()] create column failed.\n");
             return "create column failed.\n";
         }
         free_query(query);
@@ -95,7 +94,6 @@ char* execute_DbOperator(DbOperator* query) {
         char* data_path = query->operator_fields.load_operator.data_path;
         if(load_data_csv(data_path) != 0) {
             free_query(query);
-            log_err("[server.c:execute_DbOperator()] load data into database failed.\n");
             return "load data into database failed.\n";
         }
         free_query(query);
@@ -106,7 +104,6 @@ char* execute_DbOperator(DbOperator* query) {
         Table* insert_tbl = query->operator_fields.insert_operator.insert_tbl;
         if(insert_data_tbl(insert_tbl,query->operator_fields.insert_operator.values)) {
             free_query(query);
-            log_err("[server.c:execute_DbOperator()] insert data into database failed.");
             return "insert data into database failed.\n";
         }
         free_query(query);
@@ -180,7 +177,79 @@ char* execute_DbOperator(DbOperator* query) {
                 return "get ave of data failed.\n";
             }
         }
+        free_query(query);
         return "calculate ave of data successfully.\n";
+    }
+    else if (query->type == SUM) {
+        char* sum_name = query->operator_fields.sum_operator.sum_name;
+        char* handle = query->operator_fields.sum_operator.handle;
+        if (query->operator_fields.sum_operator.handle_type == HANDLE_COL) {
+            if (sum_col_data(sum_name,handle) != 0) {
+                free_query(query);
+                return "get sum of data failed.\n";
+            }
+        }
+        else {
+            if (sum_rsl_data(sum_name,handle) != 0) {
+                free_query(query);
+                return "get sum of data failed.\n";
+            }
+        }
+        free_query(query);
+        return "calculate sum of data successfully.\n";
+    }
+    else if (query->type == ADD) {
+        char* add_name1 = query->operator_fields.add_operator.add_name1;
+        char* add_name2 = query->operator_fields.add_operator.add_name2;
+        char* handle = query->operator_fields.add_operator.handle;
+        HandleType add_type1 = query->operator_fields.add_operator.add_type1;
+        HandleType add_type2 = query->operator_fields.add_operator.add_type2;
+        if(add_type1 == HANDLE_COL && add_type2 == HANDLE_COL) {
+            if(add_col_col(add_name1,add_name2,handle) != 0) {
+                free_query(query);
+                return "get addition of data failed.\n";
+            }
+        }
+        else if(add_type1 == HANDLE_RSL && add_type2 == HANDLE_RSL) {
+            if(add_rsl_rsl(add_name1,add_name2,handle) != 0) {
+                free_query(query);
+                return "get addition of data failed.\n";
+            }
+        }
+        else if(add_type1 == HANDLE_COL && add_type2 == HANDLE_RSL) {
+            if(add_col_rsl(add_name1,add_name2,handle) != 0) {
+                free_query(query);
+                return "get addition of data failed.\n";
+            }
+        }
+        else if(add_type1 == HANDLE_RSL && add_type2 == HANDLE_COL) {
+            if(add_rsl_col(add_name1,add_name2,handle) != 0) {
+                free_query(query);
+                return "get addition of data failed.\n";
+            }
+        }
+        free_query(query);
+        return "calculate addition of data successfully.\n";
+    }
+    else if (query->type == SUB) {
+        char* sub_name1 = query->operator_fields.sub_operator.sub_name1;
+        char* sub_name2 = query->operator_fields.sub_operator.sub_name2;
+        char* handle = query->operator_fields.sub_operator.handle;
+        HandleType sub_type1 = query->operator_fields.sub_operator.sub_type1;
+        HandleType sub_type2 = query->operator_fields.sub_operator.sub_type2;
+        if(sub_type1 == HANDLE_COL && sub_type2 == HANDLE_COL) {
+            if(sub_col_col(sub_name1,sub_name2,handle) != 0) {
+                free_query(query);
+                return "get subtraction of data failed.\n";
+            }
+        }
+        else if(sub_type1 == HANDLE_RSL && sub_type2 == HANDLE_RSL) {
+            if(sub_rsl_rsl(sub_name1,sub_name2,handle) != 0) {
+                free_query(query);
+                return "get subtraction of data failed.\n";
+            }
+        }
+        return "get subtraction of data successfully.\n";
     }
     else if (query->type == PRINT) {
         size_t print_num = query->operator_fields.print_operator.print_num;
@@ -191,6 +260,7 @@ char* execute_DbOperator(DbOperator* query) {
             log_err("[server.c:execute_DbOperator()] fetch data failed.\n");
             return "fetch data failed.\n";
         }
+        free_query(query);
         return print_result;
     }
     else if (query->type == SHUTDOWN) {

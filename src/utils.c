@@ -16,6 +16,16 @@
 #define LOG_INFO 1
 
 
+bool has_comma(char *str) {
+    size_t length = strlen(str);
+    for (int i = 0; i < length; ++i) {
+        if (str[i] == ',') {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool has_period(char *str) {
     size_t length = strlen(str);
     for (int i = 0; i < length; ++i) {

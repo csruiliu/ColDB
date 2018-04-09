@@ -381,6 +381,67 @@ DbOperator* parse_sub(char* handle, char* query_command, message* send_message) 
     return dbo;
 }
 
+DbOperator* parse_max(char* handle, char* query_command, message* send_message) {
+    if(has_comma(handle)) {
+        char* max_handle_pos = next_token_comma(&handle, &send_message->status);
+        char* max_handle_value = next_token_comma(&handle, &send_message->status);
+        char* max_vec_pos = next_token_comma(&query_command, &send_message->status);
+        char* max_vec_value = next_token_comma(&query_command, &send_message->status);
+        int last_char = (int)strlen(max_vec_value) - 1;
+        if (last_char < 0 || max_vec_value[last_char] != ')') {
+            return NULL;
+        }
+        max_vec_value[last_char] = '\0';
+        DbOperator* dbo = malloc(sizeof(DbOperator));
+        dbo->type = MAX;
+        dbo->operator_fields.max_operator.max_type = MAX_POS_VALUE;
+        dbo->operator_fields.max_operator.handle_value = malloc((strlen(max_handle_value)+1)* sizeof(char));
+        strcpy(dbo->operator_fields.max_operator.handle_value,max_handle_value);
+        dbo->operator_fields.max_operator.handle_pos = malloc((strlen(max_handle_pos)+1)* sizeof(char));
+        strcpy(dbo->operator_fields.max_operator.handle_pos,max_handle_pos);
+        dbo->operator_fields.max_operator.max_vec_pos = malloc((strlen(max_vec_pos)+1)* sizeof(char));
+        strcpy(dbo->operator_fields.max_operator.max_vec_pos,max_vec_pos);
+        dbo->operator_fields.max_operator.max_vec_value = malloc((strlen(max_vec_value)+1)* sizeof(char));
+        strcpy(dbo->operator_fields.max_operator.max_vec_value,max_vec_value);
+    }
+    else {
+        int last_char = (int)strlen(query_command) - 1;
+        if (last_char < 0 || query_command[last_char] != ')') {
+            return NULL;
+        }
+        query_command[last_char] = '\0';
+        DbOperator* dbo = malloc(sizeof(DbOperator));
+        dbo->type = MAX;
+        dbo->operator_fields.max_operator.max_type = MAX_VALUE;
+        dbo->operator_fields.max_operator.handle_value = malloc((strlen(handle)+1)* sizeof(char));
+        strcpy(dbo->operator_fields.max_operator.handle_value,handle);
+        dbo->operator_fields.max_operator.max_vec_value = malloc((strlen(query_command)+1)* sizeof(char));
+        strcpy(dbo->operator_fields.max_operator.max_vec_value,query_command);
+        return dbo;
+    }
+}
+
+DbOperator* parse_min(char* handle, char* query_command, message* send_message) {
+    if(has_comma(handle)) {
+
+    }
+    else {
+        int last_char = (int)strlen(query_command) - 1;
+        if (last_char < 0 || query_command[last_char] != ')') {
+            return NULL;
+        }
+        query_command[last_char] = '\0';
+        DbOperator* dbo = malloc(sizeof(DbOperator));
+        dbo->type = MIN;
+        dbo->operator_fields.min_operator.min_type = MIN_VALUE;
+        dbo->operator_fields.min_operator.handle_value = malloc((strlen(handle)+1)* sizeof(char));
+        strcpy(dbo->operator_fields.min_operator.handle_value,handle);
+        dbo->operator_fields.min_operator.min_vec_value = malloc((strlen(query_command)+1)* sizeof(char));
+        strcpy(dbo->operator_fields.min_operator.min_vec_value,query_command);
+        return dbo;
+    }
+}
+
 /**
  * parse_command takes as input the send_message from the client and then
  * parses it into the appropriate query. Stores into send_message the
@@ -457,6 +518,14 @@ DbOperator* parse_command(char* query_command, message* send_message, int client
     else if (strncmp(query_command, "sub(", 4) == 0) {
         query_command += 4;
         dbo = parse_sub(handle, query_command, send_message);
+    }
+    else if (strncmp(query_command, "max(", 4) == 0) {
+        query_command += 4;
+        dbo = parse_max(handle, query_command, send_message);
+    }
+    else if (strncmp(query_command, "min(", 4) == 0) {
+        query_command += 4;
+        dbo = parse_min(handle, query_command, send_message);
     }
     else if (strncmp(query_command, "shutdown", 8) == 0) {
         dbo = malloc(sizeof(DbOperator));

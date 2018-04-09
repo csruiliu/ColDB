@@ -54,4 +54,12 @@ int sub_col_col(char* sub_name1, char* sub_name2, char* handle);
 
 int sub_rsl_rsl(char* sub_name1, char* sub_name2, char* handle);
 
+int max_rsl_value(char* max_vec, char* handle);
+
+int max_rsl_value_pos(char* max_vec_pos, char* max_vec_value, char* handle_pos, char* handle_value);
+
+int min_rsl_value(char* min_vec,char* handle);
+
+int min_rsl_value_pos(char* min_vec_pos, char* min_vec_value, char* handle_pos, char* handle_value);
+
 #endif //COLDB_DB_MANAGER_H

@@ -4,6 +4,16 @@
 #include "message.h"
 #include "db_fds.h"
 
+typedef enum MaxType {
+    MAX_POS_VALUE,
+    MAX_VALUE
+} MaxType;
+
+typedef enum MinType {
+    MIN_POS_VALUE,
+    MIN_VALUE
+} MinType;
+
 /*
  * tells the database what type of operator this is
  */
@@ -28,9 +38,33 @@ typedef enum OperatorType {
     AVG,
     SUM,
     ADD,
-    SUB
+    SUB,
+    MAX,
+    MIN
 } OperatorType;
 
+
+/*
+ * necessary fields for Min
+ */
+typedef struct MinOperator {
+    MinType min_type;
+    char* min_vec_pos;
+    char* min_vec_value;
+    char* handle_pos;
+    char* handle_value;
+} MinOperator;
+
+/*
+ * necessary fields for Max
+ */
+typedef struct MaxOperator {
+    MaxType max_type;
+    char* max_vec_pos;
+    char* max_vec_value;
+    char* handle_pos;
+    char* handle_value;
+} MaxOperator;
 
 /*
  * necessary fields for Sub
@@ -210,6 +244,8 @@ typedef union OperatorFields {
     SumOperator sum_operator;
     AddOperator add_operator;
     SubOperator sub_operator;
+    MaxOperator max_operator;
+    MinOperator min_operator;
 } OperatorFields;
 
 /*

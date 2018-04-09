@@ -13,6 +13,8 @@
 #include "message.h"
 
 
+bool has_comma(char *str);
+
 bool has_period(char *str);
 
 char* next_token_comma(char **tokenizer, message_status *status);

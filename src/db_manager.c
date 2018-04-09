@@ -631,7 +631,6 @@ char* generate_print_result(size_t print_num, char** print_name) {
 			row_total_length += sizeof(double);
 			data_payload_id[i] = 2;
 			data_payload_set[i] = calloc(row_num, sizeof(double));
-			log_info("ss:%0.2f\n",((double *) rsl->payload)[0]);
 			memcpy(data_payload_set[i], rsl->payload, row_num* sizeof(double));
 		}
 		else if (rsl->data_type == LONG) {
@@ -729,6 +728,7 @@ int avg_rsl_data(char* avg_rsl_name, char* handle) {
 		long* long_avg_payload = avg_rsl->payload;
 		long sum = 0;
 		for(int i = 0; i < avg_rsl->num_tuples; ++i) {
+			log_info("%d item:%d\n",i,long_avg_payload[i]);
 			sum += long_avg_payload[i];
 		}
 		avg = (double) sum / (double) avg_rsl->num_tuples;
@@ -793,9 +793,26 @@ int sum_rsl_data(char* sum_rsl_name, char* handle) {
 		memcpy(rsl->payload, &sum, sizeof(double));
 		put_rsl_replace(handle,rsl);
 	}
-	else {
+	else if (sum_rsl->data_type == INT) {
 		long sum = 0;
 		int* int_sum_payload = sum_rsl->payload;
+		for(int i = 0; i < sum_rsl->num_tuples; ++i) {
+			sum += int_sum_payload[i];
+		}
+		Result* rsl = malloc(sizeof(Result));
+		if(rsl == NULL) {
+			log_err("[db_manager.c:avg_col_data()]: init new result failed.\n");
+			return 1;
+		}
+		rsl->data_type = LONG;
+		rsl->num_tuples = 1;
+		rsl->payload = calloc(1, sizeof(long));
+		memcpy(rsl->payload, &sum, sizeof(long));
+		put_rsl_replace(handle,rsl);
+	}
+	else {
+		long sum = 0;
+		long* int_sum_payload = sum_rsl->payload;
 		for(int i = 0; i < sum_rsl->num_tuples; ++i) {
 			sum += int_sum_payload[i];
 		}
@@ -1012,6 +1029,316 @@ int sub_rsl_rsl(char* sub_name1, char* sub_name2, char* handle) {
 		rsl->payload = calloc(count, sizeof(double));
 		memcpy(rsl->payload, sub_sum, count* sizeof(double));
 		put_rsl_replace(handle,rsl);
+		return 0;
+	}
+}
+
+int max_rsl_value(char* max_vec, char* handle) {
+    Result* vrsl = get_rsl(max_vec);
+    if(vrsl == NULL) {
+        log_err("the result %s for max didn't exist in the database", max_vec);
+        return 1;
+    }
+    if(vrsl->data_type == INT) {
+        int* vrsl_payload = vrsl->payload;
+        int max = vrsl_payload[0];
+        size_t max_cnt = vrsl->num_tuples;
+        for(int i = 1; i < max_cnt; ++i) {
+            if(max < vrsl_payload[i]) {
+                max = vrsl_payload[i];
+            }
+        }
+        Result* rsl = malloc(sizeof(Result));
+        rsl->data_type = INT;
+        rsl->num_tuples = 1;
+        rsl->payload = calloc(1, sizeof(int));
+        memcpy(rsl->payload, &max, sizeof(int));
+        put_rsl_replace(handle,rsl);
+        return 0;
+    }
+    else if (vrsl->data_type == FLOAT) {
+        double* vrsl_payload = vrsl->payload;
+        double max = vrsl_payload[0];
+        size_t max_cnt = vrsl->num_tuples;
+        for(int i = 1; i < max_cnt; ++i) {
+            if(max < vrsl_payload[i]) {
+                max = vrsl_payload[i];
+            }
+        }
+        Result* rsl = malloc(sizeof(Result));
+        rsl->data_type = FLOAT;
+        rsl->num_tuples = 1;
+        rsl->payload = calloc(1, sizeof(double));
+        memcpy(rsl->payload, &max, sizeof(double));
+        put_rsl_replace(handle,rsl);
+        return 0;
+    }
+    else {
+        long* vrsl_payload = vrsl->payload;
+        long max = vrsl_payload[0];
+        size_t max_cnt = vrsl->num_tuples;
+        for(int i = 1; i < max_cnt; ++i) {
+            if(max < vrsl_payload[i]) {
+                max = vrsl_payload[i];
+            }
+        }
+        Result* rsl = malloc(sizeof(Result));
+        rsl->data_type = LONG;
+        rsl->num_tuples = 1;
+        rsl->payload = calloc(1, sizeof(long));
+        memcpy(rsl->payload, &max, sizeof(long));
+        put_rsl_replace(handle,rsl);
+        return 0;
+    }
+}
+
+int max_rsl_value_pos(char* max_vec_pos, char* max_vec_value, char* handle_pos, char* handle_value) {
+    Result* rsl_pos = get_rsl(max_vec_pos);
+    Result* rsl_value = get_rsl(max_vec_value);
+    if(rsl_pos == NULL || rsl_value == NULL) {
+        log_err("the result %s/%s for max didn't exist in the database", max_vec_pos, max_vec_value);
+        return 1;
+    }
+    if (rsl_value->data_type == INT) {
+        int* rsl_value_payload = rsl_value->payload;
+        int max = rsl_value_payload[0];
+        size_t max_cnt = rsl_value->num_tuples;
+        int pmax;
+        for(int i = 1; i < max_cnt; ++i) {
+            if(max < rsl_value_payload[i]) {
+                max = rsl_value_payload[i];
+                pmax = i;
+            }
+        }
+        int* max_pos_payload = rsl_pos->payload;
+        int max_pos = max_pos_payload[pmax];
+
+        Result* vrsl = malloc(sizeof(Result));
+        vrsl->data_type = INT;
+        vrsl->num_tuples = 1;
+        vrsl->payload = calloc(1, sizeof(int));
+        memcpy(vrsl->payload, &max, sizeof(int));
+        put_rsl_replace(handle_value,vrsl);
+
+        Result* prsl = malloc(sizeof(Result));
+        prsl->data_type = INT;
+        prsl->num_tuples = 1;
+        prsl->payload = calloc(1, sizeof(int));
+        memcpy(prsl->payload, &max_pos, sizeof(int));
+        put_rsl_replace(handle_pos,prsl);
+        return 0;
+    }
+    else if (rsl_value->data_type == FLOAT) {
+        double* rsl_value_payload = rsl_value->payload;
+        double max = rsl_value_payload[0];
+        size_t max_cnt = rsl_value->num_tuples;
+        int pmax;
+        for(int i = 1; i < max_cnt; ++i) {
+            if(max < rsl_value_payload[i]) {
+                max = rsl_value_payload[i];
+                pmax = i;
+            }
+        }
+        int* max_pos_payload = rsl_pos->payload;
+        int max_pos = max_pos_payload[pmax];
+
+        Result* vrsl = malloc(sizeof(Result));
+        vrsl->data_type = FLOAT;
+        vrsl->num_tuples = 1;
+        vrsl->payload = calloc(1, sizeof(double));
+        memcpy(vrsl->payload, &max, sizeof(double));
+        put_rsl_replace(handle_value,vrsl);
+
+        Result* prsl = malloc(sizeof(Result));
+        prsl->data_type = INT;
+        prsl->num_tuples = 1;
+        prsl->payload = calloc(1, sizeof(int));
+        memcpy(prsl->payload, &max_pos, sizeof(int));
+        put_rsl_replace(handle_pos,prsl);
+        return 0;
+    }
+    else {
+        long* rsl_value_payload = rsl_value->payload;
+        long max = rsl_value_payload[0];
+        size_t max_cnt = rsl_value->num_tuples;
+        int pmax;
+        for(int i = 1; i < max_cnt; ++i) {
+            if(max < rsl_value_payload[i]) {
+                max = rsl_value_payload[i];
+                pmax = i;
+            }
+        }
+        int* max_pos_payload = rsl_pos->payload;
+        int max_pos = max_pos_payload[pmax];
+
+        Result* vrsl = malloc(sizeof(Result));
+        vrsl->data_type = LONG;
+        vrsl->num_tuples = 1;
+        vrsl->payload = calloc(1, sizeof(long));
+        memcpy(vrsl->payload, &max, sizeof(long));
+        put_rsl_replace(handle_value,vrsl);
+
+        Result* prsl = malloc(sizeof(Result));
+        prsl->data_type = INT;
+        prsl->num_tuples = 1;
+        prsl->payload = calloc(1, sizeof(int));
+        memcpy(prsl->payload, &max_pos, sizeof(int));
+        put_rsl_replace(handle_pos,prsl);
+        return 0;
+    }
+}
+
+int min_rsl_value(char* min_vec,char* handle) {
+	Result* vrsl = get_rsl(min_vec);
+	if(vrsl == NULL) {
+		log_err("the result %s for min didn't exist in the database", min_vec);
+		return 1;
+	}
+	if(vrsl->data_type == INT) {
+		int* vrsl_payload = vrsl->payload;
+		int min = vrsl_payload[0];
+		size_t min_cnt = vrsl->num_tuples;
+		for(int i = 1; i < min_cnt; ++i) {
+			if(min > vrsl_payload[i]) {
+				min = vrsl_payload[i];
+			}
+		}
+		Result* rsl = malloc(sizeof(Result));
+		rsl->data_type = INT;
+		rsl->num_tuples = 1;
+		rsl->payload = calloc(1, sizeof(int));
+		memcpy(rsl->payload, &min, sizeof(int));
+		put_rsl_replace(handle,rsl);
+		return 0;
+	}
+	else if (vrsl->data_type == FLOAT) {
+		double* vrsl_payload = vrsl->payload;
+		double min = vrsl_payload[0];
+		size_t min_cnt = vrsl->num_tuples;
+		for(int i = 1; i < min_cnt; ++i) {
+			if(min > vrsl_payload[i]) {
+				min = vrsl_payload[i];
+			}
+		}
+		Result* rsl = malloc(sizeof(Result));
+		rsl->data_type = FLOAT;
+		rsl->num_tuples = 1;
+		rsl->payload = calloc(1, sizeof(double));
+		memcpy(rsl->payload, &min, sizeof(double));
+		put_rsl_replace(handle,rsl);
+		return 0;
+	}
+	else {
+		long* vrsl_payload = vrsl->payload;
+		long min = vrsl_payload[0];
+		size_t min_cnt = vrsl->num_tuples;
+		for(int i = 1; i < min_cnt; ++i) {
+			if(min > vrsl_payload[i]) {
+				min = vrsl_payload[i];
+			}
+		}
+		Result* rsl = malloc(sizeof(Result));
+		rsl->data_type = LONG;
+		rsl->num_tuples = 1;
+		rsl->payload = calloc(1, sizeof(long));
+		memcpy(rsl->payload, &min, sizeof(long));
+		put_rsl_replace(handle,rsl);
+		return 0;
+	}
+}
+
+int min_rsl_value_pos(char* min_vec_pos, char* min_vec_value, char* handle_pos, char* handle_value) {
+	Result* rsl_pos = get_rsl(min_vec_pos);
+	Result* rsl_value = get_rsl(min_vec_value);
+	if(rsl_pos == NULL || rsl_value == NULL) {
+		log_err("the result %s/%s for min didn't exist in the database", min_vec_pos, min_vec_value);
+		return 1;
+	}
+	if (rsl_value->data_type == INT) {
+		int* rsl_value_payload = rsl_value->payload;
+		int min = rsl_value_payload[0];
+		size_t min_cnt = rsl_value->num_tuples;
+		int pmin;
+		for(int i = 1; i < min_cnt; ++i) {
+			if(min > rsl_value_payload[i]) {
+				min = rsl_value_payload[i];
+				pmin = i;
+			}
+		}
+		int* min_pos_payload = rsl_pos->payload;
+		int min_pos = min_pos_payload[pmin];
+
+		Result* vrsl = malloc(sizeof(Result));
+		vrsl->data_type = INT;
+		vrsl->num_tuples = 1;
+		vrsl->payload = calloc(1, sizeof(int));
+		memcpy(vrsl->payload, &min, sizeof(int));
+		put_rsl_replace(handle_value,vrsl);
+
+		Result* prsl = malloc(sizeof(Result));
+		prsl->data_type = INT;
+		prsl->num_tuples = 1;
+		prsl->payload = calloc(1, sizeof(int));
+		memcpy(prsl->payload, &min_pos, sizeof(int));
+		put_rsl_replace(handle_pos,prsl);
+		return 0;
+	}
+	else if (rsl_value->data_type == FLOAT) {
+		double* rsl_value_payload = rsl_value->payload;
+		double min = rsl_value_payload[0];
+		size_t min_cnt = rsl_value->num_tuples;
+		int pmin;
+		for(int i = 1; i < min_cnt; ++i) {
+			if(min > rsl_value_payload[i]) {
+				min = rsl_value_payload[i];
+				pmin = i;
+			}
+		}
+		int* min_pos_payload = rsl_pos->payload;
+		int min_pos = min_pos_payload[pmin];
+
+		Result* vrsl = malloc(sizeof(Result));
+		vrsl->data_type = FLOAT;
+		vrsl->num_tuples = 1;
+		vrsl->payload = calloc(1, sizeof(double));
+		memcpy(vrsl->payload, &min, sizeof(double));
+		put_rsl_replace(handle_value,vrsl);
+
+		Result* prsl = malloc(sizeof(Result));
+		prsl->data_type = INT;
+		prsl->num_tuples = 1;
+		prsl->payload = calloc(1, sizeof(int));
+		memcpy(prsl->payload, &min_pos, sizeof(int));
+		put_rsl_replace(handle_pos,prsl);
+		return 0;
+	}
+	else {
+		long* rsl_value_payload = rsl_value->payload;
+		long min = rsl_value_payload[0];
+		size_t min_cnt = rsl_value->num_tuples;
+		int pmin;
+		for(int i = 1; i < min_cnt; ++i) {
+			if(min > rsl_value_payload[i]) {
+				min = rsl_value_payload[i];
+				pmin = i;
+			}
+		}
+		int* min_pos_payload = rsl_pos->payload;
+		int min_pos = min_pos_payload[pmin];
+
+		Result* vrsl = malloc(sizeof(Result));
+		vrsl->data_type = LONG;
+		vrsl->num_tuples = 1;
+		vrsl->payload = calloc(1, sizeof(long));
+		memcpy(vrsl->payload, &min, sizeof(long));
+		put_rsl_replace(handle_value,vrsl);
+
+		Result* prsl = malloc(sizeof(Result));
+		prsl->data_type = INT;
+		prsl->num_tuples = 1;
+		prsl->payload = calloc(1, sizeof(int));
+		memcpy(prsl->payload, &min_pos, sizeof(int));
+		put_rsl_replace(handle_pos,prsl);
 		return 0;
 	}
 }

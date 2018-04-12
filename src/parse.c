@@ -527,6 +527,14 @@ DbOperator* parse_command(char* query_command, message* send_message, int client
         query_command += 4;
         dbo = parse_min(handle, query_command, send_message);
     }
+    else if (strncmp(query_command, "batch_queries()", 13) == 0) {
+        dbo = malloc(sizeof(DbOperator));
+        dbo->type = BATCH_QUERY;
+    }
+    else if (strncmp(query_command, "batch_execute()", 15) == 0) {
+        dbo = malloc(sizeof(DbOperator));
+        dbo->type = BATCH_EXEC;
+    }
     else if (strncmp(query_command, "shutdown", 8) == 0) {
         dbo = malloc(sizeof(DbOperator));
         dbo->type = SHUTDOWN;

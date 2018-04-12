@@ -23,6 +23,7 @@
 #include "db_manager.h"
 #include "common.h"
 #include "utils.h"
+#include "db_batch.h"
 
 #define DEFAULT_QUERY_BUFFER_SIZE 1024
 
@@ -44,6 +45,292 @@ void free_query(DbOperator* query) {
     free(query);
 }
 
+char* exec_create_db(DbOperator* query) {
+    char* db_name = query->operator_fields.create_db_operator.db_name;
+    current_db = create_db(db_name);
+    if(current_db == NULL) {
+        free_query(query);
+        log_err("[server.c:execute_DbOperator()] create database failed.\n");
+        return "create database failed.\n";
+    }
+    free_query(query);
+    log_info("create database successfully.\n");
+    return "create database successfully.\n";
+}
+
+char* exec_create_tbl(DbOperator* query) {
+    char* db_name = query->operator_fields.create_tbl_operator.db_name;
+    char* tbl_name = query->operator_fields.create_tbl_operator.tbl_name;
+    size_t col_count = query->operator_fields.create_tbl_operator.col_count;
+    Table* tbl = create_table(db_name, tbl_name, col_count);
+    if(tbl == NULL) {
+        free_query(query);
+        log_err("[server.c:execute_DbOperator()] create table failed.\n");
+        return "create table failed.\n";
+    }
+    free_query(query);
+    log_info("create table successfully.\n");
+    return "create table successfully.\n";
+}
+
+char* exec_create_col(DbOperator* query) {
+    char* full_tbl_name = query->operator_fields.create_col_operator.tbl_name;
+    char* full_col_name = query->operator_fields.create_col_operator.col_name;
+    Column* col = create_column(full_tbl_name, full_col_name);
+    if(col == NULL) {
+        free_query(query);
+        return "create column failed.\n";
+    }
+    free_query(query);
+    log_info("create column successfully.\n");
+    return "create column successfully.\n";
+}
+
+char* exec_load(DbOperator* query) {
+    char* data_path = query->operator_fields.load_operator.data_path;
+    if(load_data_csv(data_path) != 0) {
+        free_query(query);
+        return "load data into database failed.\n";
+    }
+    free_query(query);
+    log_info("load data into database successfully.\n");
+    return "load data into database successfully.\n";
+}
+
+char* exec_insert(DbOperator* query) {
+    Table* insert_tbl = query->operator_fields.insert_operator.insert_tbl;
+    if(insert_data_tbl(insert_tbl,query->operator_fields.insert_operator.values)) {
+        free_query(query);
+        return "insert data into database failed.\n";
+    }
+    free_query(query);
+    log_info("insert data into database successfully.\n");
+    return "insert data into database successfully.\n";
+}
+
+char* exec_select(DbOperator* query) {
+    if(query->operator_fields.select_operator.selectType == HANDLE_COL) {
+        char* select_col_name = query->operator_fields.select_operator.select_col;
+        char* handle = query->operator_fields.select_operator.handle;
+        char* pre_range = query->operator_fields.select_operator.pre_range;
+        char* post_range = query->operator_fields.select_operator.post_range;
+        Column* scol = get_col(select_col_name);
+        if(scol == NULL) {
+            log_err("[server.c:execute_DbOperator()] column didn't exist in the database.\n");
+            return "column didn't exist in the database.\n";
+        }
+        if (scol->idx_type == UNIDX) {
+            if(select_data_col_unidx(scol, handle, pre_range, post_range) != 0) {
+                free_query(query);
+                log_err("[server.c:execute_DbOperator()] select data from column in database failed.\n");
+                return "select data from column in database failed.\n";
+            }
+        }
+        free_query(query);
+        log_info("select data from column in database successfully.\n");
+        return "select data from column in database successfully.\n";
+    }
+    else {
+        char* select_rsl_pos = query->operator_fields.select_operator.select_rsl_pos;
+        char* select_rsl_val = query->operator_fields.select_operator.select_rsl_val;
+        char* handle = query->operator_fields.select_operator.handle;
+        char* pre_range = query->operator_fields.select_operator.pre_range;
+        char* post_range = query->operator_fields.select_operator.post_range;
+        Result* srsl_pos = get_rsl(select_rsl_pos);
+        Result* srsl_val = get_rsl(select_rsl_val);
+        if(select_data_rsl(srsl_pos, srsl_val, handle, pre_range, post_range) != 0) {
+            free_query(query);
+            log_err("[server.c:execute_DbOperator()] select data from result in database failed.\n");
+            return "select data from result in database failed.\n";
+        }
+        free_query(query);
+        log_info("select data from result in database successfully.\n");
+        return "select data from result in database successfully.\n";
+    }
+}
+
+char* exec_fetch(DbOperator* query) {
+    char* col_val_name = query->operator_fields.fetch_operator.col_var_name;
+    char* rsl_vec_pos = query->operator_fields.fetch_operator.rsl_vec_pos;
+    char* handle = query->operator_fields.fetch_operator.handle;
+    if(fetch_col_data(col_val_name,rsl_vec_pos,handle) != 0) {
+        free_query(query);
+        return "fetch data failed.\n";
+    }
+    free_query(query);
+    log_info("[server.c:execute_DbOperator()] fetch data successfully.\n");
+    return "fetch data successfully.\n";
+}
+
+char* exec_aggr_avg(DbOperator* query) {
+    char* avg_name = query->operator_fields.avg_operator.avg_name;
+    char* handle = query->operator_fields.avg_operator.handle;
+    if (query->operator_fields.avg_operator.handle_type == HANDLE_COL) {
+        if (avg_col_data(avg_name,handle) != 0) {
+            free_query(query);
+            return "get ave of data failed.\n";
+        }
+    }
+    else {
+        if (avg_rsl_data(avg_name,handle) != 0) {
+            free_query(query);
+            return "get ave of data failed.\n";
+        }
+    }
+    free_query(query);
+    return "calculate ave of data successfully.\n";
+}
+
+char* exec_aggr_sum(DbOperator* query) {
+    char* sum_name = query->operator_fields.sum_operator.sum_name;
+    char* handle = query->operator_fields.sum_operator.handle;
+    if (query->operator_fields.sum_operator.handle_type == HANDLE_COL) {
+        if (sum_col_data(sum_name,handle) != 0) {
+            free_query(query);
+            return "get sum of data failed.\n";
+        }
+    }
+    else {
+        if (sum_rsl_data(sum_name,handle) != 0) {
+            free_query(query);
+            return "get sum of data failed.\n";
+        }
+    }
+    free_query(query);
+    return "calculate sum of data successfully.\n";
+}
+
+char* exec_aggr_add(DbOperator* query) {
+    char* add_name1 = query->operator_fields.add_operator.add_name1;
+    char* add_name2 = query->operator_fields.add_operator.add_name2;
+    char* handle = query->operator_fields.add_operator.handle;
+    HandleType add_type1 = query->operator_fields.add_operator.add_type1;
+    HandleType add_type2 = query->operator_fields.add_operator.add_type2;
+    if(add_type1 == HANDLE_COL && add_type2 == HANDLE_COL) {
+        if(add_col_col(add_name1,add_name2,handle) != 0) {
+            free_query(query);
+            return "get addition of data failed.\n";
+        }
+    }
+    else if(add_type1 == HANDLE_RSL && add_type2 == HANDLE_RSL) {
+        if(add_rsl_rsl(add_name1,add_name2,handle) != 0) {
+            free_query(query);
+            return "get addition of data failed.\n";
+        }
+    }
+    else if(add_type1 == HANDLE_COL && add_type2 == HANDLE_RSL) {
+        if(add_col_rsl(add_name1,add_name2,handle) != 0) {
+            free_query(query);
+            return "get addition of data failed.\n";
+        }
+    }
+    else if(add_type1 == HANDLE_RSL && add_type2 == HANDLE_COL) {
+        if(add_rsl_col(add_name1,add_name2,handle) != 0) {
+            free_query(query);
+            return "get addition of data failed.\n";
+        }
+    }
+    free_query(query);
+    return "calculate addition of data successfully.\n";
+}
+
+char* exec_aggr_sub(DbOperator* query) {
+    char* sub_name1 = query->operator_fields.sub_operator.sub_name1;
+    char* sub_name2 = query->operator_fields.sub_operator.sub_name2;
+    char* handle = query->operator_fields.sub_operator.handle;
+    HandleType sub_type1 = query->operator_fields.sub_operator.sub_type1;
+    HandleType sub_type2 = query->operator_fields.sub_operator.sub_type2;
+    if(sub_type1 == HANDLE_COL && sub_type2 == HANDLE_COL) {
+        if(sub_col_col(sub_name1,sub_name2,handle) != 0) {
+            free_query(query);
+            return "get subtraction of data failed.\n";
+        }
+    }
+    else if(sub_type1 == HANDLE_RSL && sub_type2 == HANDLE_RSL) {
+        if(sub_rsl_rsl(sub_name1,sub_name2,handle) != 0) {
+            free_query(query);
+            return "get subtraction of data failed.\n";
+        }
+    }
+    return "get subtraction of data successfully.\n";
+}
+
+char* exec_aggr_max(DbOperator* query) {
+    if(query->operator_fields.max_operator.max_type == MAX_VALUE) {
+        char* handle = query->operator_fields.max_operator.handle_value;
+        char* max_vec = query->operator_fields.max_operator.max_vec_value;
+        if (max_rsl_value(max_vec,handle) != 0) {
+            free_query(query);
+            return "get max of data failed.\n";
+        }
+        return "get max of data successfully.\n";
+    }
+    else {
+        char* handle_value = query->operator_fields.max_operator.handle_value;
+        char* handle_pos = query->operator_fields.max_operator.handle_pos;
+        char* max_vec_value = query->operator_fields.max_operator.max_vec_value;
+        char* max_vec_pos = query->operator_fields.max_operator.max_vec_pos;
+        if(max_rsl_value_pos(max_vec_pos,max_vec_value,handle_pos,handle_value) != 0) {
+            free_query(query);
+            return "get max of data and regarding position failed.\n";
+        }
+        return "get max of data and regarding position successfully.\n";
+    }
+}
+
+char* exec_aggr_min(DbOperator* query) {
+    if(query->operator_fields.min_operator.min_type == MAX_VALUE) {
+        char* handle = query->operator_fields.min_operator.handle_value;
+        char* min_vec = query->operator_fields.min_operator.min_vec_value;
+        if (min_rsl_value(min_vec,handle) != 0) {
+            free_query(query);
+            return "get min of data failed.\n";
+        }
+        return "get min of data successfully.\n";
+    }
+    else {
+        char* handle_value = query->operator_fields.min_operator.handle_value;
+        char* handle_pos = query->operator_fields.min_operator.handle_pos;
+        char* min_vec_value = query->operator_fields.min_operator.min_vec_value;
+        char* min_vec_pos = query->operator_fields.min_operator.min_vec_pos;
+        if(min_rsl_value_pos(min_vec_pos,min_vec_value,handle_pos,handle_value) != 0) {
+            free_query(query);
+            return "get min of data and regarding position failed.\n";
+        }
+        return "get min of data and regarding position successfully.\n";
+    }
+}
+
+char* set_batch_query(DbOperator* query) {
+    setUseBatch(1);
+}
+
+char* exec_print(DbOperator* query) {
+    size_t print_num = query->operator_fields.print_operator.print_num;
+    char** print_name = query->operator_fields.print_operator.print_name;
+    char* print_result = generate_print_result(print_num, print_name);
+    if (print_result == NULL){
+        free_query(query);
+        log_err("[server.c:execute_DbOperator()] fetch data failed.\n");
+        return "fetch data failed.\n";
+    }
+    free_query(query);
+    return print_result;
+}
+
+char* exec_shutdown(DbOperator* query) {
+    if(persist_data_csv() != 0) {
+        log_err("persist all the data failed.\n");
+    }
+    free_query(query);
+    free_db_store();
+    free_tbl_store();
+    free_col_store();
+    free_rsl_store();
+    log_info("persist all the data and shutdown the server.\n");
+    return "persist all the data and shutdown the server.\n";
+}
+
 /** execute_DbOperator takes as input the DbOperator and executes the query.
  * This should be replaced in your implementation (and its implementation possibly moved to a different file).
  * It is currently here so that you can verify that your server and client can send messages.
@@ -53,270 +340,52 @@ char* execute_DbOperator(DbOperator* query) {
         return "unsupported command, try again.\n";
     }
     else if (query->type == CREATE_DB) {
-        char* db_name = query->operator_fields.create_db_operator.db_name;
-        current_db = create_db(db_name);
-        if(current_db == NULL) {
-            free_query(query);
-            log_err("[server.c:execute_DbOperator()] create database failed.\n");
-            return "create database failed.\n";
-        }
-        free_query(query);
-        log_info("create database successfully.\n");
-        return "create database successfully.\n";
+        return exec_create_db(query);
     }
     else if (query->type == CREATE_TBL) {
-        char* db_name = query->operator_fields.create_tbl_operator.db_name;
-        char* tbl_name = query->operator_fields.create_tbl_operator.tbl_name;
-        size_t col_count = query->operator_fields.create_tbl_operator.col_count;
-        Table* tbl = create_table(db_name, tbl_name, col_count);
-        if(tbl == NULL) {
-            free_query(query);
-            log_err("[server.c:execute_DbOperator()] create table failed.\n");
-            return "create table failed.\n";
-        }
-        free_query(query);
-        log_info("create table successfully.\n");
-        return "create table successfully.\n";
+        return exec_create_tbl(query);
     }
     else if (query->type == CREATE_COL){
-        char* full_tbl_name = query->operator_fields.create_col_operator.tbl_name;
-        char* full_col_name = query->operator_fields.create_col_operator.col_name;
-        Column* col = create_column(full_tbl_name, full_col_name);
-        if(col == NULL) {
-            free_query(query);
-            return "create column failed.\n";
-        }
-        free_query(query);
-        log_info("create column successfully.\n");
-        return "create column successfully.\n";
+        return exec_create_col(query);
     }
     else if (query->type == LOAD) {
-        char* data_path = query->operator_fields.load_operator.data_path;
-        if(load_data_csv(data_path) != 0) {
-            free_query(query);
-            return "load data into database failed.\n";
-        }
-        free_query(query);
-        log_info("load data into database successfully.\n");
-        return "load data into database successfully.\n";
+        return exec_load(query);
     }
     else if (query->type == INSERT) {
-        Table* insert_tbl = query->operator_fields.insert_operator.insert_tbl;
-        if(insert_data_tbl(insert_tbl,query->operator_fields.insert_operator.values)) {
-            free_query(query);
-            return "insert data into database failed.\n";
-        }
-        free_query(query);
-        log_info("insert data into database successfully.\n");
-        return "insert data into database successfully.\n";
+        return exec_insert(query);
     }
     else if (query->type == SELECT) {
-        if(query->operator_fields.select_operator.selectType == HANDLE_COL) {
-            char* select_col_name = query->operator_fields.select_operator.select_col;
-            char* handle = query->operator_fields.select_operator.handle;
-            char* pre_range = query->operator_fields.select_operator.pre_range;
-            char* post_range = query->operator_fields.select_operator.post_range;
-            Column* scol = get_col(select_col_name);
-            if(scol == NULL) {
-                log_err("[server.c:execute_DbOperator()] column didn't exist in the database.\n");
-                return "column didn't exist in the database.\n";
-            }
-            if (scol->idx_type == UNIDX) {
-                if(select_data_col_unidx(scol, handle, pre_range, post_range) != 0) {
-                    free_query(query);
-                    log_err("[server.c:execute_DbOperator()] select data from column in database failed.\n");
-                    return "select data from column in database failed.\n";
-                }
-            }
-            free_query(query);
-            log_info("select data from column in database successfully.\n");
-            return "select data from column in database successfully.\n";
-        }
-        else {
-            char* select_rsl_pos = query->operator_fields.select_operator.select_rsl_pos;
-            char* select_rsl_val = query->operator_fields.select_operator.select_rsl_val;
-            char* handle = query->operator_fields.select_operator.handle;
-            char* pre_range = query->operator_fields.select_operator.pre_range;
-            char* post_range = query->operator_fields.select_operator.post_range;
-            Result* srsl_pos = get_rsl(select_rsl_pos);
-            Result* srsl_val = get_rsl(select_rsl_val);
-            if(select_data_rsl(srsl_pos, srsl_val, handle, pre_range, post_range) != 0) {
-                free_query(query);
-                log_err("[server.c:execute_DbOperator()] select data from result in database failed.\n");
-                return "select data from result in database failed.\n";
-            }
-            free_query(query);
-            log_info("select data from result in database successfully.\n");
-            return "select data from result in database successfully.\n";
-        }
+        return exec_select(query);
     }
     else if (query->type == FETCH) {
-        char* col_val_name = query->operator_fields.fetch_operator.col_var_name;
-        char* rsl_vec_pos = query->operator_fields.fetch_operator.rsl_vec_pos;
-        char* handle = query->operator_fields.fetch_operator.handle;
-        if(fetch_col_data(col_val_name,rsl_vec_pos,handle) != 0) {
-            free_query(query);
-            return "fetch data failed.\n";
-        }
-        free_query(query);
-        log_info("[server.c:execute_DbOperator()] fetch data successfully.\n");
-        return "fetch data successfully.\n";
+        return exec_fetch(query);
     }
     else if (query->type == AVG) {
-        char* avg_name = query->operator_fields.avg_operator.avg_name;
-        char* handle = query->operator_fields.avg_operator.handle;
-        if (query->operator_fields.avg_operator.handle_type == HANDLE_COL) {
-            if (avg_col_data(avg_name,handle) != 0) {
-                free_query(query);
-                return "get ave of data failed.\n";
-            }
-        }
-        else {
-            if (avg_rsl_data(avg_name,handle) != 0) {
-                free_query(query);
-                return "get ave of data failed.\n";
-            }
-        }
-        free_query(query);
-        return "calculate ave of data successfully.\n";
+        return exec_aggr_avg(query);
     }
     else if (query->type == SUM) {
-        char* sum_name = query->operator_fields.sum_operator.sum_name;
-        char* handle = query->operator_fields.sum_operator.handle;
-        if (query->operator_fields.sum_operator.handle_type == HANDLE_COL) {
-            if (sum_col_data(sum_name,handle) != 0) {
-                free_query(query);
-                return "get sum of data failed.\n";
-            }
-        }
-        else {
-            if (sum_rsl_data(sum_name,handle) != 0) {
-                free_query(query);
-                return "get sum of data failed.\n";
-            }
-        }
-        free_query(query);
-        return "calculate sum of data successfully.\n";
+        return exec_aggr_sum(query);
     }
     else if (query->type == ADD) {
-        char* add_name1 = query->operator_fields.add_operator.add_name1;
-        char* add_name2 = query->operator_fields.add_operator.add_name2;
-        char* handle = query->operator_fields.add_operator.handle;
-        HandleType add_type1 = query->operator_fields.add_operator.add_type1;
-        HandleType add_type2 = query->operator_fields.add_operator.add_type2;
-        if(add_type1 == HANDLE_COL && add_type2 == HANDLE_COL) {
-            if(add_col_col(add_name1,add_name2,handle) != 0) {
-                free_query(query);
-                return "get addition of data failed.\n";
-            }
-        }
-        else if(add_type1 == HANDLE_RSL && add_type2 == HANDLE_RSL) {
-            if(add_rsl_rsl(add_name1,add_name2,handle) != 0) {
-                free_query(query);
-                return "get addition of data failed.\n";
-            }
-        }
-        else if(add_type1 == HANDLE_COL && add_type2 == HANDLE_RSL) {
-            if(add_col_rsl(add_name1,add_name2,handle) != 0) {
-                free_query(query);
-                return "get addition of data failed.\n";
-            }
-        }
-        else if(add_type1 == HANDLE_RSL && add_type2 == HANDLE_COL) {
-            if(add_rsl_col(add_name1,add_name2,handle) != 0) {
-                free_query(query);
-                return "get addition of data failed.\n";
-            }
-        }
-        free_query(query);
-        return "calculate addition of data successfully.\n";
+        return exec_aggr_add(query);
     }
     else if (query->type == SUB) {
-        char* sub_name1 = query->operator_fields.sub_operator.sub_name1;
-        char* sub_name2 = query->operator_fields.sub_operator.sub_name2;
-        char* handle = query->operator_fields.sub_operator.handle;
-        HandleType sub_type1 = query->operator_fields.sub_operator.sub_type1;
-        HandleType sub_type2 = query->operator_fields.sub_operator.sub_type2;
-        if(sub_type1 == HANDLE_COL && sub_type2 == HANDLE_COL) {
-            if(sub_col_col(sub_name1,sub_name2,handle) != 0) {
-                free_query(query);
-                return "get subtraction of data failed.\n";
-            }
-        }
-        else if(sub_type1 == HANDLE_RSL && sub_type2 == HANDLE_RSL) {
-            if(sub_rsl_rsl(sub_name1,sub_name2,handle) != 0) {
-                free_query(query);
-                return "get subtraction of data failed.\n";
-            }
-        }
-        return "get subtraction of data successfully.\n";
+        return exec_aggr_sub(query);
     }
     else if (query->type == MAX) {
-        if(query->operator_fields.max_operator.max_type == MAX_VALUE) {
-            char* handle = query->operator_fields.max_operator.handle_value;
-            char* max_vec = query->operator_fields.max_operator.max_vec_value;
-            if (max_rsl_value(max_vec,handle) != 0) {
-                free_query(query);
-                return "get max of data failed.\n";
-            }
-            return "get max of data successfully.\n";
-        }
-        else {
-            char* handle_value = query->operator_fields.max_operator.handle_value;
-            char* handle_pos = query->operator_fields.max_operator.handle_pos;
-            char* max_vec_value = query->operator_fields.max_operator.max_vec_value;
-            char* max_vec_pos = query->operator_fields.max_operator.max_vec_pos;
-            if(max_rsl_value_pos(max_vec_pos,max_vec_value,handle_pos,handle_value) != 0) {
-                free_query(query);
-                return "get max of data and regarding position failed.\n";
-            }
-            return "get max of data and regarding position successfully.\n";
-        }
+        return exec_aggr_max(query);
     }
     else if (query->type == MIN) {
-        if(query->operator_fields.min_operator.min_type == MAX_VALUE) {
-            char* handle = query->operator_fields.min_operator.handle_value;
-            char* min_vec = query->operator_fields.min_operator.min_vec_value;
-            if (min_rsl_value(min_vec,handle) != 0) {
-                free_query(query);
-                return "get min of data failed.\n";
-            }
-            return "get min of data successfully.\n";
-        }
-        else {
-            char* handle_value = query->operator_fields.min_operator.handle_value;
-            char* handle_pos = query->operator_fields.min_operator.handle_pos;
-            char* min_vec_value = query->operator_fields.min_operator.min_vec_value;
-            char* min_vec_pos = query->operator_fields.min_operator.min_vec_pos;
-            if(min_rsl_value_pos(min_vec_pos,min_vec_value,handle_pos,handle_value) != 0) {
-                free_query(query);
-                return "get min of data and regarding position failed.\n";
-            }
-            return "get min of data and regarding position successfully.\n";
-        }
+        return exec_aggr_min(query);
+    }
+    else if (query->type == BATCH_QUERY) {
+        return set_batch_query(query);
     }
     else if (query->type == PRINT) {
-        size_t print_num = query->operator_fields.print_operator.print_num;
-        char** print_name = query->operator_fields.print_operator.print_name;
-        char* print_result = generate_print_result(print_num, print_name);
-        if (print_result == NULL){
-            free_query(query);
-            log_err("[server.c:execute_DbOperator()] fetch data failed.\n");
-            return "fetch data failed.\n";
-        }
-        free_query(query);
-        return print_result;
+        return exec_print(query);
     }
     else if (query->type == SHUTDOWN) {
-        if(persist_data_csv() != 0) {
-            log_err("persist all the data failed.\n");
-        }
-        free_db_store();
-        free_tbl_store();
-        free_col_store();
-        free_rsl_store();
-        log_info("persist all the data and shutdown the server.\n");
-        return "persist all the data and shutdown the server.\n";
+        return exec_shutdown(query);
     }
     else {
         free(query);
@@ -324,6 +393,8 @@ char* execute_DbOperator(DbOperator* query) {
         return "unsupported command, try again.\n";
     }
 }
+
+
 
 /**
  * handle_client(client_socket)

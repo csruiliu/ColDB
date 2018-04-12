@@ -40,7 +40,9 @@ typedef enum OperatorType {
     ADD,
     SUB,
     MAX,
-    MIN
+    MIN,
+    BATCH_QUERY,
+    BATCH_EXEC
 } OperatorType;
 
 

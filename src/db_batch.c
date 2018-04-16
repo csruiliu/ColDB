@@ -27,12 +27,13 @@ int batch_add(DbOperator *query) {
     if(node == NULL) {
         return 1;
     }
-    if(add_batch_queue_sse(node) != 0) {
+    if(add_batch_queue(node) != 0) {
         return 1;
     }
     return 0;
 }
 
 int exec_batch_query() {
+    show_batch_query();
     return 0;
 }

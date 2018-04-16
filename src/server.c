@@ -109,6 +109,12 @@ char* exec_insert(DbOperator* query) {
 }
 
 char* exec_select(DbOperator* query) {
+    if(getUseBatch() == 1) {
+        if(batch_add(query) != 0) {
+            return "the query failed to put into batch\n";
+        }
+        return "the query has been put into batch\n";
+    }
     if(query->operator_fields.select_operator.selectType == HANDLE_COL) {
         char* select_col_name = query->operator_fields.select_operator.select_col;
         char* handle = query->operator_fields.select_operator.handle;
@@ -301,8 +307,24 @@ char* exec_aggr_min(DbOperator* query) {
     }
 }
 
-char* set_batch_query(DbOperator* query) {
+char* set_batch(DbOperator *query) {
     setUseBatch(1);
+    if(init_batch() != 0) {
+        free(query);
+        return "batch queries start failed.\n";
+    }
+    free(query);
+    return "batch queries start successfully.\n";
+}
+
+char* exec_batch(DbOperator *query) {
+    setUseBatch(0);
+    if(exec_batch_query() != 0) {
+        free(query);
+        return "exec batch queries failed.\n";
+    }
+    free(query);
+    return "exec batch queries successfully.\n";
 }
 
 char* exec_print(DbOperator* query) {
@@ -379,7 +401,10 @@ char* execute_DbOperator(DbOperator* query) {
         return exec_aggr_min(query);
     }
     else if (query->type == BATCH_QUERY) {
-        return set_batch_query(query);
+        return set_batch(query);
+    }
+    else if (query->type == BATCH_EXEC) {
+        return exec_batch(query);
     }
     else if (query->type == PRINT) {
         return exec_print(query);

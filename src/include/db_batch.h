@@ -17,4 +17,6 @@ int batch_add(DbOperator *query);
 
 int exec_batch_query();
 
+int batch_schedule();
+
 #endif //COLDB_DB_BATCH_H

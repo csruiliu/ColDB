@@ -55,6 +55,18 @@ int add_batch_queue(bqNode* node) {
     return 0;
 }
 
+bqNode* pop_batch_queue() {
+    if (is_bq_empty() == 0) {
+        return NULL;
+    }
+    bqNode* node = bq->head->next;
+    return node;
+}
+
+int get_queue_length() {
+    return bq->length;
+}
+
 void show_batch_query() {
     if (is_bq_empty() == 0) {
         return;
@@ -79,3 +91,4 @@ int is_bq_empty() {
         return 1;
     }
 }
+

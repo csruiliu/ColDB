@@ -323,8 +323,12 @@ char* exec_batch(DbOperator *query) {
         free(query);
         return "exec batch queries failed.\n";
     }
+    if(batch_schedule() != 0) {
+        free(query);
+        return "schedule batch queries failed.\n";
+    }
     free(query);
-    return "exec batch queries successfully.\n";
+    return "schedule and execute batch queries successfully.\n";
 }
 
 char* exec_print(DbOperator* query) {

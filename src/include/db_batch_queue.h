@@ -29,4 +29,8 @@ int is_bq_empty();
 
 void show_batch_query();
 
+int get_queue_length();
+
+bqNode* pop_batch_queue();
+
 #endif //COLDB_DB_BATCH_QUEUE_H

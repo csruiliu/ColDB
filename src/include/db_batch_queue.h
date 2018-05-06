@@ -23,7 +23,7 @@ bqNode* create_node(DbOperator *query);
 
 int create_batch_queue();
 
-int add_batch_queue(bqNode* node);
+int push_node_queue(bqNode *node);
 
 int is_bq_empty();
 
@@ -31,6 +31,8 @@ void show_batch_query();
 
 int get_queue_length();
 
-bqNode* pop_batch_queue();
+int pop_node_queue();
+
+bqNode* get_head_queue();
 
 #endif //COLDB_DB_BATCH_QUEUE_H

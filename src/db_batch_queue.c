@@ -44,7 +44,7 @@ int create_batch_queue() {
 /*
  * when adding query into batch queue, the query will be sorted according to select range
  */
-int add_batch_queue(bqNode* node) {
+int push_node_queue(bqNode *node) {
     if(bq == NULL || node == NULL) {
         log_err("The queue or the adding node is null.\n");
         return 1;
@@ -55,7 +55,26 @@ int add_batch_queue(bqNode* node) {
     return 0;
 }
 
-bqNode* pop_batch_queue() {
+int pop_node_queue() {
+    if (is_bq_empty() == 0) {
+        return 1;
+    }
+    bqNode* node = bq->head->next;
+    if(bq->length == 1) {
+        bq->head->next = NULL;
+        bq->head = bq->tail;
+        bq->length = 0;
+    }
+    else {
+        bq->head->next = node->next;
+        bq->length--;
+    }
+    free(node);
+    return 0;
+}
+
+
+bqNode* get_head_queue() {
     if (is_bq_empty() == 0) {
         return NULL;
     }

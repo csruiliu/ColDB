@@ -319,12 +319,10 @@ char* set_batch(DbOperator *query) {
 
 char* exec_batch(DbOperator *query) {
     setUseBatch(0);
-    /*
-    if(batch_schedule() != 0) {
+    if(batch_schedule_convoy() != 0) {
         free(query);
         return "schedule batch queries failed.\n";
     }
-    */
     if(exec_batch_query() != 0) {
         free(query);
         return "exec batch queries failed.\n";

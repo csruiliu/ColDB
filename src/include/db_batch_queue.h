@@ -23,16 +23,32 @@ bqNode* create_node(DbOperator *query);
 
 int create_batch_queue();
 
-int push_node_queue(bqNode *node);
+int create_refine_batch_queue();
+
+batchQueue* get_bq();
+
+batchQueue* get_bqr();
 
 int is_bq_empty();
 
-void show_batch_query();
+int is_bqr_empty();
 
-int get_queue_length();
+int push_node_bq(bqNode *node);
 
-int pop_node_queue();
+int push_node_bqr(bqNode * node);
 
-bqNode* get_head_queue();
+int get_bq_length();
+
+int get_bqr_length();
+
+void show_bq();
+
+void show_bqr();
+
+int push_bqr_convoy(bqNode *node);
+
+bqNode* pop_head_bq();
+
+bqNode* pop_head_bqr();
 
 #endif //COLDB_DB_BATCH_QUEUE_H

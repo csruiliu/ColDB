@@ -29,16 +29,34 @@ int batch_add(DbOperator *query) {
     if(node == NULL) {
         return 1;
     }
-    if(push_node_queue(node) != 0) {
+    if(push_node_bq(node) != 0) {
         return 1;
     }
     return 0;
 }
 
-int batch_schedule() {
-    int bq_len = get_queue_length();
+int batch_schedule_convoy() {
+    show_bq();
+    if(create_refine_batch_queue() != 0) {
+        log_err("[db_batch.c:batch_schedule_convoy] create refined batch queue failed.\n");
+        return 1;
+    }
+    int bq_len = get_bq_length();
+    for(int i = 0; i < bq_len; ++i) {
+        bqNode* node = pop_head_bq();
+        if(push_bqr_convoy(node) != 0) {
+            log_err("[db_batch.c:batch_schedule_convoy] refine batch queue failed.\n");
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int batch_schedule_partition() {
+    /*
+    int bq_len = get_bq_length();
     for (int i = 0; i < bq_len; ++i) {
-        bqNode* node = get_head_queue();
+        bqNode* node = get_head_bq();
         printf("query: %s, %s, %s.\n", node->query->operator_fields.select_operator.select_col,
                node->query->operator_fields.select_operator.pre_range,
                node->query->operator_fields.select_operator.post_range);
@@ -47,15 +65,15 @@ int batch_schedule() {
             log_info("queue is empty\n");
         }
     }
-
+     */
     return 0;
 }
 
 void query_execute() {
     DbOperator* query;
     while(1) {
-        bqNode* node = get_head_queue();
-        if (node == NULL || (pop_node_queue() != 0)) {
+        bqNode* node = pop_head_bqr();
+        if (node == NULL) {
             break;
         }
         else {

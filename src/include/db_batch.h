@@ -20,7 +20,7 @@ int batch_add(DbOperator *query);
 
 int exec_batch_query();
 
-int batch_schedule();
+int batch_schedule_convoy();
 
 int create_thread(int size_p);
 

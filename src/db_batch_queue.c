@@ -9,7 +9,6 @@
 
 batchQueue* bq;
 
-//refine batch queue
 batchQueue* bqr;
 
 bqNode* create_node(DbOperator *query) {
@@ -46,13 +45,13 @@ int create_refine_batch_queue() {
     if(bqr == NULL) {
         return 1;
     }
-    bqNode* node = (bqNode*) malloc(sizeof(bqNode));
-    if(node == NULL){
+    bqNode* node_r = (bqNode*) malloc(sizeof(bqNode));
+    if(node_r == NULL){
         free(bqr);
         return 1;
     }
-    bqr->head = node;
-    bqr->tail = node;
+    bqr->head = node_r;
+    bqr->tail = node_r;
     bqr->length = 0;
     return 0;
 }
@@ -162,11 +161,12 @@ int get_bqr_length() {
 
 void show_bq() {
     if (is_bq_empty() == 0) {
+        log_info("The bqr is empty\n");
         return;
     }
     bqNode *node = bq->head->next;
     while (node != NULL) {
-        printf("query: %s, %s, %s.\n", node->query->operator_fields.select_operator.select_col,
+        log_info("query: %s, %s, %s.\n", node->query->operator_fields.select_operator.select_col,
                node->query->operator_fields.select_operator.pre_range,
                node->query->operator_fields.select_operator.post_range);
         node = node->next;
@@ -175,11 +175,12 @@ void show_bq() {
 
 void show_bqr() {
     if (is_bqr_empty() == 0) {
+        log_info("The bqr is empty\n");
         return;
     }
-    bqNode *node = bqr->head->next;
+    bqNode* node = bqr->head->next;
     while (node != NULL) {
-        printf("query: %s, %s, %s.\n", node->query->operator_fields.select_operator.select_col,
+        log_info("query: %s, %s, %s.\n", node->query->operator_fields.select_operator.select_col,
                node->query->operator_fields.select_operator.pre_range,
                node->query->operator_fields.select_operator.post_range);
         node = node->next;

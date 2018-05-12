@@ -36,7 +36,7 @@ int batch_add(DbOperator *query) {
 }
 
 int batch_schedule_convoy() {
-    show_bq();
+    show_bqr();
     if(create_refine_batch_queue() != 0) {
         log_err("[db_batch.c:batch_schedule_convoy] create refined batch queue failed.\n");
         return 1;
@@ -44,11 +44,13 @@ int batch_schedule_convoy() {
     int bq_len = get_bq_length();
     for(int i = 0; i < bq_len; ++i) {
         bqNode* node = pop_head_bq();
+        node->next = NULL;
         if(push_bqr_convoy(node) != 0) {
             log_err("[db_batch.c:batch_schedule_convoy] refine batch queue failed.\n");
             return 1;
         }
     }
+    show_bqr();
     return 0;
 }
 
@@ -141,7 +143,6 @@ int create_thread(int size_p) {
 
 
 int exec_batch_query() {
-    show_bqr();
     void *status;
     int nprocs = get_nprocs();
     log_info("current available process number: %d\n", nprocs);

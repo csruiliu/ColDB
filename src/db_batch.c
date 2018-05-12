@@ -141,6 +141,7 @@ int create_thread(int size_p) {
 
 
 int exec_batch_query() {
+    show_bqr();
     void *status;
     int nprocs = get_nprocs();
     log_info("current available process number: %d\n", nprocs);

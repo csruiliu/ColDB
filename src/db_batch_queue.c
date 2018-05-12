@@ -193,7 +193,6 @@ int push_bqr_convoy(bqNode* ref_node) {
         return 1;
     }
     if(is_bqr_empty() == 0) {
-        log_info("insert %s\n",ref_node->query->operator_fields.select_operator.handle);
         bqr->tail->next = ref_node;
         bqr->tail = ref_node;
         bqr->length++;
@@ -210,6 +209,19 @@ int push_bqr_convoy(bqNode* ref_node) {
             cur_node->next = ref_node;
             bqr->length++;
             return 0;
+        }
+        else if(strcmp(ref_pre,"null") != 0 && strcmp(ref_post,"null") != 0
+                && strcmp(cur_pre,"null") != 0 && strcmp(cur_post,"null") != 0) {
+            int int_ref_pre = atoi(ref_pre);
+            int int_ref_post = atoi(ref_post);
+            int int_cur_pre = atoi(cur_pre);
+            int int_cur_post = atoi(cur_post);
+            if(int_ref_post > int_cur_post && int_ref_pre > int_cur_pre) {
+                ref_node->next = cur_node->next;
+                cur_node->next = ref_node;
+                bqr->length++;
+                return 0;
+            }
         }
         cur_node = cur_node->next;
     }

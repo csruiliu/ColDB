@@ -200,6 +200,7 @@ int push_bqr_convoy(bqNode* ref_node) {
         return 0;
     }
     bqNode* cur_node = bqr->head->next;
+    bqNode* pre_node = bqr->head;
     while (cur_node != NULL) {
         char* ref_pre = ref_node->query->operator_fields.select_operator.pre_range;
         char* ref_post = ref_node->query->operator_fields.select_operator.post_range;
@@ -217,13 +218,20 @@ int push_bqr_convoy(bqNode* ref_node) {
             int int_ref_post = atoi(ref_post);
             int int_cur_pre = atoi(cur_pre);
             int int_cur_post = atoi(cur_post);
-            if(int_ref_post > int_cur_post && int_ref_pre > int_cur_pre) {
+            if(int_ref_post < int_cur_post && int_ref_pre > int_cur_pre) {
                 ref_node->next = cur_node->next;
                 cur_node->next = ref_node;
                 bqr->length++;
                 return 0;
             }
+            else if (int_ref_post > int_cur_post && int_ref_pre < int_cur_pre) {
+                pre_node->next = ref_node;
+                ref_node->next = cur_node;
+                bqr->length++;
+                return 0;
+            }
         }
+        pre_node = cur_node;
         cur_node = cur_node->next;
     }
     bqr->tail->next = ref_node;

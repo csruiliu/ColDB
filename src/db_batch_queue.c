@@ -187,7 +187,11 @@ void show_bqr() {
     }
 }
 
-
+/*
+ * Convoy method:
+ * 1. queries which have overlap will be adjacent
+ * 2. the order is from the larger range to the smaller range
+ */
 int push_bqr_convoy(bqNode* ref_node) {
     if(bqr == NULL || ref_node == NULL) {
         log_err("The refined queue or the adding node is null.\n");

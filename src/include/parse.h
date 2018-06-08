@@ -29,6 +29,7 @@ typedef enum OperatorType {
     CREATE_DB,
     CREATE_TBL,
     CREATE_COL,
+    CREATE_IDX,
     LOAD,
     SHUTDOWN,
     INSERT,
@@ -179,6 +180,15 @@ typedef struct CreateColOperator {
 } CreateColOperator;
 
 /*
+ * necessary fields for create index command
+ */
+typedef struct CreateIdxOperator {
+    char* col_name;
+    int col_idx;
+    bool is_cluster;
+} CreateIdxOperator;
+
+/*
  * necessary fields for load data command
  */
 typedef struct LoadOperator {
@@ -238,6 +248,7 @@ typedef union OperatorFields {
     CreateDbOperator create_db_operator;
     CreateTblOperator create_tbl_operator;
     CreateColOperator create_col_operator;
+    CreateIdxOperator create_idx_operator;
     LoadOperator load_operator;
     SelectOperator select_operator;
     FetchOperator fetch_operator;

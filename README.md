@@ -10,6 +10,8 @@ UChicago CMSC33500 Project: A main-memory optimized column-store, [using c only 
 
 **Milestone 4**: add hash-join/nested-join support to ColDB system
 
+**TODO 1: Fine-grained query partition for batch**
+
 ## Instructions ##
 
 ### Getting Started ###
@@ -67,6 +69,10 @@ Right now the starter code requires that you use libexplain. You can install thi
 package via:
 
 > `sudo apt-get install libexplain-dev`
+
+Sometimes, there will be a fatal error: zconf.h: No such file or directory, it can be fixed via:
+
+> `sudo apt-get install build-essential zlib1g-dev`
 
 ### Logging ###
 

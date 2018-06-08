@@ -31,6 +31,44 @@ char* next_token_period(char **tokenizer, message_status *status) {
     return token;
 }
 
+/*
+ * If index is "btree", then col_idx = 1. If index is "sorted", then col_idx = 2. 0 means unrecognized.
+ */
+DbOperator* parse_create_idx(char* query_command, message* send_message) {
+    DbOperator* dbo;
+    char* col_name = next_token_comma(&query_command, &send_message->status);
+    char* col_idx = next_token_comma(&query_command, &send_message->status);
+    char* is_cluster = next_token_comma(&query_command, &send_message->status);
+    if(send_message->status == INCORRECT_FORMAT) {
+        return NULL;
+    }
+    int last_char = (int)strlen(is_cluster) - 1;
+    if (is_cluster[last_char] != ')') {
+        return NULL;
+    }
+    is_cluster[last_char] = '\0';
+    dbo = malloc(sizeof(DbOperator));
+    dbo->type = CREATE_IDX;
+    dbo->operator_fields.create_idx_operator.col_name = malloc((strlen(col_name)+1)* sizeof(char));
+    strcpy(dbo->operator_fields.create_idx_operator.col_name,col_name);
+    if(strcmp(col_idx, "btree") == 0) {
+        dbo->operator_fields.create_idx_operator.col_idx = 1;
+    }
+    else if (strcmp(col_idx, "sorted") == 0) {
+        dbo->operator_fields.create_idx_operator.col_idx = 2;
+    }
+    else {
+        dbo->operator_fields.create_idx_operator.col_idx = 0;
+    }
+    if(strcmp(is_cluster,"clustered") == 0) {
+        dbo->operator_fields.create_idx_operator.is_cluster = true;
+    }
+    else {
+        dbo->operator_fields.create_idx_operator.is_cluster = false;
+    }
+    return dbo;
+}
+
 DbOperator* parse_create_col(char* query_command, message* send_message) {
     DbOperator* dbo;
     char** create_arguments_index = &query_command;
@@ -482,6 +520,10 @@ DbOperator* parse_command(char* query_command, message* send_message, int client
     else if(strncmp(query_command, "create(col,", 11) == 0) {
         query_command += 11;
         dbo = parse_create_col(query_command, send_message);
+    }
+    else if(strncmp(query_command, "create(idx,", 11) == 0) {
+        query_command += 11;
+        dbo = parse_create_idx(query_command, send_message);
     }
     else if (strncmp(query_command, "load(", 5) == 0) {
         query_command += 5;

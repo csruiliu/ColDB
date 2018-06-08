@@ -86,6 +86,29 @@ char* exec_create_col(DbOperator* query) {
     return "create column successfully.\n";
 }
 
+char* exec_create_idx(DbOperator* query) {
+    char* col_name = query->operator_fields.create_idx_operator.col_name;
+    int col_index = query->operator_fields.create_idx_operator.col_idx;
+    bool is_cluster = query->operator_fields.create_idx_operator.is_cluster;
+    log_info("col: %s\n", col_name);
+    log_info("col_index: %d\n", col_index);
+    if(is_cluster == true) {
+        log_info("col_cluster: true\n");
+    }
+    else if (is_cluster == false) {
+        log_info("col_cluster: false\n");
+    }
+
+    Column* col = get_col(col_name);
+    if(col == NULL) {
+        free_query(query);
+        return "create column index failed.\n";
+    }
+    free_query(query);
+    log_info("create column index successfully.\n");
+    return "create column index successfully.\n";
+}
+
 char* exec_load(DbOperator* query) {
     char* data_path = query->operator_fields.load_operator.data_path;
     if(load_data_csv(data_path) != 0) {
@@ -373,6 +396,9 @@ char* execute_DbOperator(DbOperator* query) {
     }
     else if (query->type == CREATE_COL){
         return exec_create_col(query);
+    }
+    else if (query->type == CREATE_IDX){
+        return exec_create_idx(query);
     }
     else if (query->type == LOAD) {
         return exec_load(query);

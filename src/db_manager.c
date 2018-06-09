@@ -45,7 +45,7 @@ Db* create_db(char* db_name) {
 	return db;
 }
 
-Table* create_table(char* db_name, char* tbl_name, size_t num_columns) {
+Table* create_table(char* db_name, char* tbl_name, char* pricls_col_name, size_t num_columns) {
 	if(strcmp(current_db->db_name,db_name) != 0) {
 		log_err("the current active database is not database %s\n", db_name);
 		return NULL;
@@ -85,8 +85,14 @@ Table* create_table(char* db_name, char* tbl_name, size_t num_columns) {
 		strcpy(tbl->db_name_aff,db_name);
 		tbl->tbl_capacity = num_columns;
 		tbl->tbl_size = 0;
-		tbl->pricls_col_name = "NULL";
-		tbl->hasCls = 0;
+		tbl->pricls_col_name = malloc((strlen(pricls_col_name)+1)* sizeof(char));
+        strcpy(tbl->pricls_col_name,pricls_col_name);
+        if(strcmp(pricls_col_name,"NULL") == 0) {
+            tbl->hasCls = 0;
+        }
+        else {
+            tbl->hasCls = 1;
+        }
 		tbl->columns = calloc(num_columns, sizeof(Column*));
 		put_tbl(tbl_name,tbl);
 		current_db->tables[current_db->db_size] = tbl;
@@ -279,8 +285,8 @@ int persist_data_csv() {
 		for(int j = 0; j < stbl->tbl_size; ++j) {
             fprintf(fp, "%s", current_db->db_name);
 		    fprintf(fp, ",%s", stbl->tbl_name);
-            fprintf(fp, ",%d", stbl->tbl_capacity);
-		    //fprintf(fp, ",%s", stbl->pricls_col_name);
+            fprintf(fp, ",%s", stbl->pricls_col_name);
+		    fprintf(fp, ",%zu", stbl->tbl_capacity);
             Column* scol = get_col(stbl->columns[j]->col_name);
 			fprintf(fp, ",%s", scol->col_name);
 			if(scol->idx_type == BTREE) {
@@ -347,6 +353,7 @@ int setup_db_csv() {
 				mes_status = OK_DONE;
                 char* db_name = next_token_comma(&line,&mes_status);
 				char* tbl_name = next_token_comma(&line,&mes_status);
+				char* tbl_pricls_col_name = next_token_comma(&line,&mes_status);
 				char* tbl_capacity = next_token_comma(&line,&mes_status);
 				char* col_name = next_token_comma(&line,&mes_status);
 				char* idx_type = next_token_comma(&line,&mes_status);
@@ -360,7 +367,7 @@ int setup_db_csv() {
 					log_err("[db_manager.c:setup_db_csv()] setup database failed.\n");
 					return 1;
 				}
-				Table* setup_tbl = create_table(db_name,tbl_name, atoi(tbl_capacity));
+				Table* setup_tbl = create_table(db_name, tbl_name, tbl_pricls_col_name, atoi(tbl_capacity));
 				if(setup_tbl == NULL) {
 					log_err("[db_manager.c:setup_db_csv()] setup table failed.\n");
 					return 1;

@@ -62,7 +62,7 @@ char* exec_create_tbl(DbOperator* query) {
     char* db_name = query->operator_fields.create_tbl_operator.db_name;
     char* tbl_name = query->operator_fields.create_tbl_operator.tbl_name;
     size_t col_count = query->operator_fields.create_tbl_operator.col_count;
-    Table* tbl = create_table(db_name, tbl_name, col_count);
+    Table* tbl = create_table(db_name, tbl_name, "NULL", col_count);
     if(tbl == NULL) {
         free_query(query);
         log_err("[server.c:execute_DbOperator()] create table failed.\n");

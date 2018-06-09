@@ -85,7 +85,7 @@ Table* create_table(char* db_name, char* tbl_name, size_t num_columns) {
 		strcpy(tbl->db_name_aff,db_name);
 		tbl->tbl_capacity = num_columns;
 		tbl->tbl_size = 0;
-		tbl->pricls_col_name = NULL;
+		tbl->pricls_col_name = "NULL";
 		tbl->hasCls = 0;
 		tbl->columns = calloc(num_columns, sizeof(Column*));
 		put_tbl(tbl_name,tbl);
@@ -280,7 +280,8 @@ int persist_data_csv() {
             fprintf(fp, "%s", current_db->db_name);
 		    fprintf(fp, ",%s", stbl->tbl_name);
             fprintf(fp, ",%d", stbl->tbl_capacity);
-		    Column* scol = get_col(stbl->columns[j]->col_name);
+		    //fprintf(fp, ",%s", stbl->pricls_col_name);
+            Column* scol = get_col(stbl->columns[j]->col_name);
 			fprintf(fp, ",%s", scol->col_name);
 			if(scol->idx_type == BTREE) {
 				fprintf(fp, ",btree");
@@ -329,7 +330,7 @@ int setup_db_csv() {
     }
     message_status mes_status;
     while((filename = readdir(pDir)) != NULL) {
-        if(strcmp(filename->d_name,".") != 0 && strcmp(filename->d_name,"..") != 0) {
+        if(strcmp(filename->d_name,".") != 0 && strcmp(filename->d_name,"..") != 0 && is_csv(filename->d_name) == true) {
             log_info("loading data %s into database\n", filename->d_name);
             char* db_file = malloc(sizeof(char) * ((strlen(cwd)+strlen(filename->d_name)+1)));
             strcpy(db_file,cwd);
@@ -420,6 +421,7 @@ int setup_db_csv() {
             free(db_file);
             fclose(fp);
         }
+
     }
 	closedir(pDir);
     return 0;

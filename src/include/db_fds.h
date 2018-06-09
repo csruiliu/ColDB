@@ -69,6 +69,7 @@ typedef struct Column {
  * Table
  * Defines a table structure, which is composed of multiple columns.
  * - tbl_name: the name of the associated table, which follows the format [db-name.table-name]
+ * - db_name_aff: the db_name which the table belongs to
  * - columns: the pointer to the array of tables contained in the db.
  * - tbl_size: the size of the current column objects
  * - tbl_capacity: the max amount of column objects in table

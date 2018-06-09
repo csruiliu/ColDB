@@ -88,22 +88,24 @@ char* exec_create_col(DbOperator* query) {
 
 char* exec_create_idx(DbOperator* query) {
     char* col_name = query->operator_fields.create_idx_operator.col_name;
-    int col_index = query->operator_fields.create_idx_operator.col_idx;
-    bool is_cluster = query->operator_fields.create_idx_operator.is_cluster;
-    log_info("col: %s\n", col_name);
-    log_info("col_index: %d\n", col_index);
-    if(is_cluster == true) {
-        log_info("col_cluster: true\n");
-    }
-    else if (is_cluster == false) {
-        log_info("col_cluster: false\n");
-    }
 
     Column* col = get_col(col_name);
     if(col == NULL) {
         free_query(query);
         return "create column index failed.\n";
     }
+    col->idx_type = query->operator_fields.create_idx_operator.col_idx;
+    bool is_cluster = query->operator_fields.create_idx_operator.is_cluster;
+
+    if(is_cluster == true) {
+        log_info("col_cluster: true\n");
+
+    }
+    else if (is_cluster == false) {
+        col->cls_type = UNCLSR;
+    }
+
+
     free_query(query);
     log_info("create column index successfully.\n");
     return "create column index successfully.\n";

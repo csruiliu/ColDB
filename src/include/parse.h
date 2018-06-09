@@ -184,7 +184,7 @@ typedef struct CreateColOperator {
  */
 typedef struct CreateIdxOperator {
     char* col_name;
-    int col_idx;
+    IndexType col_idx;
     bool is_cluster;
 } CreateIdxOperator;
 

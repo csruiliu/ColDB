@@ -21,6 +21,8 @@ char* next_token_comma(char **tokenizer, message_status *status);
 
 char* next_token_period(char **tokenizer, message_status *status);
 
+bool is_csv(char* filename);
+
 /**
  * trims newline characters from a string (in place)
  **/

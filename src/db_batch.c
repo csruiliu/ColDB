@@ -67,7 +67,7 @@ int batch_schedule_partition() {
             log_info("queue is empty\n");
         }
     }
-     */
+    */
     return 0;
 }
 

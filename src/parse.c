@@ -31,6 +31,16 @@ char* next_token_period(char **tokenizer, message_status *status) {
     return token;
 }
 
+bool is_csv(char* filename) {
+    size_t len = strlen(filename);
+    char dest[4] = "";
+    strncpy(dest, filename+len-4, 4);
+    if(strcmp(dest,".csv") == 0) {
+        return true;
+    }
+    return false;
+}
+
 /*
  * If index is "btree", then col_idx = 1. If index is "sorted", then col_idx = 2. 0 means unrecognized.
  */
@@ -52,13 +62,13 @@ DbOperator* parse_create_idx(char* query_command, message* send_message) {
     dbo->operator_fields.create_idx_operator.col_name = malloc((strlen(col_name)+1)* sizeof(char));
     strcpy(dbo->operator_fields.create_idx_operator.col_name,col_name);
     if(strcmp(col_idx, "btree") == 0) {
-        dbo->operator_fields.create_idx_operator.col_idx = 1;
+        dbo->operator_fields.create_idx_operator.col_idx = BTREE;
     }
     else if (strcmp(col_idx, "sorted") == 0) {
-        dbo->operator_fields.create_idx_operator.col_idx = 2;
+        dbo->operator_fields.create_idx_operator.col_idx = SORTED;
     }
     else {
-        dbo->operator_fields.create_idx_operator.col_idx = 0;
+        dbo->operator_fields.create_idx_operator.col_idx = UNIDX;
     }
     if(strcmp(is_cluster,"clustered") == 0) {
         dbo->operator_fields.create_idx_operator.is_cluster = true;

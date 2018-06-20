@@ -183,7 +183,8 @@ typedef struct CreateColOperator {
  * necessary fields for create index command
  */
 typedef struct CreateIdxOperator {
-    char* col_name;
+    char* idx_col_name;
+    char* idx_tbl_name;
     IndexType col_idx;
     bool is_cluster;
 } CreateIdxOperator;

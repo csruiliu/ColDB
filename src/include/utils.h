@@ -24,6 +24,12 @@ char* next_token_period(char **tokenizer, message_status *status);
 bool is_csv(char* filename);
 
 /**
+ * parse a table name from a full column name
+ **/
+
+char* parse_tbl_name(char* fullColName);
+
+/**
  * trims newline characters from a string (in place)
  **/
 

@@ -41,6 +41,22 @@ bool is_csv(char* filename) {
     return false;
 }
 
+/**
+ * assume the input col name has the correct format
+ **/
+char* parse_tbl_name(char* fullColName) {
+    size_t len = strlen(fullColName);
+    for(int i = len-1; i >= 0; --i) {
+        if(fullColName[i] == '.') {
+            char* tbl_name = malloc(sizeof(char)*(i-1));
+            strncpy(tbl_name, fullColName, i-1);
+            return tbl_name;
+        }
+    }
+    return NULL;
+}
+
+
 /*
  * If index is "btree", then col_idx = 1. If index is "sorted", then col_idx = 2. 0 means unrecognized.
  */
@@ -59,8 +75,9 @@ DbOperator* parse_create_idx(char* query_command, message* send_message) {
     is_cluster[last_char] = '\0';
     dbo = malloc(sizeof(DbOperator));
     dbo->type = CREATE_IDX;
-    dbo->operator_fields.create_idx_operator.col_name = malloc((strlen(col_name)+1)* sizeof(char));
-    strcpy(dbo->operator_fields.create_idx_operator.col_name,col_name);
+    dbo->operator_fields.create_idx_operator.idx_col_name = malloc((strlen(col_name)+1)* sizeof(char));
+    strcpy(dbo->operator_fields.create_idx_operator.idx_col_name,col_name);
+
     if(strcmp(col_idx, "btree") == 0) {
         dbo->operator_fields.create_idx_operator.col_idx = BTREE;
     }

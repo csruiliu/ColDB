@@ -88,5 +88,15 @@ just `make`, you can run:
 
 > `make CFLAGS+="-DLOG -DLOG_ERR -DLOG_INFO"
 
+
+### Persistence CSV ###
+
+Each line/record describes each column: 
+
+| aff_db_name | tbl_name | pricls_col_name | tbl_capacity | col_name | index_type | cls_type | row_id | value | ... | row_id | value |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+|   |   |   |   |   |   |   |   |   |   |   |   |
+
+
 ---
 Note that this project originates from Stratos Idreos’s CS165 course at Harvard. He and his TAs have put a tremendous amount of effort into making this project. Some of the documentation has been updated to reflect our course number, but you may see references to 165. 

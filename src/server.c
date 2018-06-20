@@ -87,27 +87,43 @@ char* exec_create_col(DbOperator* query) {
 }
 
 char* exec_create_idx(DbOperator* query) {
-    char* col_name = query->operator_fields.create_idx_operator.col_name;
-
+    char* col_name = query->operator_fields.create_idx_operator.idx_col_name;
     Column* col = get_col(col_name);
     if(col == NULL) {
         free_query(query);
-        return "create column index failed.\n";
+        return "create column index failed. no column found.\n";
     }
     col->idx_type = query->operator_fields.create_idx_operator.col_idx;
+
     bool is_cluster = query->operator_fields.create_idx_operator.is_cluster;
-
     if(is_cluster == true) {
-        log_info("col_cluster: true\n");
-
+        char* tbl_name = parse_tbl_name(col_name);
+        if(tbl_name == NULL) {
+            free_query(query);
+            return "parse table name from full column name failed.\n";
+        }
+        Table* tbl_aff = get_tbl(tbl_name);
+        if(tbl_aff == NULL) {
+            free_query(query);
+            return "no affiliated table found.\n";
+        }
+        if(tbl_aff->hasCls == 0) {
+            tbl_aff->hasCls = 1;
+            tbl_aff->pricls_col_name = (char *) realloc(tbl_aff->pricls_col_name, strlen(col_name));
+            strcpy(tbl_aff->pricls_col_name, col_name);
+            col->cls_type = PRICLSR;
+        }
+        else {
+            col->cls_type = CLSR;
+        }
     }
-    else if (is_cluster == false) {
+    else {
         col->cls_type = UNCLSR;
     }
 
 
     free_query(query);
-    log_info("create column index successfully.\n");
+    log_info("created [%s,%s] index for [%s] successfully.\n",col->idx_type,col->cls_type,col_name);
     return "create column index successfully.\n";
 }
 

@@ -4,7 +4,8 @@
 #include <zconf.h>
 #include <sys/stat.h>
 #include <dirent.h>
-#include "db_index_sort.h"
+
+#include "db_cluster.h"
 #include "db_manager.h"
 #include "utils.h"
 
@@ -163,7 +164,8 @@ int load_data_csv(char* data_path) {
 		}
 	}
 	log_info("%d columns in the loading file\n", headerCount);
-    if (headerCount == 1) {
+    //only 1 column to load
+	if (headerCount == 1) {
         char* header = trim_newline(line);
         Column* lcol = get_col(header);
         if (lcol == NULL) {
@@ -185,43 +187,77 @@ int load_data_csv(char* data_path) {
                 rowId_load++;
             }
         }
-        //TODO
-    }
-    else {
-        char* header = trim_newline(line);
-        Column** colSet = calloc(headerCount, sizeof(Column*));
-        SortLink** slSet = calloc(headerCount, sizeof(SortLink*));
-        for(int i = 0; i < headerCount; ++i) {
-            char* col_name = next_token_comma(&header, &mes_status);
-            colSet[i] = get_col(col_name);
-            if (colSet[i] == NULL) {
-                log_err("[db_manager.c:load_data_csv] cannot find column %s in database\n", col_name);
-                free(line_copy);
-                fclose(fp);
-                return 1;
-            }
-            slSet[i] = sortlink_init();
-        }
-        int rowId_load = 0;
-        while ((getline(&line, &len, fp)) != -1) {
-            for (int i = 0; i < headerCount; ++i) {
-                char *va = next_token_comma(&line, &mes_status);
+        else if(lcol->cls_type == PRICLSR) {
+            ClusterLink* clink = clusterlink_init();
+            int rowId_load = 0;
+            while ((getline(&line, &len, fp)) != -1) {
+                char *va = line;
                 int lv = atoi(va);
-                sortlink_insert(lv,rowId_load,slSet[i]);
+                clusterlink_insert(lv,rowId_load,clink);
+                rowId_load++;
             }
-            rowId_load++;
+            if(lcol->idx_type == BTREE) {
+				//TODO
+            }
+            else if(lcol->idx_type == SORTED) {
+				clink = clusterlink_sort_select(clink);
+				clusterlink_load(clink,lcol);
+				free(line_copy);
+				fclose(fp);
+            }
         }
-        for(int j = 0; j < headerCount; ++j) {
-            if(colSet[j]->cls_type == UNCLSR) {
-                if(sortlink_load(slSet[j],colSet[j]) != 0) {
+        //TODO: Mutiple clustered indices
+    }
+    //multiple columns to load
+    else {
+		char* header = trim_newline(line);
+        Column** colSet = calloc(headerCount, sizeof(Column*));
+		ClusterLink** slSet = calloc(headerCount, sizeof(ClusterLink*));
+		for(int i = 0; i < headerCount; ++i) {
+			char* col_name = next_token_comma(&header, &mes_status);
+			colSet[i] = get_col(col_name);
+			if (colSet[i] == NULL) {
+				log_err("[db_manager.c:load_data_csv] cannot find column %s in database\n", col_name);
+				free(line_copy);
+				fclose(fp);
+				return 1;
+			}
+			slSet[i] = clusterlink_init();
+		}
+		int rowId_load = 0;
+		while ((getline(&line, &len, fp)) != -1) {
+			for (int i = 0; i < headerCount; ++i) {
+				char *va = next_token_comma(&line, &mes_status);
+				int lv = atoi(va);
+				clusterlink_insert(lv,rowId_load,slSet[i]);
+			}
+			rowId_load++;
+		}
+		for(int j = 0; j < headerCount; ++j) {
+			if(colSet[j]->cls_type == UNCLSR) {
+				if(clusterlink_load(slSet[j],colSet[j]) != 0) {
 					log_err("[db_manager.c:load_data_csv] load column %s in database failed.\n", colSet[j]->col_name);
 					free(line_copy);
 					fclose(fp);
 					return 1;
-                }
-            }
-        }
-        //TODO
+				}
+			}
+			else if(colSet[j]->cls_type == PRICLSR) {
+				if(colSet[j]->idx_type == BTREE) {
+					//TODO
+				}
+				else if(colSet[j]->idx_type == SORTED) {
+					slSet[j] = clusterlink_sort_select(slSet[j]);
+					if(clusterlink_load(slSet[j],colSet[j]) != 0) {
+						log_err("[db_manager.c:load_data_csv] load column %s with sorted index in database failed.\n", colSet[j]->col_name);
+						free(line_copy);
+						fclose(fp);
+						return 1;
+					}
+				}
+			}
+		}
+		//TODO: Mutiple clustered indices
     }
 	return 0;
 }

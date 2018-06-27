@@ -86,6 +86,11 @@ char* exec_create_col(DbOperator* query) {
     return "create column successfully.\n";
 }
 
+/**
+ * Creating index is always before loading/inserting data so there is no need to do any data operation in this function.
+ * All clustered indices will be declared before the insertion of data to a table.
+ **/
+
 char* exec_create_idx(DbOperator* query) {
     char* col_name = query->operator_fields.create_idx_operator.idx_col_name;
     Column* col = get_col(col_name);
@@ -120,8 +125,6 @@ char* exec_create_idx(DbOperator* query) {
     else {
         col->cls_type = UNCLSR;
     }
-
-
     free_query(query);
     log_info("created [%s,%s] index for [%s] successfully.\n",col->idx_type,col->cls_type,col_name);
     return "create column index successfully.\n";

@@ -12,7 +12,7 @@ UChicago CMSC33500 Project: A main-memory optimized column-store, [using c only 
 
 **TODO 1: Fine-grained query partition for batch**
 
-**TODO 2: Multiple clustered and unclustered indices**
+**TODO 2: Multiple clustered and unclustered indices (Done!)**
 
 ## Instructions ##
 

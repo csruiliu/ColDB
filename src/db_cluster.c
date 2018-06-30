@@ -31,7 +31,8 @@ void clusterlink_insert(int value, int rowId, ClusterLink* clusterLink) {
     clusterLink->clink_size++;
 }
 
-ClusterLink* clusterlink_sort_select(ClusterLink* clusterLink) {
+//we use select sort method
+ClusterLink* clusterlink_sort(ClusterLink *clusterLink) {
     ClusterNode* p,*q;
     ClusterNode* pMin;
     int tmpv=0;
@@ -60,7 +61,13 @@ ClusterLink* clusterlink_sort_select(ClusterLink* clusterLink) {
     return clusterLink;
 }
 
-ClusterLink* clusterlink_btree(ClusterLink* clusterLink) {
+ClusterLink* clusterlink_btree(ClusterLink* clusterLink, int order) {
+    ClusterNode* p;
+    ClusterNode* q;
+
+    if (clusterLink->head->next == NULL) {
+        return clusterLink;
+    }
 
 }
 

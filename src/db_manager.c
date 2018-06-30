@@ -200,7 +200,7 @@ int load_data_csv(char* data_path) {
 				//TODO
             }
             else if(lcol->idx_type == SORTED) {
-				clink = clusterlink_sort_select(clink);
+				clink = clusterlink_sort(clink);
 				clusterlink_load(clink,lcol);
 				free(line_copy);
 				fclose(fp);
@@ -247,7 +247,7 @@ int load_data_csv(char* data_path) {
 					//TODO
 				}
 				else if(colSet[j]->idx_type == SORTED) {
-					slSet[j] = clusterlink_sort_select(slSet[j]);
+					slSet[j] = clusterlink_sort(slSet[j]);
 					if(clusterlink_load(slSet[j],colSet[j]) != 0) {
 						log_err("[db_manager.c:load_data_csv] load column %s with sorted index in database failed.\n", colSet[j]->col_name);
 						free(line_copy);

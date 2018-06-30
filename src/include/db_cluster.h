@@ -22,9 +22,9 @@ ClusterLink* clusterlink_init();
 
 void clusterlink_insert(int value, int rowId, ClusterLink* clusterLink);
 
-ClusterLink* clusterlink_sort_select(ClusterLink* clusterLink);
+ClusterLink* clusterlink_sort(ClusterLink *clusterLink);
 
-ClusterLink* clusterlink_btree(ClusterLink* clusterLink);
+ClusterLink* clusterlink_btree(ClusterLink* clusterLink, int order);
 
 int clusterlink_load(ClusterLink* clusterLink, Column* lcol);
 

@@ -5,8 +5,8 @@
 #ifndef COLDB_DB_INDEX_H
 #define COLDB_DB_INDEX_H
 
-#define ORDER 128
-#define KEY_NUM (2 * ORDER - 1)
+#define T 127
+#define KEY_NUM (2 * T - 1)
 
 typedef int type_t;
 
@@ -25,6 +25,8 @@ BTree* btree_init();
 BTree* btree_insert(BTree* btree, type_t key);
 
 BTree* btree_delete(BTree* btree, type_t key);
+
+BTree* btree_split_child(BTree* parent, int pos, BTree* child);
 
 BTree* btree_insert_notfull(BTree* btree, type_t key);
 

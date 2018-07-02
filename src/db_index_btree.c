@@ -14,7 +14,7 @@ BTree* btree_init() {
         return NULL;
     }
     btree->key_num = 0;
-    btree->leaf = '1';
+    btree->leaf = true;
     btree->max_key = -1;
     btree->min_key = -1;
     return btree;
@@ -22,7 +22,7 @@ BTree* btree_init() {
 
 
 BTree* btree_insert(BTree* btree, type_t key) {
-    if(btree->key_num == KEY_NUM) {
+    if(btree->key_num == MAX_KEY_NUM) {
 
     }
     return btree_insert_notfull(btree, key);
@@ -34,7 +34,7 @@ BTree* btree_delete(BTree* btree, type_t key) {
 
 BTree* btree_insert_notfull(BTree* btree, type_t key) {
     //the tree is a leaf node
-    if(btree->leaf == '1') {
+    if(btree->leaf) {
         if(btree->max_key == -1 && btree->min_key == -1) {
             btree->max_key = key;
             btree->min_key = key;
@@ -69,7 +69,7 @@ BTree* btree_insert_notfull(BTree* btree, type_t key) {
     //the tree is not a leaf node
     else {
         if (key < btree->min_key) {
-            if(btree->child[0]->key_num == KEY_NUM) {
+            if(btree->child[0]->key_num == MAX_KEY_NUM) {
                 btree_split_child(btree, 0, btree->child[0]);
             }
             else {
@@ -77,7 +77,7 @@ BTree* btree_insert_notfull(BTree* btree, type_t key) {
             }
         }
         else if (key > btree->max_key) {
-            if(btree->child[btree->key_num]->key_num == KEY_NUM) {
+            if(btree->child[btree->key_num]->key_num == MAX_KEY_NUM) {
                 btree_split_child(btree, 0, btree->child[0]);
             }
             else {
@@ -107,34 +107,33 @@ BTree* btree_split_child(BTree* parent, int pos, BTree* child) {
         return NULL;
     }
     new_child->leaf = child->leaf;
-    //if child is leaf node
-    if(child->leaf == '1') {
-        //copy the last half keys of the parents to the new node
-        for(int i = 0; i <= T - 2; ++i) {
-            new_child->key[i] = child->key[i+T];
-        }
-        new_child->key_num = T - 1;
-        child->key_num = T - 1;
-        //move previous keys for new allocated child
-        for(int j = parent->key_num-1; j >= pos; --j) {
-            parent->key[j+1] = parent->key[j];
-        }
-        //move previous child for new allocated child
-        for(int k = parent->key_num; k > pos; --k) {
-            parent->child[k+1] = parent->child[k];
-        }
-        parent->key[pos] = child->key[T];
-        parent->key_num++;
-        parent->child[pos] = child;
-        parent->child[pos+1] = new_child;
+
+    //copy last T-1 items to new child
+    for(int i = 0; i <= T-2; ++i) {
+        new_child->key[i] = child->key[i+T];
+        child->key[i+T] = 0;
     }
-    //else child is not a leaf node
-    else {
-        for(int j = 0; j <= T-2; ++j) {
-            new_child->child[j] = child->child[j+T];
+    new_child->key_num = T-1;
+    child->key_num = T-1;
+    //if child is leaf node, also need to copy regarding children
+    if(child->leaf == false) {
+        for(int i = MAX_CHILD_NUM-1; i <= T; --i) {
+            new_child->child[i-T] = child->child[i];
+            child->child[i] = NULL;
         }
-        child->key_num = T-1;
     }
+    //move parents keys for new median value
+    for(int j = parent->key_num-1; j >= pos; --j) {
+        parent->key[j+1] = parent->key[j];
+    }
+    //move parents children for new median value
+    for(int k = parent->key_num; k > pos; --k) {
+        parent->child[k+1] = parent->child[k];
+    }
+    parent->key[pos] = child->key[T];
+    parent->key_num++;
+    parent->child[pos] = child;
+    parent->child[pos+1] = new_child;
 }
 
 

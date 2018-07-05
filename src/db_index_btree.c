@@ -83,12 +83,34 @@ BTree* btree_insert_notfull(BTree* btree_n, int rowId, int value) {
             }
         }
         else if(value <= btree_n->kvs[0].value) {
-            btree_insert_notfull(btree_n->child[0],rowId,value);
+            if(btree_n->child[0]->kv_num == MAX_KV_NUM) {
+                btree_split_child(btree_n,0,btree_n->child[0]);
+                if(value > btree_n->kvs[0].value) {
+                    btree_insert_notfull(btree_n->child[1],rowId,value);
+                }
+                else {
+                    btree_insert_notfull(btree_n->child[0],rowId,value);
+                }
+            }
+            else {
+                btree_insert_notfull(btree_n->child[0],rowId,value);
+            }
         }
         else {
             for(int i = btree_n->kv_num-1; i > 0; --i) {
                 if(value <= btree_n->kvs[i].value && value > btree_n->kvs[i-1].value) {
-                    btree_insert_notfull(btree_n->child[i],rowId,value);
+                    if(btree_n->child[i]->kv_num == MAX_KV_NUM) {
+                        btree_split_child(btree_n,i,btree_n->child[i]);
+                        if(value > btree_n->kvs[i].value) {
+                            btree_insert_notfull(btree_n->child[i+1],rowId,value);
+                        }
+                        else {
+                            btree_insert_notfull(btree_n->child[i],rowId,value);
+                        }
+                    }
+                    else {
+                        btree_insert_notfull(btree_n->child[i],rowId,value);
+                    }
                     break;
                 }
             }

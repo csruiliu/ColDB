@@ -88,16 +88,55 @@ definition at the top of the file:
 The other way is to add it during the compilation process. Instead of running
 just `make`, you can run:
 
-> `make CFLAGS+="-DLOG -DLOG_ERR -DLOG_INFO"
+> `make CFLAGS+="-DLOG -DLOG_ERR -DLOG_INFO"`
 
 
 ### Persistence CSV ###
+
+The database is stored as a CSV, located in `./src/db` folder 
 
 Each line/record describes each column: 
 
 | aff_db_name | tbl_name | pricls_col_name | tbl_capacity | col_name | index_type | cls_type | row_id | value | ... | row_id | value |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 |   |   |   |   |   |   |   |   |   |   |   |   |
+
+## Test ## 
+
+The naive test files are located in `./project_tests` folder. In this folder, `csv` files are dataset, `dsl` files are workload, `exp` files are expected results (some exp are empty since the regarding workload don't have a result) 
+
+**Milestone 1: test01 through test09**
+
+| Test no. | Pass/Fail |
+|:-----:|:-----:|
+| Test 01 | **Pass** |
+| Test 02 | **Pass** |
+| Test 03 | **Pass** |
+| Test 04 | **Pass** |
+| Test 05 | **Pass** |
+| Test 06 | **Pass** |
+| Test 07 | **Pass** |
+| Test 08 | **Pass** |
+| Test 09 | **Pass** |
+
+**Milestone 2: test10 through test17**
+
+| Test no. | Pass/Fail |
+|:-----:|:-----:|
+| Test 10 | **Pass** |
+| Test 11 | **Pass** |
+| Test 12 | **Pass** |
+| Test 13 | **Pass** |
+| Test 14 | **Pass** |
+| Test 15 | **Pass** |
+| Test 16 | **Pass** |
+| Test 17 | **Pass** |
+
+**Milestone 3: test18 through test29**
+
+
+**Milestone 4: test30 through test35**
+
 
 
 ---

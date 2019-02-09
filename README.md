@@ -125,17 +125,38 @@ The naive test files are located in `./project_tests` folder. In this folder, `c
 | Test 11 | **Pass** |
 | Test 12 | **Pass** |
 | Test 13 | **Pass** |
-| Test 14 |  |
-| Test 15 |  |
-| Test 16 |  |
-| Test 17 |  |
+| Test 14 | **Pass** |
+| Test 15 | **Pass** |
+| Test 16 | **Pass** |
+| Test 17 | **Pass** |
 
 **Milestone 3: test18 through test29**
 
+| Test no. | Pass/Fail |
+|:-----:|:-----:|
+| Test 18 |  |
+| Test 19 |  |
+| Test 20 |  |
+| Test 21 |  |
+| Test 22 |  |
+| Test 23 |  |
+| Test 24 |  |
+| Test 25 |  |
+| Test 26 |  |
+| Test 27 |  |
+| Test 28 |  |
+| Test 29 |  |
 
 **Milestone 4: test30 through test35**
 
-
+| Test no. | Pass/Fail |
+|:-----:|:-----:|
+| Test 30 |  |
+| Test 31 |  |
+| Test 32 |  |
+| Test 33 |  |
+| Test 34 |  |
+| Test 35 |  |
 
 ---
 Note that this project originates from Stratos Idreos’s CS165 course at Harvard. He and his TAs have put a tremendous amount of effort into making this project. Some of the documentation has been updated to reflect our course number, but you may see references to 165. 

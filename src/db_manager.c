@@ -713,7 +713,8 @@ char* generate_print_result(size_t print_num, char** print_name) {
 		}
 		payload_tmp[len-1] = '\n';
 		strcat(print_rsl,payload_tmp);
-		free(payload_tmp);
+		//delete free(payload_tmp), may cause free() invalid size
+		//free(payload_tmp);
 	}
 	size_t lastchar = strlen(print_rsl);
 	print_rsl[lastchar] = '\0';

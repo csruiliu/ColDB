@@ -12,8 +12,6 @@ UChicago CMSC33500 Project: A main-memory optimized column-store, [using c only 
 
 **TODO 1: Fine-grained query partition for batch**
 
-**TODO 2: Multiple clustered and unclustered indices (Done!)**
-
 ## Instructions ##
 
 ### Getting Started ###
@@ -125,8 +123,8 @@ The naive test files are located in `./project_tests` folder. In this folder, `c
 |:-----:|:-----:|
 | Test 10 | **Pass** |
 | Test 11 | **Pass** |
-| Test 12 |  |
-| Test 13 |  |
+| Test 12 | **Pass** |
+| Test 13 | **Pass** |
 | Test 14 |  |
 | Test 15 |  |
 | Test 16 |  |

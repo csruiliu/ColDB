@@ -3,7 +3,6 @@
 //
 
 #include <memory.h>
-
 #include "utils.h"
 #include "db_batch_queue.h"
 

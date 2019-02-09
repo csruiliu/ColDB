@@ -376,20 +376,15 @@ char* exec_batch(DbOperator *query) {
 }
 
 char* exec_print(DbOperator* query) {
-    log_info("a1\n");
     size_t print_num = query->operator_fields.print_operator.print_num;
     char** print_name = query->operator_fields.print_operator.print_name;
-    log_info("a2\n");
     char* print_result = generate_print_result(print_num, print_name);
-    log_info("a3\n");
     if (print_result == NULL){
         free_query(query);
         log_err("[server.c:execute_DbOperator()] fetch data failed.\n");
         return "fetch data failed.\n";
     }
-    log_info("a4\n");
     free_query(query);
-    log_info("a5\n");
     return print_result;
 }
 

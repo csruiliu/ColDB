@@ -2,15 +2,19 @@
 // Created by rui on 4/12/18.
 //
 
-#include <db_manager.h>
+#include "db_manager.h"
 #include "db_batch.h"
 #include "db_batch_queue.h"
 #include "utils.h"
 
+
 int useBatch = 0;
 
 pthread_t** pths;
+int nprocs;
 char** pth_messages;
+
+pthread_mutex_t mutex;
 
 void setUseBatch(int value) {
     useBatch = value;
@@ -21,6 +25,11 @@ int getUseBatch() {
 }
 
 int init_batch() {
+    if(pthread_mutex_init(&mutex, NULL) != 0) {
+        perror("pthread_mutex_init failed\n");
+        log_err("pthread_mutex_init failed\n");
+        return 1;
+    }
     return create_batch_queue();
 }
 
@@ -74,7 +83,9 @@ int batch_schedule_partition() {
 void query_execute() {
     DbOperator* query;
     while(1) {
+        pthread_mutex_lock(&mutex);
         bqNode* node = pop_head_bqr();
+        pthread_mutex_unlock(&mutex);
         if (node == NULL) {
             break;
         }
@@ -92,11 +103,11 @@ void query_execute() {
                     }
                     if (scol->idx_type == UNIDX) {
                         if(select_data_col_unidx(scol, handle, pre_range, post_range) != 0) {
-                            //free(query);
+                            free(query);
                             log_err("[server.c:execute_DbOperator()] select data from column in database failed.\n");
                         }
                     }
-                    //free(query);
+                    free(query);
                     log_info("select data from column in database successfully.\n");
                 }
                 else if (query->operator_fields.select_operator.selectType == HANDLE_RSL){
@@ -108,10 +119,10 @@ void query_execute() {
                     Result* srsl_pos = get_rsl(select_rsl_pos);
                     Result* srsl_val = get_rsl(select_rsl_val);
                     if(select_data_rsl(srsl_pos, srsl_val, handle, pre_range, post_range) != 0) {
-                        //free(query);
+                        free(query);
                         log_err("[server.c:execute_DbOperator()] select data from result in database failed.\n");
                     }
-                    //free(query);
+                    free(query);
                     log_info("select data from result in database successfully.\n");
                 }
                 else {
@@ -120,6 +131,12 @@ void query_execute() {
             }
         }
     }
+    //pthread_exit(NULL);
+    //log_info("nprocs: %d\n",nprocs);
+    //for (int i = 0; i < nprocs; ++i) {
+    //    pthread_exit(pths[i]);
+    //}
+
 }
 
 int create_thread(int size_p) {
@@ -144,12 +161,16 @@ int create_thread(int size_p) {
 
 int exec_batch_query() {
     void *status;
-    int nprocs = get_nprocs();
+    nprocs = get_nprocs() - 1;
     log_info("current available process number: %d\n", nprocs);
-    create_thread(nprocs-2);
-    for(int i = 0; i < (nprocs-2); ++i) {
+    create_thread(nprocs);
+    for(int i = 0; i < nprocs; ++i) {
         pthread_join(*pths[i],&status);
+    }
+    if (pthread_mutex_destroy(&mutex) != 0) {
+        perror("pthread_mutex_destroy failed\n");
+        log_err("pthread_mutex_destroy failed\n");
+        return 1;
     }
     return 0;
 }
-

@@ -301,7 +301,7 @@ int persist_data_csv() {
 	}
     char cwd[DIRLEN];
     if (getcwd(cwd, DIRLEN) == NULL) {
-        log_err("current working dir path is too long");
+        log_err("Current working dir path is too long");
         return 1;
     }
 	strcat(cwd,"/");
@@ -309,7 +309,7 @@ int persist_data_csv() {
 	strcat(cwd,"db/");
     strcat(cwd,current_db->db_name);
     strcat(cwd,".csv");
-	log_info("current database is stored at: %s\n", cwd);
+	log_info("Current database is stored at: %s\n", cwd);
 	FILE *fp = NULL;
 	fp = fopen(cwd, "w+");
 	if(fp == NULL) {
@@ -318,8 +318,9 @@ int persist_data_csv() {
 	}
 	for(int i = 0; i < current_db->db_size; ++i) {
 	    Table* stbl = get_tbl(current_db->tables[i]->tbl_name);
-		for(int j = 0; j < stbl->tbl_size; ++j) {
-            fprintf(fp, "%s", current_db->db_name);
+
+	    for(int j = 0; j < stbl->tbl_size; ++j) {
+	        fprintf(fp, "%s", current_db->db_name);
 		    fprintf(fp, ",%s", stbl->tbl_name);
             fprintf(fp, ",%s", stbl->pricls_col_name);
 		    fprintf(fp, ",%zu", stbl->tbl_capacity);
@@ -350,6 +351,7 @@ int persist_data_csv() {
 			fprintf(fp, "\n");
 		}
 	}
+    log_info("The database is successfully stored at: %s\n", cwd);
 	fclose(fp);
     return 0;
 }
@@ -660,66 +662,101 @@ int fetch_col_data(char* col_val_name, char* rsl_vec_pos, char* handle) {
 }
 
 char* generate_print_result(size_t print_num, char** print_name) {
-	size_t row_num = get_rsl(print_name[0])->num_tuples;
+	size_t rsl_total_tuples = 0;
+	for(size_t i = 0; i< print_num; ++i) {
+		Result* rsl = get_rsl(print_name[i]);
+		rsl_total_tuples += rsl->num_tuples;
+	}
+	char* print_rsl = malloc(rsl_total_tuples * (sizeof(long)+1));
+	sprintf(print_rsl,"");
+	log_info("[Server results]\n");
+	for(size_t i = 0; i< print_num; ++i) {
+		Result* rsl = get_rsl(print_name[i]);
+		if(rsl->data_type == INT) {
+			for(size_t j = 0; j < rsl->num_tuples; ++j) {
+				log_info("%d\n",((int *)rsl->payload)[j]);
+				char* tmp_payload_data = malloc(sizeof(int)+1);
+				sprintf(tmp_payload_data, "%d\n", ((int *)rsl->payload)[j]);
+				strcat(print_rsl,tmp_payload_data);
+			}
+		}
+		else if(rsl->data_type == FLOAT) {
+			for(size_t j = 0; j < rsl->num_tuples; ++j) {
+				log_info("%0.2f\n",((double *)rsl->payload)[j]);
+				char* tmp_payload_data = malloc(sizeof(double)+1);
+				sprintf(tmp_payload_data, "%0.2f\n", ((double *)rsl->payload)[j]);
+				strcat(print_rsl,tmp_payload_data);
+			}
+		}
+		else if(rsl->data_type == LONG) {
+			for(size_t j = 0; j < rsl->num_tuples; ++j) {
+				log_info("%ld\n",((double *)rsl->payload)[j]);
+				char* tmp_payload_data = malloc(sizeof(long)+1);
+				sprintf(tmp_payload_data, "%ld\n", ((long *)rsl->payload)[j]);
+				strcat(print_rsl,tmp_payload_data);
+			}
+		}
+	}
+	log_info("\n");
+	return print_rsl;
+	/*
 	int* data_payload_id = malloc(print_num* sizeof(int));
 	void** data_payload_set = malloc(print_num * sizeof(void*));
 	size_t row_total_length = 0;
+	size_t row_total_num = 0;
 	for(int i = 0; i < print_num; ++i) {
 		Result* rsl = get_rsl(print_name[i]);
+		size_t row_num = rsl->num_tuples;
+		row_total_num += row_num;
 		if(rsl->data_type == INT) {
-			row_total_length += sizeof(int);
+			row_total_length += row_num * sizeof(int);
 			data_payload_id[i] = 1;
 			data_payload_set[i] = calloc(row_num, sizeof(int));
 			memcpy(data_payload_set[i], rsl->payload, row_num* sizeof(int));
 		}
 		else if (rsl->data_type == FLOAT) {
-			row_total_length += sizeof(double);
+			row_total_length += row_num * sizeof(double);
 			data_payload_id[i] = 2;
-			data_payload_set[i] = calloc(row_num, sizeof(double));
+			data_payload_set[i] = calloc(row_num, sizeof(double)+1);
 			memcpy(data_payload_set[i], rsl->payload, row_num* sizeof(double));
 		}
 		else if (rsl->data_type == LONG) {
-			row_total_length += sizeof(long);
+			row_total_length += row_num * sizeof(long);
 			data_payload_id[i] = 3;
 			data_payload_set[i] = calloc(row_num, sizeof(long));
 			memcpy(data_payload_set[i], rsl->payload, row_num* sizeof(long));
 		}
 	}
-	char* print_rsl = malloc(row_num*(row_total_length+print_num+1) * sizeof(char));
-	strcpy(print_rsl,"");
-
+	char* print_rsl = malloc((row_total_length+1) * sizeof(char));
 	void* data_payload;
-
-	for(int j = 0; j < row_num; ++j) {
-		char* payload_tmp = malloc((row_total_length+print_num+1) * sizeof(char));
-		int len = 0;
+	for(int j = 0; j < row_total_num; ++j) {
+		char* payload_tmp = (char*) malloc((row_total_length+1) * sizeof(char));
+        int data_payload_len = 0;
 		for(int k = 0; k < print_num; ++k) {
 			switch (data_payload_id[k]) {
 				case 1:
 					data_payload = data_payload_set[k];
-					len += sprintf(payload_tmp+len, "%d,", ((int *)data_payload)[j]);
+                    data_payload_len += sprintf(payload_tmp+data_payload_len, "%d,", ((int *)data_payload)[j]);
 					break;
 				case 2:
 					data_payload = data_payload_set[k];
-					len += sprintf(payload_tmp+len, "%0.2f,", ((double *)data_payload)[j]);
+                    data_payload_len += sprintf(payload_tmp+data_payload_len, "%0.2f,", ((double *)data_payload)[j]);
 					break;
 				case 3:
 					data_payload = data_payload_set[k];
-					len += sprintf(payload_tmp+len, "%ld,", ((long *)data_payload)[j]);
-					break;
-				default:
+                    data_payload_len += sprintf(payload_tmp+data_payload_len, "%ld,", ((long *)data_payload)[j]);
 					break;
 			}
 		}
-		payload_tmp[len-1] = '\n';
+		payload_tmp[data_payload_len-1] = '\n';
 		strcat(print_rsl,payload_tmp);
-		//delete free(payload_tmp), may cause free() invalid size
-		//free(payload_tmp);
+		free(payload_tmp);
 	}
 	size_t lastchar = strlen(print_rsl);
 	print_rsl[lastchar] = '\0';
 
 	return print_rsl;
+	*/
 }
 
 int avg_col_data(char* avg_col_name, char* handle) {

@@ -23,6 +23,8 @@ char* next_token_period(char **tokenizer, message_status *status);
 
 bool is_csv(char* filename);
 
+int hash_func(const char* s, const int a, const int m);
+
 /**
  * parse a table name from a full column name
  **/

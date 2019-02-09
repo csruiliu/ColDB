@@ -92,11 +92,11 @@ void query_execute() {
                     }
                     if (scol->idx_type == UNIDX) {
                         if(select_data_col_unidx(scol, handle, pre_range, post_range) != 0) {
-                            free(query);
+                            //free(query);
                             log_err("[server.c:execute_DbOperator()] select data from column in database failed.\n");
                         }
                     }
-                    free(query);
+                    //free(query);
                     log_info("select data from column in database successfully.\n");
                 }
                 else if (query->operator_fields.select_operator.selectType == HANDLE_RSL){
@@ -108,10 +108,10 @@ void query_execute() {
                     Result* srsl_pos = get_rsl(select_rsl_pos);
                     Result* srsl_val = get_rsl(select_rsl_val);
                     if(select_data_rsl(srsl_pos, srsl_val, handle, pre_range, post_range) != 0) {
-                        free(query);
+                        //free(query);
                         log_err("[server.c:execute_DbOperator()] select data from result in database failed.\n");
                     }
-                    free(query);
+                    //free(query);
                     log_info("select data from result in database successfully.\n");
                 }
                 else {
@@ -146,8 +146,8 @@ int exec_batch_query() {
     void *status;
     int nprocs = get_nprocs();
     log_info("current available process number: %d\n", nprocs);
-    create_thread(nprocs-1);
-    for(int i = 0; i < (nprocs-1); ++i) {
+    create_thread(nprocs-2);
+    for(int i = 0; i < (nprocs-2); ++i) {
         pthread_join(*pths[i],&status);
     }
     return 0;

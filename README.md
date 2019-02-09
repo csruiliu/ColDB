@@ -125,12 +125,12 @@ The naive test files are located in `./project_tests` folder. In this folder, `c
 |:-----:|:-----:|
 | Test 10 | **Pass** |
 | Test 11 | **Pass** |
-| Test 12 | **Pass** |
-| Test 13 | **Pass** |
-| Test 14 | **Pass** |
-| Test 15 | **Pass** |
-| Test 16 | **Pass** |
-| Test 17 | **Pass** |
+| Test 12 |  |
+| Test 13 |  |
+| Test 14 |  |
+| Test 15 |  |
+| Test 16 |  |
+| Test 17 |  |
 
 **Milestone 3: test18 through test29**
 

@@ -110,15 +110,20 @@ char* exec_create_idx(DbOperator* query) {
         Table* tbl_aff = get_tbl(tbl_name);
         if(tbl_aff == NULL) {
             free_query(query);
-            return "no affiliated table found.\n";
+            return "no table found.\n";
         }
         if(tbl_aff->hasCls == 0) {
             tbl_aff->hasCls = 1;
             tbl_aff->pricls_col_name = (char *) realloc(tbl_aff->pricls_col_name, strlen(col_name));
             strcpy(tbl_aff->pricls_col_name, col_name);
             col->cls_type = PRICLSR;
+            log_info("the table take the cluster index on column %s as the primary cluster index", col_name);
+            if(tbl_aff->tbl_size != 0) {
+                tbl_psylayout_cls(tbl_aff,col->idx_type);
+            }
         }
         else {
+            log_info("the table already has a primary cluster index on column %s", tbl_aff->pricls_col_name);
             col->cls_type = CLSR;
         }
     }

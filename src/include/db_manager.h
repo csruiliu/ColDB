@@ -62,4 +62,6 @@ int min_rsl_value(char* min_vec,char* handle);
 
 int min_rsl_value_pos(char* min_vec_pos, char* min_vec_value, char* handle_pos, char* handle_value);
 
+int tbl_psylayout_cls(Table* tbl_aff, IndexType idx_type);
+
 #endif //COLDB_DB_MANAGER_H

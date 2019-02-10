@@ -136,6 +136,10 @@ Column* create_column(char* tbl_name, char* col_name) {
 	}
 }
 
+int tbl_psylayout_cls(Table* tbl_aff, IndexType idx_type) {
+	return 0;
+}
+
 int load_data_csv(char* data_path) {
 	message_status mes_status = OK_DONE;
 	FILE *fp;
@@ -164,6 +168,7 @@ int load_data_csv(char* data_path) {
 		}
 	}
 	log_info("%d columns in the loading file\n", headerCount);
+
     //only 1 column to load
 	if (headerCount == 1) {
         char* header = trim_newline(line);
@@ -675,6 +680,7 @@ char* generate_print_result(size_t print_num, char** print_name) {
 		if(rsl->data_type == INT) {
 			for(size_t j = 0; j < rsl->num_tuples; ++j) {
 				log_info("%d\n",((int *)rsl->payload)[j]);
+				//we allocate 1 one to avoid overflow
 				char* tmp_payload_data = malloc(sizeof(int)+1);
 				sprintf(tmp_payload_data, "%d\n", ((int *)rsl->payload)[j]);
 				strcat(print_rsl,tmp_payload_data);

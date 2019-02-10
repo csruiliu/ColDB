@@ -134,7 +134,7 @@ The naive test files are located in `./project_tests` folder. In this folder, `c
 
 | Test no. | Pass/Fail |
 |:-----:|:-----:|
-| Test 18 |  |
+| Test 18 | **Pass** |
 | Test 19 |  |
 | Test 20 |  |
 | Test 21 |  |

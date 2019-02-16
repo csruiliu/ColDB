@@ -16,4 +16,3 @@ relational_insert(db1.tbl2,-8,-88,-888,-2222)
 relational_insert(db1.tbl2,-9,-99,-999,-2222)
 relational_insert(db1.tbl2,-10,-11,0,-34)
 shutdown
-

@@ -14,4 +14,3 @@ relational_insert(db1.tbl1,-8)
 relational_insert(db1.tbl1,-9)
 relational_insert(db1.tbl1,-10)
 shutdown
-

@@ -1,6 +1,9 @@
 # IDE
 **/.idea/
 
+# files
+*.pdf
+
 # Prerequisites
 *.d
 

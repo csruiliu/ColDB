@@ -10,8 +10,6 @@ UChicago CMSC33500 Project: A main-memory optimized column-store, [using c only 
 
 **Milestone 4**: add hash-join/nested-join support to ColDB system
 
-**TODO 1: Fine-grained query partition for batch**
-
 ## Instructions ##
 
 ### Getting Started ###
@@ -159,4 +157,4 @@ The naive test files are located in `./project_tests` folder. In this folder, `c
 | Test 35 |  |
 
 ---
-Note that this project originates from Stratos Idreos’s CS165 course at Harvard. He and his TAs have put a tremendous amount of effort into making this project. Some of the documentation has been updated to reflect our course number, but you may see references to 165. 
+Note that this project originates from Stratos Idreos's CS165 course at Harvard. He and his TAs have put a tremendous amount of effort into making this project. Some of the documentation has been updated to reflect our course number, but you may see references to 165. 

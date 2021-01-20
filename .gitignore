@@ -3,6 +3,10 @@
 
 # files
 *.pdf
+**/db/
+**/.deps/
+server
+client
 
 # Prerequisites
 *.d

@@ -2,7 +2,7 @@
 create(db,"db1")
 create(tbl,"tbl1",db1,1)
 create(col,"col1",db1.tbl1)
-load("/home/rui/Development/coldb/project_tests/data1.csv")
+load("/home/ruiliu/Development/coldb/project_tests/data1.csv")
 relational_insert(db1.tbl1,-1)
 relational_insert(db1.tbl1,-2)
 relational_insert(db1.tbl1,-3)

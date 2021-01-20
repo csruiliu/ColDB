@@ -87,7 +87,7 @@ DbOperator* parse_create_idx(char* query_command, message* send_message) {
     else {
         dbo->operator_fields.create_idx_operator.col_idx = UNIDX;
     }
-    if(strcmp(is_cluster,"clustered") == 0) {
+    if(strcmp(is_cluster, "clustered") == 0) {
         dbo->operator_fields.create_idx_operator.is_cluster = true;
     }
     else {

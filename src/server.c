@@ -119,7 +119,7 @@ char* exec_create_idx(DbOperator* query) {
             col->cls_type = PRICLSR;
             log_info("the table take the cluster index on column %s as the primary cluster index", col_name);
             if(tbl_aff->tbl_size != 0) {
-                tbl_psylayout_cls(tbl_aff,col->idx_type);
+                tbl_psylayout_cls(tbl_aff, col->idx_type);
             }
         }
         else {
@@ -131,7 +131,7 @@ char* exec_create_idx(DbOperator* query) {
         col->cls_type = UNCLSR;
     }
     free_query(query);
-    log_info("created [%s,%s] index for [%s] successfully.\n",col->idx_type,col->cls_type,col_name);
+    log_info("created [%s,%s] index for [%s] successfully.\n", col->idx_type, col->cls_type,col_name);
     return "create column index successfully.\n";
 }
 

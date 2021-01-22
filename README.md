@@ -58,7 +58,7 @@ Each database is stored as a csv file (e.g., `coldb.csv`), located in `./src/db`
 In the csv file, each line (record) describes a single column with the following schema: 
 
 | db | tbl | pricls_col | tbl_cap | col | index | cls | row_id | value | ... |
-|---|---|---|---|---|---|---|---|---|---|---|---|
+|---|---|---|---|---|---|---|---|---|---|
 | db1 | table1 | col3 | 4 | col1 | btree | uncls | 0 | 192 | ... |
 
 + `db`: The database name that the column belongs to

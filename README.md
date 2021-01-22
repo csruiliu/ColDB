@@ -1,31 +1,22 @@
 # ColDB #
 
-UChicago CMSC33500 Project: A main-memory optimized column-store, [using c only with Berkeley BSC]
+ColDB: A main-memory optimized column-store. 
 
-**Milestone 1**: design and implement the basic functionality of a column-store with the ability to run single-table queries
+This is an academic column-based database. It is implemented by C [only with Berkeley BSC].
 
-**Milestone 2**: add fast scans, using scan sharing & multi-cores
+### Dependencies ###
 
-**Milestone 3**: add indexing support to boost select operators
+The ColDB requires libexplain. You can install this package via:
 
-**Milestone 4**: add hash-join/nested-join support to ColDB system
+> `sudo apt install libexplain-dev`
 
-## Instructions ##
+Sometimes, there will be a fatal error: zconf.h: No such file or directory, it can be fixed via:
 
-### Getting Started ###
-
-Please follow the instructions in the README in the project root for 
-setting up your git repository.
-
-We recommend that throughout the quarter, you make git tags at each of
-the checkpoints so that it's easier to manage the progress of your project.
+> `sudo apt install build-essential zlib1g-dev`
 
 ### Client-Server code ###
-We have included a simple unix socket implementation of an interactive
-client-server database implementation. You are recommended to use it
-as a foundation for your own database implementation. We have also
-provided a sample makefile that should be compatible with most machines.
-You are free to use your own makefile as well.
+
+We have included a simple unix socket implementation of an interactive client-server database implementation. You are recommended to use it as a foundation for your own database implementation. We have also provided a sample makefile that should be compatible with most machines. You are free to use your own makefile as well.
 
 You can build both the client and server using:
 
@@ -42,60 +33,46 @@ A high-level explanation of what happens is:
 
 2. The client attempts to connect to the server.
 
-3. When the client has successfully connected, it waits for input from stdin.
-Once received, it will create a message struct containing the input and
-then send it to the server.  It immediately waits for a response to determine
-if the server is willing to process the command.
+3. When the client has successfully connected, it waits for input from stdin. Once received, it will create a message struct containing the input and then send it to the server.  It immediately waits for a response to determine if the server is willing to process the command.
 
-4. When the server notices that a client has connected, it waits for a message
-from the client.  When it receives the message from the client, it parses the
-input and decides whether it is a valid/invalid query.
-It immediately returns the response indicating whether it was valid or not.
+4. When the server notices that a client has connected, it waits for a message from the client.  When it receives the message from the client, it parses the input and decides whether it is a valid/invalid query. It immediately returns the response indicating whether it was valid or not.
 
-5. Once the client receives the response, three things are possible:
-1) if the query was invalid, then just go back to waiting for input from stdin.
-2) if the query was valid and the server indicates that it will send back the
-result, then wait to receive another message from the server.
-3) if the query was valid but the server indicates that it will not send back
-the result, then go back to waiting for input on stdin.
+5. Once the client receives the response, three things are possible: 1) if the query was invalid, then just go back to waiting for input from stdin. 2) if the query was valid and the server indicates that it will send back the result, then wait to receive another message from the server. 3) if the query was valid but the server indicates that it will not send back the result, then go back to waiting for input on stdin.
 
-6. Back on the server side, if the query is a valid query then it should
-process it, and then send back the result if it was asked to.
-
-### Dependencies
-Right now the starter code requires that you use libexplain. You can install this 
-package via:
-
-> `sudo apt-get install libexplain-dev`
-
-Sometimes, there will be a fatal error: zconf.h: No such file or directory, it can be fixed via:
-
-> `sudo apt-get install build-essential zlib1g-dev`
+6. Back on the server side, if the query is a valid query then it should process it, and then send back the result if it was asked to.
 
 ### Logging ###
 
-We have included a couple useful logging functions in utils.c.
-These logging functions depend on #ifdef located within the code.
-There are multiple ways to enable logging. One way is by adding your own
-definition at the top of the file:
+We have included a couple useful logging functions in utils.c. These logging functions depend on #ifdef located within the code. There are multiple ways to enable logging. One way is by adding your own definition at the top of the file:
 
 > `#define LOG 1`
 
-The other way is to add it during the compilation process. Instead of running
-just `make`, you can run:
+The other way is to add it during the compilation process. Instead of running just `make`, you can run:
 
 > `make CFLAGS+="-DLOG -DLOG_ERR -DLOG_INFO"`
 
+### Database Schema ###
 
-### Persistence CSV ###
+Each database is stored as a csv file (e.g., `coldb.csv`), located in `./src/db` folder, of course you can redirect it. 
 
-The database is stored as a CSV, located in `./src/db` folder 
+In the csv file, each line (record) describes a single column with the following schema: 
 
-Each line/record describes each column: 
-
-| aff_db_name | tbl_name | pricls_col_name | tbl_capacity | col_name | index_type | cls_type | row_id | value | ... | row_id | value |
+| db | tbl | pricls_col | tbl_cap | col | index | cls | row_id | value | ... |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-|   |   |   |   |   |   |   |   |   |   |   |   |
+| db1 | table1 | col3 | 4 | col1 | btree | uncls | 0 | 192 | ... |
+
++ `db`: The database name that the column belongs to
++ `tbl`: The table name that the column belongs to
++ `pricls_col`: The principle cluster column name in the table. The first declared clustered index will be the principal copy of the data. This copy of the data will support unclustered indices.
++ `tbl_cap`: how many columns in the table
++ `col`: The column name for this record
++ `index`: The index supported by the current column 
++ `cls`: Whether the current index is clustered index or not
++ `row_id`: The row id
++ `value`: data stored in the corresponding row.
+
+
+The schema design is based on the [instructions](Instructions.md). 
 
 ## Test ## 
 
@@ -156,5 +133,8 @@ The naive test files are located in `./project_tests` folder. In this folder, `c
 | Test 34 |  |
 | Test 35 |  |
 
+---------
+
+Reference:
 ---
-Note that this project originates from Stratos Idreos's CS165 course at Harvard. He and his TAs have put a tremendous amount of effort into making this project. Some of the documentation has been updated to reflect our course number, but you may see references to 165. 
+Note that this project originates from Stratos Idreos's CS165 course at Harvard. He and his TAs have put a tremendous amount of effort into making this project. Some of the documentation has been updated to reflect our course number UChicago CMSC33500. 

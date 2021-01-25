@@ -9,6 +9,27 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdbool.h>
+#include "message.h"
+
+
+bool has_comma(char *str);
+
+bool has_period(char *str);
+
+char* next_token_comma(char **tokenizer, message_status *status);
+
+char* next_token_period(char **tokenizer, message_status *status);
+
+bool is_csv(char* filename);
+
+int hash_func(const char* s, const int a, const int m);
+
+/**
+ * parse a table name from a full column name
+ **/
+
+char* parse_tbl_name(char* fullColName);
 
 /**
  * trims newline characters from a string (in place)

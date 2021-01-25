@@ -1,8 +1,10 @@
 #include <stdio.h>
-#include <string.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
+#include <stdbool.h>
+#include "message.h"
 #include "utils.h"
 
 #define ANSI_COLOR_RED     "\x1b[31m"
@@ -12,6 +14,27 @@
 #define LOG 1
 #define LOG_ERR 1
 #define LOG_INFO 1
+
+
+bool has_comma(char *str) {
+    size_t length = strlen(str);
+    for (int i = 0; i < length; ++i) {
+        if (str[i] == ',') {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool has_period(char *str) {
+    size_t length = strlen(str);
+    for (int i = 0; i < length; ++i) {
+        if (str[i] == '.') {
+            return true;
+        }
+    }
+    return false;
+}
 
 /* removes newline characters from the input string.
  * Shifts characters over and shortens the length of

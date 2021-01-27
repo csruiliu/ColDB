@@ -1,4 +1,9 @@
-#include "cs165_api.h"
+#include <stdlib.h>
+#include <stdbool.h>
+#include <stdio.h>
+
+#include "db_element.h"
+#include "message.h"
 
 // In this class, there will always be only one active database at a time
 Db *current_db;

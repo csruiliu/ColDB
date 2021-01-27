@@ -12,31 +12,15 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "cs165_api.h"
+
 #include "parse.h"
 #include "utils.h"
-#include "client_context.h"
-
-/**
- * Takes a pointer to a string.
- * This method returns the original string truncated to where its first comma lies.
- * In addition, the original string now points to the first character after that comma.
- * This method destroys its input.
- **/
-
-char* next_token(char** tokenizer, message_status* status) {
-    char* token = strsep(tokenizer, ",");
-    if (token == NULL) {
-        *status= INCORRECT_FORMAT;
-    }
-    return token;
-}
 
 /**
  * This method takes in a string representing the arguments to create a table.
  * It parses those arguments, checks that they are valid, and creates a table.
  **/
-
+/*
 message_status parse_create_tbl(char* create_arguments) {
     message_status status = OK_DONE;
     char** create_arguments_index = &create_arguments;
@@ -50,7 +34,7 @@ message_status parse_create_tbl(char* create_arguments) {
     }
 
     // Get the table name free of quotation marks
-    table_name = trim_quotes(table_name);
+    table_name = trim_quote(table_name);
 
     // read and chop off last char, which should be a ')'
     int last_char = strlen(col_cnt) - 1;
@@ -80,12 +64,12 @@ message_status parse_create_tbl(char* create_arguments) {
 
     return status;
 }
-
+*/
 /**
  * This method takes in a string representing the arguments to create a database.
  * It parses those arguments, checks that they are valid, and creates a database.
  **/
-
+/*
 message_status parse_create_db(char* create_arguments) {
     char *token;
     token = strsep(&create_arguments, ",");
@@ -115,10 +99,11 @@ message_status parse_create_db(char* create_arguments) {
         }
     }
 }
-
+*/
 /**
  * parse_create parses a create statement and then passes the necessary arguments off to the next function
  **/
+/*
 message_status parse_create(char* create_arguments) {
     message_status mes_status;
     char *tokenizer_copy, *to_free;
@@ -149,12 +134,13 @@ message_status parse_create(char* create_arguments) {
     free(to_free);
     return mes_status;
 }
+*/
 
 /**
  * parse_insert reads in the arguments for a create statement and 
  * then passes these arguments to a database function to insert a row.
  **/
-
+/*
 DbOperator* parse_insert(char* query_command, message* send_message) {
     unsigned int columns_inserted = 0;
     char* token = NULL;
@@ -196,6 +182,7 @@ DbOperator* parse_insert(char* query_command, message* send_message) {
         return NULL;
     }
 }
+*/
 
 /**
  * parse_command takes as input the send_message from the client and then
@@ -217,25 +204,27 @@ DbOperator* parse_command(char* query_command, message* send_message, int client
     if (equals_pointer != NULL) {
         // handle exists, store here. 
         *equals_pointer = '\0';
-        cs165_log(stdout, "FILE HANDLE: %s\n", handle);
+        coldb_log(stdout, "FILE HANDLE: %s\n", handle);
         query_command = ++equals_pointer;
     } else {
         handle = NULL;
     }
 
-    cs165_log(stdout, "QUERY: %s\n", query_command);
+    coldb_log(stdout, "QUERY: %s\n", query_command);
 
     send_message->status = OK_WAIT_FOR_RESPONSE;
     query_command = trim_whitespace(query_command);
-    // check what command is given. 
+
+    // check what command is given.
     if (strncmp(query_command, "create", 6) == 0) {
-        query_command += 6;
-        send_message->status = parse_create(query_command);
-        dbo = malloc(sizeof(DbOperator));
-        dbo->type = CREATE;
+        //query_command += 6;
+        //send_message->status = parse_create(query_command);
+        //dbo = malloc(sizeof(DbOperator));
+        //dbo->type = CREATE;
+        //dbo = parse_create_db(query_command);
     } else if (strncmp(query_command, "relational_insert", 17) == 0) {
         query_command += 17;
-        dbo = parse_insert(query_command, send_message);
+        //dbo = parse_insert(query_command, send_message);
     }
     if (dbo == NULL) {
         return dbo;

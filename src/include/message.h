@@ -1,8 +1,27 @@
 #ifndef MESSAGE_H__
 #define MESSAGE_H__
 
-// mesage_status defines the status of the previous request.
-// FEEL FREE TO ADD YOUR OWN OR REMOVE ANY THAT ARE UNUSED IN YOUR PROJECT
+/**
+ * Error codes used to indicate the outcome of an API call
+ **/
+typedef enum StatusCode {
+    /* The operation completed successfully */
+    OK,
+    /* There was an error with the call. */
+    ERROR,
+} StatusCode;
+
+/**
+ * status declares an error code and associated message
+ */
+typedef struct Status {
+    StatusCode code;
+    char* error_message;
+} Status;
+
+/**
+ * mesage_status defines the status of the previous request.
+ **/
 typedef enum message_status {
     OK_DONE,
     OK_WAIT_FOR_RESPONSE,

@@ -24,10 +24,8 @@
 
 #include "common.h"
 #include "parse.h"
-#include "cs165_api.h"
 #include "message.h"
 #include "utils.h"
-#include "client_context.h"
 
 #define DEFAULT_QUERY_BUFFER_SIZE 1024
 
@@ -37,7 +35,8 @@
  **/
 char* execute_DbOperator(DbOperator* query) {
     free(query);
-    return "165";
+    log_info("unsupported command, try again.\n");
+    return "unsupported command, try again.\n";
 }
 
 /**

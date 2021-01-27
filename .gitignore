@@ -1,6 +1,9 @@
 # IDE
 **/.idea/
 
+# CMake
+**/cmake-build-debug
+
 # files
 *.pdf
 **/db/

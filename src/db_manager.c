@@ -6,7 +6,11 @@
 #include "message.h"
 
 // In this class, there will always be only one active database at a time
-Db *current_db;
+Db* current_db;
+
+Db* create_db(char* db_name) {
+    return NULL;
+}
 
 /* 
  * Here you will create a table object. The Status object can be used to return

@@ -24,19 +24,33 @@
 
 #include "common.h"
 #include "parse.h"
-#include "message.h"
-#include "utils.h"
+#include "utils_func.h"
+#include "db_element.h"
+#include "db_manager.h"
 
 #define DEFAULT_QUERY_BUFFER_SIZE 1024
+
+char* exec_create_db(DbOperator* query) {
+    char* db_name = query->operator_fields.create_db_operator.db_name;
+    //current_db = create_db(db_name);
+    current_db = create_db(db_name);
+}
+
 
 /** execute_DbOperator takes as input the DbOperator and executes the query.
  * This should be replaced in your implementation (and its implementation possibly moved to a different file).
  * It is currently here so that you can verify that your server and client can send messages.
  **/
 char* execute_DbOperator(DbOperator* query) {
-    free(query);
-    log_info("unsupported command, try again.\n");
-    return "unsupported command, try again.\n";
+    if (query->type == CREATE_DB) {
+        return exec_create_db(query);
+    }
+    else {
+        free(query);
+        log_info("unsupported command, try again.\n");
+        return "unsupported command, try again.\n";
+    }
+
 }
 
 /**
@@ -153,10 +167,12 @@ int setup_server() {
     return server_socket;
 }
 
-// Currently this main will setup the socket and accept a single client.
-// After handling the client, it will exit.
-// You will need to extend this to handle multiple concurrent clients
-// and remain running until it receives a shut-down command.
+/**
+ * Currently this main will setup the socket and accept a single client.
+ * After handling the client, it will exit.
+ * You will need to extend this to handle multiple concurrent clients
+ * and remain running until it receives a shut-down command.
+ */
 int main(void)
 {
     int server_socket = setup_server();

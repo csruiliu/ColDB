@@ -1,20 +1,20 @@
 #include <stdlib.h>
 #include <memory.h>
 #include "kv_store.h"
-#include "utils.h"
+#include "utils_func.h"
 
 #define PRIME 19
 #define MAX_PROB 10
 
 int allocate(kvstore** kv_store, size_t size) {
-    *kvsp = malloc(sizeof(kv_store));
-    if(*kvsp == NULL) {
+    *kv_store = malloc(sizeof(kv_store));
+    if(*kv_store == NULL) {
         return 1;
     }
-    (*kvsp)->size = size;
-    (*kvsp)->count = 0;
-    (*kvsp)->kv_pair = calloc(size,sizeof(kvpair));
-    if((*kvsp)->kv_pair == NULL) {
+    (*kv_store)->size = size;
+    (*kv_store)->count = 0;
+    (*kv_store)->kv_pair = calloc(size,sizeof(kvpair));
+    if((*kv_store)->kv_pair == NULL) {
         return 1;
     }
     return 0;

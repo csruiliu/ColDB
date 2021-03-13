@@ -1,5 +1,5 @@
-#ifndef ELEMENT_H__
-#define ELEMENT_H__
+#ifndef ELEMENT_H
+#define ELEMENT_H
 
 // Limits the size of a name in our database to 64 characters
 #define MAX_SIZE_NAME 64

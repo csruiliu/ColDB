@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <math.h>
-#include "utils.h"
+#include "utils_func.h"
 
 #define ANSI_COLOR_RED     "\x1b[31m"
 #define ANSI_COLOR_GREEN   "\x1b[32m"
@@ -17,9 +17,9 @@
 /**
  * a hash function for kv store
  **/
-int hash_func(const char* s, const int a, const int m) {
+int hash_func(const char* s, size_t a, size_t m) {
     long hash = 0;
-    const int len_s = strlen(s);
+    size_t len_s = strlen(s);
     for (int i = 0; i < len_s; i++) {
         hash += (long)pow(a, len_s - (i+1)) * s[i];
         hash = hash % m;

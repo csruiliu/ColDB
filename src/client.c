@@ -26,7 +26,7 @@ machine please look into this as a a source of error. */
 
 #include "common.h"
 #include "message.h"
-#include "utils.h"
+#include "utils_func.h"
 
 #define DEFAULT_STDIN_BUFFER_SIZE 1024
 

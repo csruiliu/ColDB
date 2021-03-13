@@ -1,5 +1,5 @@
-#ifndef MESSAGE_H__
-#define MESSAGE_H__
+#ifndef MESSAGE_H
+#define MESSAGE_H
 
 /**
  * Error codes used to indicate the outcome of an API call

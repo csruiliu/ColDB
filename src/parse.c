@@ -1,10 +1,10 @@
-/* 
+/**
  * This file contains methods necessary to parse input from the client.
  * Mostly, functions in parse.c will take in string input and map these
  * strings into database operators. This will require checking that the
  * input from the client is in the correct format and maps to a valid
  * database operator.
- */
+ **/
 
 #define _BSD_SOURCE
 #include <string.h>
@@ -14,7 +14,7 @@
 #include <ctype.h>
 
 #include "parse.h"
-#include "utils.h"
+#include "utils_func.h"
 
 /**
  * This method takes in a string representing the arguments to create a table.
@@ -185,6 +185,24 @@ DbOperator* parse_insert(char* query_command, message* send_message) {
 */
 
 /**
+ * parse_create parses a create statement and then passes the necessary arguments off to the next function
+ **/
+DbOperator* parse_create_db(char* query_command) {
+    char* db_name = trim_quote(query_command);
+    int last_char = (int)strlen(db_name) - 1;
+    if (last_char < 0 || db_name[last_char] != ')') {
+        return NULL;
+    }
+    // add new null terminator
+    db_name[last_char] = '\0';
+    DbOperator* dbo = malloc(sizeof(DbOperator));
+    dbo->operator_fields.create_db_operator.db_name = malloc((strlen(db_name)+1)*sizeof(char));
+    strcpy(dbo->operator_fields.create_db_operator.db_name, db_name);
+    dbo->type = CREATE_DB;
+    return dbo;
+}
+
+/**
  * parse_command takes as input the send_message from the client and then
  * parses it into the appropriate query. Stores into send_message the
  * status to send back.
@@ -216,18 +234,18 @@ DbOperator* parse_command(char* query_command, message* send_message, int client
     query_command = trim_whitespace(query_command);
 
     // check what command is given.
-    if (strncmp(query_command, "create", 6) == 0) {
-        //query_command += 6;
-        //send_message->status = parse_create(query_command);
-        //dbo = malloc(sizeof(DbOperator));
-        //dbo->type = CREATE;
-        //dbo = parse_create_db(query_command);
-    } else if (strncmp(query_command, "relational_insert", 17) == 0) {
-        query_command += 17;
-        //dbo = parse_insert(query_command, send_message);
+    if (strncmp(query_command, "create(db,", 10) == 0) {
+        query_command += 10;
+        dbo = parse_create_db(query_command);
     }
-    if (dbo == NULL) {
-        return dbo;
+    /*
+    else if (strncmp(query_command, "relational_insert", 17) == 0) {
+        query_command += 17;
+        dbo = parse_insert(query_command, send_message);
+    }
+    */
+    else {
+        return NULL;
     }
     
     dbo->client_fd = client_socket;

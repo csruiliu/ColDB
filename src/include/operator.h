@@ -1,17 +1,23 @@
-#ifndef OPERATOR_H__
-#define OPERATOR_H__
+#ifndef OPERATOR_H
+#define OPERATOR_H
 #include "db_element.h"
 
-// Limits the size of a name in our database to 64 characters
+/**
+ * Limits the size of a name in our database to 64 characters
+ */
 #define HANDLE_MAX_SIZE 64
 
 /**
- * necessary fields for insertion
- **/
-typedef struct InsertOperator {
-    Table* table;
-    int* values;
-} InsertOperator;
+* Defines a comparator flag between two values
+**/
+typedef enum ComparatorType {
+    NO_COMPARISON = 0,
+    LESS_THAN = 1,
+    GREATER_THAN = 2,
+    EQUAL = 4,
+    LESS_THAN_OR_EQUAL = 5,
+    GREATER_THAN_OR_EQUAL = 6
+} ComparatorType;
 
 /**
  *  an enum which allows us to differentiate between columns and results
@@ -30,19 +36,40 @@ typedef union GeneralizedColumnPointer {
 } GeneralizedColumnPointer;
 
 /**
- * necessary fields for open
- **/
-typedef struct OpenOperator {
-    char* db_name;
-} OpenOperator;
-
-/**
  *  unifying type holding either a column or a result
  **/
 typedef struct GeneralizedColumn {
     GeneralizedColumnType column_type;
     GeneralizedColumnPointer column_pointer;
 } GeneralizedColumn;
+
+/**
+ * Comparator
+ * A comparator defines a comparison operation over a column.
+ **/
+typedef struct Comparator {
+    long int p_low; // used in equality and ranges.
+    long int p_high; // used in range compares.
+    GeneralizedColumn* gen_col;
+    ComparatorType type1;
+    ComparatorType type2;
+    char* handle;
+} Comparator;
+
+/**
+ * necessary fields for insertion
+ **/
+typedef struct InsertOperator {
+    Table* table;
+    int* values;
+} InsertOperator;
+
+/**
+ * necessary fields for open
+ **/
+typedef struct OpenOperator {
+    char* db_name;
+} OpenOperator;
 
 /**
  *  used to refer to a column in our client context
@@ -62,18 +89,25 @@ typedef struct ClientContext {
 } ClientContext;
 
 /**
+ * necessary fields for create db command
+ **/
+typedef struct CreateDbOperator {
+    char* db_name;
+} CreateDbOperator;
+
+/**
  * Union type holding the fields of any operator
  **/
 typedef union OperatorFields {
+    CreateDbOperator create_db_operator;
     InsertOperator insert_operator;
-    OpenOperator open_operator;
 } OperatorFields;
 
 /**
  * Supported type of operator
  **/
 typedef enum OperatorType {
-    CREATE,
+    CREATE_DB,
     INSERT,
     OPEN,
 } OperatorType;
@@ -91,6 +125,5 @@ typedef struct DbOperator {
     int client_fd;
     ClientContext* context;
 } DbOperator;
-
 
 #endif

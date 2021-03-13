@@ -3,11 +3,16 @@
 // Provides utility and helper functions that may be useful throughout.
 // Includes debugging tools.
 
-#ifndef __UTILS_H__
-#define __UTILS_H__
+#ifndef UTILS_FUNC_H
+#define UTILS_FUNC_H
 
 #include <stdarg.h>
 #include <stdio.h>
+
+/**
+ * a hash function for kv store
+ **/
+int hash_func(const char* s, size_t a, size_t m);
 
 /**
  * trims newline characters from a string (in place)

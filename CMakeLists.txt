@@ -9,12 +9,15 @@ add_executable(coldb
         src/include/common.h
         src/include/db_element.h
         src/include/db_manager.h
+        src/include/kv_store.h
         src/include/message.h
         src/include/operator.h
         src/include/parse.h
-        src/include/utils.h
+        src/include/utils_func.h
         src/client.c
+        src/db_element.c
         src/db_manager.c
+        src/kv_store.c
         src/parse.c
         src/server.c
-        src/utils.c)
+        src/utils_func.c)

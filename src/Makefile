@@ -14,7 +14,7 @@ O ?= 0
 # Flags and other libraries
 override CFLAGS += -Wall -Wextra -pedantic -pthread -O$(O) -I$(INCLUDES)
 LDFLAGS =
-LIBS =
+LIBS = -lm
 INCLUDES = include
 EXPLAIN = -lexplain
 

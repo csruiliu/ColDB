@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <math.h>
 #include "utils.h"
 
 #define ANSI_COLOR_RED     "\x1b[31m"
@@ -13,6 +14,18 @@
 #define LOG_ERR 1
 #define LOG_INFO 1
 
+/**
+ * a hash function for kv store
+ **/
+int hash_func(const char* s, const int a, const int m) {
+    long hash = 0;
+    const int len_s = strlen(s);
+    for (int i = 0; i < len_s; i++) {
+        hash += (long)pow(a, len_s - (i+1)) * s[i];
+        hash = hash % m;
+    }
+    return (int)hash;
+}
 
 /**
  * Removes newline characters from the input string.

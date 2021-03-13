@@ -9,7 +9,7 @@
  * DataType
  * Flag to mark what type of data is held in the struct.
  * You can support additional types by including this enum and using void*
- * in place of int* in db_operator simliar to the way IndexType supports
+ * in place of int* in db_operator similar to the way IndexType supports
  * additional types.
  **/
 typedef enum DataType {

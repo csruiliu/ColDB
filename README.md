@@ -110,28 +110,28 @@ The naive test files are located in `./project_tests` folder. In this folder, `c
 | Test no. | Pass/Fail |
 |:-----:|:-----:|
 | Test 18 | **Pass** |
-| Test 19 |  |
-| Test 20 |  |
-| Test 21 |  |
-| Test 22 |  |
-| Test 23 |  |
-| Test 24 |  |
-| Test 25 |  |
-| Test 26 |  |
-| Test 27 |  |
-| Test 28 |  |
-| Test 29 |  |
+| Test 19 | **Pass** |
+| Test 20 | **Pass** |
+| Test 21 | **Pass** |
+| Test 22 | **Pass** |
+| Test 23 | **Pass** |
+| Test 24 | **Pass** |
+| Test 25 | **Pass** |
+| Test 26 | **Pass** |
+| Test 27 | **Pass** |
+| Test 28 | **Pass** |
+| Test 29 | **Pass** |
 
 **Milestone 4: test30 through test35**
 
 | Test no. | Pass/Fail |
 |:-----:|:-----:|
-| Test 30 |  |
-| Test 31 |  |
-| Test 32 |  |
-| Test 33 |  |
-| Test 34 |  |
-| Test 35 |  |
+| Test 30 | **Pass** |
+| Test 31 | **Pass** |
+| Test 32 | **Pass** |
+| Test 33 | **Pass** |
+| Test 34 | **Pass** |
+| Test 35 | **Pass** |
 
 ---------
 

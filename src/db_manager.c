@@ -20,10 +20,10 @@ Db* create_db(char* db_name) {
         return current_db;
     }
     db = malloc(sizeof(Db));
-    db->db_name = malloc((strlen(db_name)+1)* sizeof(char));
-    strcpy(db->db_name,db_name);
-    db->db_capacity = 0;
-    db->db_size = 0;
+    db->name = malloc((strlen(db_name)+1)* sizeof(char));
+    strcpy(db->name, db_name);
+    db->capacity = 0;
+    db->size = 0;
     db->tables = NULL;
     put_db(db_name,db);
     log_info("create db %s successfully.\n",db_name);

@@ -4,6 +4,11 @@
 // Limits the size of a name in our database to 64 characters
 #define MAX_SIZE_NAME 64
 
+#include <stdlib.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stddef.h>
+
 /**
  * EXTRA
  * DataType
@@ -56,10 +61,10 @@ typedef struct Table {
  * - tables_capacity: the amount of pointers that can be held in the currently allocated memory slot
  **/
 typedef struct Db {
-    char name[MAX_SIZE_NAME];
+    char* name;
     Table *tables;
-    size_t tables_size;
-    size_t tables_capacity;
+    size_t size;
+    size_t capacity;
 } Db;
 
 /**
@@ -71,5 +76,9 @@ typedef struct Result {
     DataType data_type;
     void *payload;
 } Result;
+
+Db* get_db(char *db_name);
+
+void put_db(char* db_name, Db* db);
 
 #endif

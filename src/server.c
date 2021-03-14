@@ -25,7 +25,6 @@
 #include "common.h"
 #include "parse.h"
 #include "utils_func.h"
-#include "db_element.h"
 #include "db_manager.h"
 
 #define DEFAULT_QUERY_BUFFER_SIZE 1024

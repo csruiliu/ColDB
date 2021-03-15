@@ -9,17 +9,10 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#include "message.h"
-
 /**
  * a hash function for kv store
  **/
 int hash_func(const char* s, size_t a, size_t m);
-
-/**
- * a hash function for kv store
- **/
-char* next_token_comma(char **tokenizer, message_status *status);
 
 /**
  * trims newline characters from a string (in place)

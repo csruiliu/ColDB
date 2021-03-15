@@ -17,6 +17,17 @@
 #include "utils_func.h"
 
 /**
+ * using comma to split string, but actually only return the string after comma
+ **/
+char* next_token_comma(char **tokenizer, message_status *status) {
+    char* token = strsep(tokenizer, ",");
+    if (token == NULL) {
+        *status = INCORRECT_FORMAT;
+    }
+    return token;
+}
+
+/**
  * This method takes in a string representing the arguments to create a table.
  * It parses those arguments, checks that they are valid, and creates a table.
  **/

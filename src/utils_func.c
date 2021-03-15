@@ -29,17 +29,6 @@ int hash_func(const char* s, size_t a, size_t m) {
 }
 
 /**
- * using comma to split string, but actually only return the string after comma
- **/
-char* next_token_comma(char **tokenizer, message_status *status) {
-    char* token = strsep(tokenizer, ",");
-    if (token == NULL) {
-        *status = INCORRECT_FORMAT;
-    }
-    return token;
-}
-
-/**
  * Removes newline characters from the input string.
  * Shifts characters over and shortens the length of
  * the string by the number of newline characters.

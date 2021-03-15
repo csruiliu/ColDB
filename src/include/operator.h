@@ -1,5 +1,6 @@
 #ifndef OPERATOR_H
 #define OPERATOR_H
+
 #include "db_element.h"
 
 /**
@@ -96,21 +97,68 @@ typedef struct CreateDbOperator {
 } CreateDbOperator;
 
 /**
- * Union type holding the fields of any operator
+ * necessary fields for create table command
  **/
-typedef union OperatorFields {
-    CreateDbOperator create_db_operator;
-    InsertOperator insert_operator;
-} OperatorFields;
+typedef struct CreateTableOperator {
+    char* db_name;
+    char* table_name;
+    size_t col_count;
+} CreateTableOperator;
+
+/**
+ * necessary fields for create column command
+ **/
+typedef struct CreateColOperator {
+    char* tbl_name;
+    char* col_name;
+} CreateColOperator;
+
+/**
+ * necessary fields for create index command
+ **/
+typedef struct CreateIdxOperator {
+    char* idx_col_name;
+    char* idx_tbl_name;
+    IndexType col_idx;
+    bool is_cluster;
+} CreateIdxOperator;
 
 /**
  * Supported type of operator
  **/
 typedef enum OperatorType {
     CREATE_DB,
+    CREATE_TBL,
+    CREATE_COL,
+    CREATE_IDX,
+    LOAD,
+    SHUTDOWN,
     INSERT,
-    OPEN,
+    SELECT,
+    FETCH,
+    PRINT,
+    AVG,
+    SUM,
+    ADD,
+    SUB,
+    MAX,
+    MIN,
+    BATCH_QUERY,
+    BATCH_EXEC
 } OperatorType;
+
+/**
+ * Union type holding the fields of any operator
+ **/
+typedef union OperatorFields {
+    InsertOperator insert_operator;
+    CreateDbOperator create_db_operator;
+    CreateTableOperator create_table_operator;
+    CreateColOperator create_col_operator;
+    CreateIdxOperator create_idx_operator;
+} OperatorFields;
+
+
 
 /**
  * DbOperator holds the following fields:

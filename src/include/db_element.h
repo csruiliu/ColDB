@@ -9,6 +9,12 @@
 #include <stdio.h>
 #include <stddef.h>
 
+typedef enum IndexType {
+    UNIDX,
+    BTREE,
+    SORTED
+} IndexType;
+
 /**
  * EXTRA
  * DataType
@@ -38,18 +44,22 @@ typedef struct Column {
  * We do not require you to dynamically manage the size of your tables,
  * although you are free to append to the struct if you would like to (i.e.,
  * include a size_t table_size).
- * name, the name associated with the table. table names must be unique
- *     within a database, but tables from different databases can have the same
- *     name.
- * - col_count, the number of columns in the table
- * - col,umns this is the pointer to an array of columns contained in the table.
- * - table_length, the size of the columns in the table.
+ * - name: the name of the associated table, which follows the format [db-name.table-name]
+ * - aff_db_name: the db_name which the table belongs to
+ * - columns: the pointer to the array of tables contained in the db.
+ * - table_size: the size of the current column objects
+ * - table_capacity: the max amount of column objects in table
+ * - pricluster_index_col_name: the name of primary clustering column
+ * - has_cluster_index: the table has primary clustering column or not, 1 means has primary clustring column, 0 is not.
  **/
 typedef struct Table {
-    char name [MAX_SIZE_NAME];
-    Column *columns;
-    size_t col_count;
-    size_t table_length;
+    char* name;
+    char* aff_db_name;
+    Column** columns;
+    size_t size;
+    size_t capacity;
+    char* pricluster_index_col_name;
+    int has_cluster_index;
 } Table;
 
 /**
@@ -62,7 +72,7 @@ typedef struct Table {
  **/
 typedef struct Db {
     char* name;
-    Table *tables;
+    Table** tables;
     size_t size;
     size_t capacity;
 } Db;
@@ -77,8 +87,47 @@ typedef struct Result {
     void *payload;
 } Result;
 
+/**
+ *  All the function definitions used for kv store of db
+ **/
+void init_db_store(size_t size);
+
 Db* get_db(char *db_name);
 
 void put_db(char* db_name, Db* db);
+
+void free_db_store();
+
+/**
+ *  All the function definitions used for kv store of table
+ **/
+void init_table_store(size_t size);
+
+Table* get_table(char* table_name);
+
+void put_table(char* table_name, Table* table);
+
+void free_table_store();
+/**
+ *  All the function definitions used for kv store of column
+ **/
+void init_column_store(size_t size);
+
+Column* get_column(char* col_name);
+
+void put_column(char* col_name, Column* col);
+
+void free_column_store();
+
+/**
+ *  All the function definitions used for kv store of result
+ **/
+void init_results_store(size_t size);
+
+Result* get_result(char* result_name);
+
+void put_rsl_replace(char* result_name, Result* result);
+
+void free_rsl_store();
 
 #endif

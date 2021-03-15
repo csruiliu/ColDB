@@ -4,8 +4,8 @@
 #include <assert.h>
 #include <memory.h>
 
-#include "db_element.h"
 #include "message.h"
+#include "db_element.h"
 #include "utils_func.h"
 
 #define RESIZE 2

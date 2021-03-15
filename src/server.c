@@ -29,12 +29,41 @@
 
 #define DEFAULT_QUERY_BUFFER_SIZE 1024
 
+void free_query(DbOperator* query) {
+    if (query->type == CREATE_TBL) {
+        free(query->operator_fields.create_table_operator.db_name);
+        free(query->operator_fields.create_table_operator.table_name);
+    }
+    else if (query->type == CREATE_COL) {
+        free(query->operator_fields.create_col_operator.col_name);
+        free(query->operator_fields.create_col_operator.tbl_name);
+    }
+    else if (query->type == CREATE_DB){
+        free(query->operator_fields.create_db_operator.db_name);
+    }
+    free(query);
+}
+
 char* exec_create_db(DbOperator* query) {
     char* db_name = query->operator_fields.create_db_operator.db_name;
     //current_db = create_db(db_name);
     current_db = create_db(db_name);
 }
 
+char* exec_create_table(DbOperator* query) {
+    char* db_name = query->operator_fields.create_table_operator.db_name;
+    char* tbl_name = query->operator_fields.create_table_operator.table_name;
+    size_t col_count = query->operator_fields.create_table_operator.col_count;
+    Table* tbl = create_table(db_name, tbl_name, "NULL", col_count);
+    if(tbl == NULL) {
+        free_query(query);
+        log_err("[server.c:execute_DbOperator()] create table failed.\n");
+        return "create table failed.\n";
+    }
+    free_query(query);
+    log_info("create table successfully.\n");
+    return "create table successfully.\n";
+}
 
 /** execute_DbOperator takes as input the DbOperator and executes the query.
  * This should be replaced in your implementation (and its implementation possibly moved to a different file).
@@ -43,6 +72,9 @@ char* exec_create_db(DbOperator* query) {
 char* execute_DbOperator(DbOperator* query) {
     if (query->type == CREATE_DB) {
         return exec_create_db(query);
+    }
+    else if (query->type == CREATE_TBL) {
+        return exec_create_table(query);
     }
     else {
         free(query);

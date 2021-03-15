@@ -140,49 +140,35 @@ message_status parse_create(char* create_arguments) {
  * parse_insert reads in the arguments for a create statement and 
  * then passes these arguments to a database function to insert a row.
  **/
-/*
 DbOperator* parse_insert(char* query_command, message* send_message) {
     unsigned int columns_inserted = 0;
     char* token = NULL;
-    // check for leading '('
-    if (strncmp(query_command, "(", 1) == 0) {
-        query_command++;
-        char** command_index = &query_command;
-        // parse table input
-        char* table_name = next_token(command_index, &send_message->status);
-        if (send_message->status == INCORRECT_FORMAT) {
-            return NULL;
-        }
-        // lookup the table and make sure it exists. 
-        Table* insert_table = lookup_table(table_name);
-        if (insert_table == NULL) {
-            send_message->status = OBJECT_NOT_FOUND;
-            return NULL;
-        }
-        // make insert operator. 
-        DbOperator* dbo = malloc(sizeof(DbOperator));
-        dbo->type = INSERT;
-        dbo->operator_fields.insert_operator.table = insert_table;
-        dbo->operator_fields.insert_operator.values = malloc(sizeof(int) * insert_table->col_count);
-        // parse inputs until we reach the end. Turn each given string into an integer. 
-        while ((token = strsep(command_index, ",")) != NULL) {
-            int insert_val = atoi(token);
-            dbo->operator_fields.insert_operator.values[columns_inserted] = insert_val;
-            columns_inserted++;
-        }
-        // check that we received the correct number of input values
-        if (columns_inserted != insert_table->col_count) {
-            send_message->status = INCORRECT_FORMAT;
-            free (dbo);
-            return NULL;
-        } 
-        return dbo;
-    } else {
-        send_message->status = UNKNOWN_COMMAND;
+    char* insert_table_name = next_token_comma(&query_command, &send_message->status);
+    if (send_message->status == INCORRECT_FORMAT) {
         return NULL;
     }
+    Table* insert_table = get_table(insert_table_name);
+    if (insert_table == NULL) {
+        send_message->status = OBJECT_NOT_FOUND;
+        return NULL;
+    }
+    DbOperator* dbo = malloc(sizeof(DbOperator));
+    dbo->type = INSERT;
+    dbo->operator_fields.insert_operator.table = insert_table;
+    dbo->operator_fields.insert_operator.values = malloc(sizeof(int) * insert_table->size);
+    while ((token = strsep(&query_command, ",")) != NULL) {
+        int insert_val = atoi(token);
+        dbo->operator_fields.insert_operator.values[columns_inserted] = insert_val;
+        columns_inserted++;
+    }
+    if (columns_inserted != insert_table->size) {
+        send_message->status = INCORRECT_FORMAT;
+        free (dbo);
+        return NULL;
+    }
+    return dbo;
 }
-*/
+
 
 /**
  * parse_create parses a create statement and then passes the necessary arguments off to the next function
@@ -238,12 +224,10 @@ DbOperator* parse_command(char* query_command, message* send_message, int client
         query_command += 10;
         dbo = parse_create_db(query_command);
     }
-    /*
     else if (strncmp(query_command, "relational_insert", 17) == 0) {
         query_command += 17;
         dbo = parse_insert(query_command, send_message);
     }
-    */
     else {
         return NULL;
     }

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <math.h>
+
 #include "utils_func.h"
 
 #define ANSI_COLOR_RED     "\x1b[31m"
@@ -25,6 +26,17 @@ int hash_func(const char* s, size_t a, size_t m) {
         hash = hash % m;
     }
     return (int)hash;
+}
+
+/**
+ * using comma to split string, but actually only return the string after comma
+ **/
+char* next_token_comma(char **tokenizer, message_status *status) {
+    char* token = strsep(tokenizer, ",");
+    if (token == NULL) {
+        *status = INCORRECT_FORMAT;
+    }
+    return token;
 }
 
 /**

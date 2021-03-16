@@ -8,11 +8,22 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 /**
  * a hash function for kv store
  **/
 int hash_func(const char* s, size_t a, size_t m);
+
+/**
+ * judge if the string include period
+ **/
+bool has_period(char *str);
+
+/**
+ * judge if the string include comma
+ **/
+bool has_comma(char *str);
 
 /**
  * trims newline characters from a string (in place)

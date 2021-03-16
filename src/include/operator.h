@@ -124,6 +124,34 @@ typedef struct CreateIdxOperator {
 } CreateIdxOperator;
 
 /**
+ * necessary fields for load data command
+ **/
+typedef struct LoadOperator {
+    char* data_path;
+} LoadOperator;
+
+/**
+ * tells the database what type of operator this is
+ **/
+typedef enum HandleType {
+    HANDLE_COL,
+    HANDLE_RSL
+} HandleType;
+
+/**
+ * necessary fields for select
+ **/
+typedef struct SelectOperator {
+    char* select_col;
+    char* select_rsl_pos;
+    char* select_rsl_val;
+    char* pre_range;
+    char* post_range;
+    char* handle;
+    HandleType selectType;
+} SelectOperator;
+
+/**
  * Supported type of operator
  **/
 typedef enum OperatorType {
@@ -148,6 +176,96 @@ typedef enum OperatorType {
 } OperatorType;
 
 /**
+ * necessary fields for fetch
+ **/
+typedef struct FetchOperator {
+    char* col_var_name;
+    char* rsl_vec_pos;
+    char* handle;
+} FetchOperator;
+
+/**
+ * necessary fields for print
+ **/
+typedef struct PrintOperator {
+    size_t print_num;
+    char** print_name;
+} PrintOperator;
+
+/**
+ * necessary fields for avg
+ **/
+typedef struct AvgOperator {
+    HandleType handle_type;
+    char* avg_name;
+    char* handle;
+} AvgOperator;
+
+/**
+ * necessary fields for sum
+ **/
+typedef struct SumOperator {
+    HandleType handle_type;
+    char* sum_name;
+    char* handle;
+} SumOperator;
+
+/**
+ * necessary fields for add
+ **/
+typedef struct AddOperator {
+    HandleType add_type1;
+    HandleType add_type2;
+    char* add_name1;
+    char* add_name2;
+    char* handle;
+} AddOperator;
+
+/**
+ * necessary fields for Sub
+ **/
+typedef struct SubOperator {
+    HandleType sub_type1;
+    HandleType sub_type2;
+    char* sub_name1;
+    char* sub_name2;
+    char* handle;
+} SubOperator;
+
+
+/**
+ * necessary fields for Max
+ **/
+typedef enum MaxType {
+    MAX_POS_VALUE,
+    MAX_VALUE
+} MaxType;
+
+typedef struct MaxOperator {
+    MaxType max_type;
+    char* max_vec_pos;
+    char* max_vec_value;
+    char* handle_pos;
+    char* handle_value;
+} MaxOperator;
+
+/**
+ * necessary fields for Min
+ **/
+typedef enum MinType {
+    MIN_POS_VALUE,
+    MIN_VALUE
+} MinType;
+
+typedef struct MinOperator {
+    MinType min_type;
+    char* min_vec_pos;
+    char* min_vec_value;
+    char* handle_pos;
+    char* handle_value;
+} MinOperator;
+
+/**
  * Union type holding the fields of any operator
  **/
 typedef union OperatorFields {
@@ -156,9 +274,17 @@ typedef union OperatorFields {
     CreateTableOperator create_table_operator;
     CreateColOperator create_col_operator;
     CreateIdxOperator create_idx_operator;
+    LoadOperator load_operator;
+    SelectOperator select_operator;
+    FetchOperator fetch_operator;
+    PrintOperator print_operator;
+    AvgOperator avg_operator;
+    SumOperator sum_operator;
+    AddOperator add_operator;
+    SubOperator sub_operator;
+    MaxOperator max_operator;
+    MinOperator min_operator;
 } OperatorFields;
-
-
 
 /**
  * DbOperator holds the following fields:

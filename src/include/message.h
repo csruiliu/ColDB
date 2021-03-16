@@ -42,7 +42,7 @@ typedef enum message_status {
 // payload: defines the payload of the message.
 typedef struct message {
     message_status status;
-    int length;
+    size_t length;
     char* payload;
 } message;
 

@@ -22,7 +22,7 @@ int hash_func(const char* s, size_t a, size_t m) {
     long hash = 0;
     size_t len_s = strlen(s);
     for (int i = 0; i < len_s; i++) {
-        hash += (long)pow(a, len_s - (i+1)) * s[i];
+        hash += (long)pow(a, (double)len_s - (i+1)) * s[i];
         hash = hash % m;
     }
     return (int)hash;
@@ -34,7 +34,7 @@ int hash_func(const char* s, size_t a, size_t m) {
  * the string by the number of newline characters.
  **/
 char* trim_newline(char* str) {
-    int length = strlen(str);
+    size_t length = strlen(str);
     int current = 0;
     for (int i = 0; i < length; ++i) {
         if (!(str[i] == '\r' || str[i] == '\n')) {
@@ -52,7 +52,7 @@ char* trim_newline(char* str) {
  * the string by the number of space characters.
  **/
 char* trim_whitespace(char* str) {
-    int length = strlen(str);
+    size_t length = strlen(str);
     int current = 0;
     for (int i = 0; i < length; ++i) {
         if (!isspace(str[i])) {
@@ -70,7 +70,7 @@ char* trim_whitespace(char* str) {
  * the string by the number of parenthesis characters.
  **/
 char* trim_parenthesis(char* str) {
-    int length = strlen(str);
+    size_t length = strlen(str);
     int current = 0;
     for (int i = 0; i < length; ++i) {
         if (!(str[i] == '(' || str[i] == ')')) {
@@ -88,7 +88,7 @@ char* trim_parenthesis(char* str) {
  * the string by the number of space characters.
  **/
 char* trim_quote(char* str) {
-    int length = strlen(str);
+    size_t length = strlen(str);
     int current = 0;
     for (int i = 0; i < length; ++i) {
         if (str[i] != '\"') {

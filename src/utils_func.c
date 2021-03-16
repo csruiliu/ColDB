@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <string.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -21,11 +20,37 @@
 int hash_func(const char* s, size_t a, size_t m) {
     long hash = 0;
     size_t len_s = strlen(s);
-    for (int i = 0; i < len_s; i++) {
+    for (size_t i = 0; i < len_s; i++) {
         hash += (long)pow(a, (double)len_s - (i+1)) * s[i];
         hash = hash % m;
     }
     return (int)hash;
+}
+
+/**
+ * judge if the string include period
+ **/
+bool has_period(char *str) {
+    size_t length = strlen(str);
+    for (size_t i = 0; i < length; ++i) {
+        if (str[i] == '.') {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * judge if the string include comma
+ **/
+bool has_comma(char *str) {
+    size_t length = strlen(str);
+    for (size_t i = 0; i < length; ++i) {
+        if (str[i] == ',') {
+            return true;
+        }
+    }
+    return false;
 }
 
 /**
@@ -36,7 +61,7 @@ int hash_func(const char* s, size_t a, size_t m) {
 char* trim_newline(char* str) {
     size_t length = strlen(str);
     int current = 0;
-    for (int i = 0; i < length; ++i) {
+    for (size_t i = 0; i < length; ++i) {
         if (!(str[i] == '\r' || str[i] == '\n')) {
             str[current++] = str[i];
         }
@@ -54,7 +79,7 @@ char* trim_newline(char* str) {
 char* trim_whitespace(char* str) {
     size_t length = strlen(str);
     int current = 0;
-    for (int i = 0; i < length; ++i) {
+    for (size_t i = 0; i < length; ++i) {
         if (!isspace(str[i])) {
             str[current++] = str[i];
         }
@@ -72,7 +97,7 @@ char* trim_whitespace(char* str) {
 char* trim_parenthesis(char* str) {
     size_t length = strlen(str);
     int current = 0;
-    for (int i = 0; i < length; ++i) {
+    for (size_t i = 0; i < length; ++i) {
         if (!(str[i] == '(' || str[i] == ')')) {
             str[current++] = str[i];
         }
@@ -90,7 +115,7 @@ char* trim_parenthesis(char* str) {
 char* trim_quote(char* str) {
     size_t length = strlen(str);
     int current = 0;
-    for (int i = 0; i < length; ++i) {
+    for (size_t i = 0; i < length; ++i) {
         if (str[i] != '\"') {
             str[current++] = str[i];
         }

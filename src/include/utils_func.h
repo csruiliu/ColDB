@@ -10,6 +10,21 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+#include "message.h"
+
+
+bool is_csv(char* filename);
+
+/**
+ * using period to split string, but actually only return the string after period
+ **/
+char* next_token_period(char **tokenizer, message_status *status);
+
+/**
+ * using comma to split string, but actually only return the string after comma
+ **/
+char* next_token_comma(char **tokenizer, message_status *status);
+
 /**
  * a hash function for kv store
  **/

@@ -14,6 +14,42 @@
 #define LOG_ERR 1
 #define LOG_INFO 1
 
+
+/**
+ * check if the file with filename is csv
+ **/
+bool is_csv(char* filename) {
+    size_t len = strlen(filename);
+    char dest[4] = "";
+    strncpy(dest, filename+len-4, 4);
+    if(strcmp(dest,".csv") == 0) {
+        return true;
+    }
+    return false;
+}
+
+/**
+ * using period to split string, but actually only return the string after period
+ **/
+char* next_token_period(char **tokenizer, message_status *status) {
+    char* token = strsep(tokenizer, ".");
+    if (token == NULL) {
+        *status= INCORRECT_FORMAT;
+    }
+    return token;
+}
+
+/**
+ * using comma to split string, but actually only return the string after comma
+ **/
+char* next_token_comma(char **tokenizer, message_status *status) {
+    char* token = strsep(tokenizer, ",");
+    if (token == NULL) {
+        *status = INCORRECT_FORMAT;
+    }
+    return token;
+}
+
 /**
  * a hash function for kv store
  **/

@@ -6,12 +6,9 @@
  * database operator.
  **/
 
-#define _BSD_SOURCE
+#define _DEFAULT_SOURCE
+
 #include <string.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdlib.h>
-#include <ctype.h>
 
 #include "parse.h"
 #include "utils_func.h"
@@ -40,13 +37,14 @@ DbOperator* parse_create_db(char* query_command) {
  **/
 DbOperator* parse_create_tbl(char* query_command, message* send_message) {
     DbOperator* dbo;
-    char* tbl_name = next_token_comma(&query_command, &send_message->status);
+    char* table_name = next_token_comma(&query_command, &send_message->status);
     char* db_name = next_token_comma(&query_command, &send_message->status);
     char* col_cnt = next_token_comma(&query_command, &send_message->status);
     if (send_message->status == INCORRECT_FORMAT) {
         return NULL;
     }
-    tbl_name = trim_quote(tbl_name);
+
+    table_name = trim_quote(table_name);
     int last_char = (int)strlen(col_cnt) - 1;
     if (col_cnt[last_char] != ')') {
         return NULL;
@@ -60,10 +58,10 @@ DbOperator* parse_create_tbl(char* query_command, message* send_message) {
     dbo->type = CREATE_TBL;
     dbo->operator_fields.create_table_operator.db_name = malloc((strlen(db_name)+1)* sizeof(char));
     strcpy(dbo->operator_fields.create_table_operator.db_name,db_name);
-    dbo->operator_fields.create_table_operator.table_name = malloc((strlen(tbl_name)+strlen(db_name)+2)* sizeof(char));
+    dbo->operator_fields.create_table_operator.table_name = malloc((strlen(table_name)+strlen(db_name)+2)* sizeof(char));
     strcpy(dbo->operator_fields.create_table_operator.table_name, db_name);
     strcat(dbo->operator_fields.create_table_operator.table_name, ".");
-    strcat(dbo->operator_fields.create_table_operator.table_name, tbl_name);
+    strcat(dbo->operator_fields.create_table_operator.table_name, table_name);
     dbo->operator_fields.create_table_operator.col_count = column_cnt;
     return dbo;
 }
@@ -536,10 +534,6 @@ DbOperator* parse_command(char* query_command, message* send_message, int client
     if (strncmp(query_command, "create(db,", 10) == 0) {
         query_command += 10;
         dbo = parse_create_db(query_command);
-    }
-    else if (strncmp(query_command, "relational_insert", 17) == 0) {
-        query_command += 17;
-        dbo = parse_insert(query_command, send_message);
     }
     else if (strncmp(query_command, "create(tbl,", 11) == 0) {
         query_command += 11;

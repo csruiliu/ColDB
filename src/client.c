@@ -39,7 +39,7 @@ machine please look into this as a a source of error. */
  **/
 int connect_client() {
     int client_socket;
-    int len;
+    size_t len;
     struct sockaddr_un remote;
 
     log_info("Attempting to connect...\n");

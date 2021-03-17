@@ -81,7 +81,7 @@ void free_table_store() {
 /**
  *  All the function implementations used for kv store of column
  **/
-void init_results_store(size_t size) {
+void init_column_store(size_t size) {
     if(kv_allocate(&column_store, size) == 1) {
         log_err("init column store failed.");
     }
@@ -110,5 +110,34 @@ void free_column_store() {
         log_info("free col kv store failed\n");
     } else {
         log_info("free col kv store successfully\n");
+    }
+}
+
+/**
+ *  All the function definitions used for kv store of result
+ **/
+void init_result_store(size_t size) {
+    if(kv_allocate(&result_store, size) == 1) {
+        log_err("init result store failed.");
+    }
+}
+
+Result* get_result(char* result_name) {
+    Result* result = get(result_store, result_name);
+    return result;
+}
+
+void put_result_replace(char* result_name, Result* result) {
+    int flag = put_replace(result_store, result_name, result, sizeof(Result));
+    if(flag != 0) {
+        log_err("persistent result %s failed", result_name);
+    }
+}
+
+void free_result_store() {
+    if(kv_deallocate(result_store) != 0) {
+        log_info("free result kv store failed\n");
+    } else {
+        log_info("free result kv store successfully\n");
     }
 }

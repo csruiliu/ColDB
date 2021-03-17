@@ -38,6 +38,9 @@ void free_query(DbOperator* query) {
         free(query->operator_fields.create_col_operator.col_name);
         free(query->operator_fields.create_col_operator.tbl_name);
     }
+    else if (query->type == LOAD) {
+        free(query->operator_fields.load_operator.data_path);
+    }
     else if (query->type == CREATE_DB){
         free(query->operator_fields.create_db_operator.db_name);
     }
@@ -46,8 +49,15 @@ void free_query(DbOperator* query) {
 
 char* exec_create_db(DbOperator* query) {
     char* db_name = query->operator_fields.create_db_operator.db_name;
-    //current_db = create_db(db_name);
     current_db = create_db(db_name);
+    if(current_db == NULL) {
+        free_query(query);
+        log_err("[server.c:execute_DbOperator()] create database failed.\n");
+        return "create database failed.\n";
+    }
+    free_query(query);
+    log_info("create database successfully.\n");
+    return "create database successfully.\n";
 }
 
 char* exec_create_table(DbOperator* query) {
@@ -91,7 +101,7 @@ char* execute_DbOperator(DbOperator* query) {
  **/
 void handle_client(int client_socket) {
     int done = 0;
-    int length = 0;
+    ssize_t length = 0;
 
     log_info("Connected to socket: %d.\n", client_socket);
 
@@ -101,6 +111,22 @@ void handle_client(int client_socket) {
 
     // create the client context here
     ClientContext* client_context = NULL;
+
+    init_db_store(100000);
+    init_table_store(500000);
+    init_column_store(2500000);
+    init_result_store(2500000);
+
+    if(setup_db_csv() != 0) {
+        free_db_store();
+        free_table_store();
+        free_column_store();
+        free_result_store();
+        log_err("setup db from csv data failed, exit.\n");
+        log_info("Connection closed at socket %d!\n", client_socket);
+        close(client_socket);
+        exit(1);
+    }
 
     // Continually receive messages from client and execute queries.
     // 1. Parse the command

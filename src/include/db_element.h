@@ -29,13 +29,27 @@ typedef enum DataType {
     FLOAT
 } DataType;
 
+/**
+ * Cluster Index Type
+ * UNCLSR: non-cluster index
+ * CLSR: cluster index
+ * PRICLSR: primary cluster index
+ **/
+typedef enum ClsType {
+    UNCLSR,
+    CLSR,
+    PRICLSR
+} ClsType;
+
 typedef struct Column {
-    char name[MAX_SIZE_NAME];
+    char* name;
+    char* aff_tbl_name;
     int* data;
-    // You will implement column indexes later.
-    void* index;
-    //struct ColumnIndex *index;
-    //bool clustered;
+    int* rowId;
+    size_t size;
+    size_t capacity;
+    IndexType idx_type;
+    ClsType cls_type;
 } Column;
 
 /**
@@ -122,12 +136,12 @@ void free_column_store();
 /**
  *  All the function definitions used for kv store of result
  **/
-void init_results_store(size_t size);
+void init_result_store(size_t size);
 
 Result* get_result(char* result_name);
 
-void put_rsl_replace(char* result_name, Result* result);
+void put_result_replace(char* result_name, Result* result);
 
-void free_rsl_store();
+void free_result_store();
 
 #endif

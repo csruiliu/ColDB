@@ -17,17 +17,6 @@
 #include "utils_func.h"
 
 /**
- * using comma to split string, but actually only return the string after comma
- **/
-char* next_token_comma(char **tokenizer, message_status *status) {
-    char* token = strsep(tokenizer, ",");
-    if (token == NULL) {
-        *status = INCORRECT_FORMAT;
-    }
-    return token;
-}
-
-/**
  * parse_create parses a create statement and then passes the necessary arguments off to the next function
  **/
 DbOperator* parse_create_db(char* query_command) {

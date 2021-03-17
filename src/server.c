@@ -101,7 +101,7 @@ char* execute_DbOperator(DbOperator* query) {
  **/
 void handle_client(int client_socket) {
     int done = 0;
-    ssize_t length = 0;
+    int length = 0;
 
     log_info("Connected to socket: %d.\n", client_socket);
 

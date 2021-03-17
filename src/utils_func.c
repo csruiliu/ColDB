@@ -1,6 +1,6 @@
+#define _DEFAULT_SOURCE
+
 #include <string.h>
-#include <stddef.h>
-#include <stdlib.h>
 #include <ctype.h>
 #include <math.h>
 
@@ -43,10 +43,12 @@ char* next_token_period(char **tokenizer, message_status *status) {
  * using comma to split string, but actually only return the string after comma
  **/
 char* next_token_comma(char **tokenizer, message_status *status) {
+    log_info("xxxxxxx, %s\n", *tokenizer);
     char* token = strsep(tokenizer, ",");
     if (token == NULL) {
         *status = INCORRECT_FORMAT;
     }
+    log_info("hhhhhhhhhhhhhhh, %s\n", token);
     return token;
 }
 
@@ -56,7 +58,7 @@ char* next_token_comma(char **tokenizer, message_status *status) {
 int hash_func(const char* s, size_t a, size_t m) {
     long hash = 0;
     size_t len_s = strlen(s);
-    for (size_t i = 0; i < len_s; i++) {
+    for (int i = 0; i < len_s; i++) {
         hash += (long)pow(a, (double)len_s - (i+1)) * s[i];
         hash = hash % m;
     }
@@ -113,9 +115,9 @@ char* trim_newline(char* str) {
  * the string by the number of space characters.
  **/
 char* trim_whitespace(char* str) {
-    size_t length = strlen(str);
+    int length = strlen(str);
     int current = 0;
-    for (size_t i = 0; i < length; ++i) {
+    for (int i = 0; i < length; ++i) {
         if (!isspace(str[i])) {
             str[current++] = str[i];
         }
@@ -151,7 +153,7 @@ char* trim_parenthesis(char* str) {
 char* trim_quote(char* str) {
     size_t length = strlen(str);
     int current = 0;
-    for (size_t i = 0; i < length; ++i) {
+    for (int i = 0; i < length; ++i) {
         if (str[i] != '\"') {
             str[current++] = str[i];
         }

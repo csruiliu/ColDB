@@ -43,12 +43,10 @@ char* next_token_period(char **tokenizer, message_status *status) {
  * using comma to split string, but actually only return the string after comma
  **/
 char* next_token_comma(char **tokenizer, message_status *status) {
-    log_info("xxxxxxx, %s\n", *tokenizer);
     char* token = strsep(tokenizer, ",");
     if (token == NULL) {
         *status = INCORRECT_FORMAT;
     }
-    log_info("hhhhhhhhhhhhhhh, %s\n", token);
     return token;
 }
 

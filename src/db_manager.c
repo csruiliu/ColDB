@@ -176,6 +176,23 @@ int insert_data_column(Column* col, int data, int rowId) {
     return 0;
 }
 
+/**
+ * relational insert, the column names are omitted
+ * values are inserted into the columns of the table in the order those columns were declared in table creation
+ * For example, if there are 3 columns in a table when the table is created like table(col1, col2, col3)
+ * Then, INSERT INTO table VALUES (1,2,3) means insert 1 to col1, insert 2 to col2, and insert 3 to col3.
+ **/
+int insert_data_table(Table* itbl, int* row_values) {
+    for(size_t i = 0; i < itbl->size; ++i) {
+        Column* icol = get_column(itbl->columns[i]->name);
+        if(insert_data_column(icol, row_values[i], icol->size+i) != 0) {
+            log_err("[db_manager.c:insert_data_tbl()] insert table failed.\n");
+            return 1;
+        }
+    }
+    return 0;
+}
+
 int set_column_idx_cls(Column* slcol, char* idx_type, char* cls_type) {
     if (strcmp(idx_type,"unidx") == 0) {
         slcol->idx_type = UNIDX;

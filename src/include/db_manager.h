@@ -13,6 +13,11 @@ Table* create_table(char* db_name, char* table_name, char* pricls_col_name, size
 Column* create_column(char* table_name, char* col_name);
 
 /**
+ * relational insert
+ */
+int insert_data_table(Table* itbl, int* row_values);
+
+/**
  *  read data from csv file
  **/
 int read_csv(char* data_path);

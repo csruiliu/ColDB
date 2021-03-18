@@ -141,6 +141,40 @@ Column* create_column(char* tbl_name, char* col_name) {
     }
 }
 
+/**
+ * Insert a piece of data to a single column
+ */
+int insert_data_column(Column* col, int data, int rowId) {
+    if (col->size >= col->capacity) {
+        size_t new_column_length = RESIZE * col->capacity + 1;
+        size_t new_length = new_column_length;
+        size_t old_length = col->capacity;
+        if (old_length == 0) {
+            assert(new_length > 0);
+            //log_info("column %s has new length %d\n",col->col_name, new_length);
+            col->data = calloc(new_length, sizeof(int));
+            col->rowId = calloc(new_length, sizeof(int));
+        } else {
+            int* dd = resize_int(col->data, old_length, new_length);
+            int* dr = resize_int(col->rowId, old_length, new_length);
+            free(col->data);
+            free(col->rowId);
+            col->data = calloc(new_length, sizeof(int));
+            col->rowId = calloc(new_length, sizeof(int));
+            memcpy(col->data, dd, new_length * sizeof(int));
+            memcpy(col->rowId, dr, new_length * sizeof(int));
+            if (!col->data) {
+                log_err("creating more data space failed.\n");
+                return 1;
+            }
+        }
+        col->capacity = new_length;
+    }
+    col->data[col->size] = data;
+    col->rowId[col->size] = rowId;
+    col->size++;
+    return 0;
+}
 
 int set_column_idx_cls(Column* slcol, char* idx_type, char* cls_type) {
     if (strcmp(idx_type,"unidx") == 0) {
@@ -182,7 +216,82 @@ int set_column_idx_cls(Column* slcol, char* idx_type, char* cls_type) {
     return 0;
 }
 
-int load_db_csv() {
+/**
+ * read data from csv file
+ **/
+int read_csv(char* data_path) {
+    message_status mes_status = OK_DONE;
+    FILE *fp;
+    if((fp=fopen(data_path,"r"))==NULL) {
+        log_err("[db_manager.c:load_data_csv()] cannot load data %s\n", data_path);
+        return 1;
+    }
+    char *line = NULL;
+    size_t len = 0;
+    int read = getline(&line, &len, fp);
+    if (read == -1) {
+        log_err("[db_manager.c:load_data_csv()] read file header failed.\n");
+        return 1;
+    }
+    char* line_copy = malloc((strlen(line)+1)* sizeof(char));
+    strcpy(line_copy,line);
+    size_t header_count = 0;
+    char* sepTmp = NULL;
+    while(1) {
+        sepTmp = next_token_comma(&line_copy,&mes_status);
+        if(sepTmp == NULL) {
+            break;
+        }
+        else {
+            header_count++;
+        }
+    }
+    log_info("%d columns in the loading file\n", header_count);
+
+    /**
+     * load the csv file that only has one column
+     **/
+    if (header_count == 1) {
+        char* header = trim_newline(line);
+        Column* lcol = get_column(header);
+        if (lcol == NULL) {
+            log_err("[db_manager.c:load_data_csv] cannot find column %s in database\n", header);
+            free(line_copy);
+            fclose(fp);
+            return 1;
+        }
+        if(lcol->cls_type == UNCLSR) {
+            int rowId_load = 0;
+            while ((getline(&line, &len, fp)) != -1) {
+                char *va = line;
+                int lv = atoi(va);
+                if(insert_data_column(lcol, lv, rowId_load) != 0) {
+                    free(line_copy);
+                    fclose(fp);
+                    return 1;
+                }
+                rowId_load++;
+            }
+        }
+        else if(lcol->cls_type == PRICLSR) {
+
+        }
+        else if(lcol->cls_type == CLSR) {
+
+        }
+        //TODO: Mutiple clustered indices
+    }
+    /**
+     * load the csv file that has multiple columns
+     **/
+    else {
+
+
+    }
+    return 0;
+}
+
+int load_database() {
     char cwd[DIRLEN];
     if (getcwd(cwd, DIRLEN) == NULL) {
         log_err("current working dir path is too long");
@@ -297,7 +406,7 @@ int load_db_csv() {
     return 0;
 }
 
-int save_data_csv() {
+int save_database() {
     if(current_db == NULL) {
         log_err("there is no active database\n");
         return 1;

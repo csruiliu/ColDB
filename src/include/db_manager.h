@@ -13,10 +13,15 @@ Table* create_table(char* db_name, char* table_name, char* pricls_col_name, size
 Column* create_column(char* table_name, char* col_name);
 
 /**
+ *  read data from csv file
+ **/
+int read_csv(char* data_path);
+
+/**
  *  load database when start, save database when shutdown
  **/
-int load_db_csv();
+int load_database();
 
-int save_data_csv();
+int save_database();
 
 #endif //DB_MANAGER_H

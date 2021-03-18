@@ -481,7 +481,7 @@ DbOperator* parse_max(char* handle, char* query_command, message* send_message) 
  **/
 DbOperator* parse_min(char* handle, char* query_command, message* send_message) {
     if(has_comma(handle)) {
-    
+
     }
     else {
         int last_char = (int)strlen(query_command) - 1;

@@ -89,10 +89,24 @@ char* exec_create_col(DbOperator* query) {
 }
 
 /**
+ * exec load csv file command
+ **/
+char* exec_load(DbOperator* query) {
+    char* data_path = query->operator_fields.load_operator.data_path;
+    if(read_csv(data_path) != 0) {
+        free_query(query);
+        return "load data into database failed.\n";
+    }
+    free_query(query);
+    log_info("load data into database successfully.\n");
+    return "load data into database successfully.\n";
+}
+
+/**
  * exec shutdown command
  **/
 char* exec_shutdown(DbOperator* query) {
-    if(save_data_csv() != 0) {
+    if(save_database() != 0) {
         log_err("persist all the data failed.\n");
     }
     free_query(query);
@@ -117,6 +131,9 @@ char* execute_DbOperator(DbOperator* query) {
     }
     else if (query->type == CREATE_COL) {
         return exec_create_col(query);
+    }
+    else if (query->type == LOAD) {
+        return exec_load(query);
     }
     else if (query->type == SHUTDOWN) {
         return exec_shutdown(query);
@@ -151,7 +168,7 @@ void handle_client(int client_socket) {
     init_column_store(2500000);
     init_result_store(2500000);
 
-    if(load_db_csv() != 0) {
+    if(load_database() != 0) {
         free_db_store();
         free_table_store();
         free_column_store();

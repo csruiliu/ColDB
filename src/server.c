@@ -75,6 +75,35 @@ char* exec_create_table(DbOperator* query) {
     return "create table successfully.\n";
 }
 
+char* exec_create_col(DbOperator* query) {
+    char* full_tbl_name = query->operator_fields.create_col_operator.tbl_name;
+    char* full_col_name = query->operator_fields.create_col_operator.col_name;
+    Column* col = create_column(full_tbl_name, full_col_name);
+    if(col == NULL) {
+        free_query(query);
+        return "create column failed.\n";
+    }
+    free_query(query);
+    log_info("create column successfully.\n");
+    return "create column successfully.\n";
+}
+
+/**
+ * exec shutdown command
+ **/
+char* exec_shutdown(DbOperator* query) {
+    if(save_data_csv() != 0) {
+        log_err("persist all the data failed.\n");
+    }
+    free_query(query);
+    free_db_store();
+    free_table_store();
+    free_column_store();
+    free_result_store();
+    log_info("persist all the data and shutdown the server.\n");
+    return "persist all the data and shutdown the server.\n";
+}
+
 /** execute_DbOperator takes as input the DbOperator and executes the query.
  * This should be replaced in your implementation (and its implementation possibly moved to a different file).
  * It is currently here so that you can verify that your server and client can send messages.
@@ -86,12 +115,17 @@ char* execute_DbOperator(DbOperator* query) {
     else if (query->type == CREATE_TBL) {
         return exec_create_table(query);
     }
+    else if (query->type == CREATE_COL) {
+        return exec_create_col(query);
+    }
+    else if (query->type == SHUTDOWN) {
+        return exec_shutdown(query);
+    }
     else {
         free(query);
         log_info("unsupported command, try again.\n");
         return "unsupported command, try again.\n";
     }
-
 }
 
 /**
@@ -117,7 +151,7 @@ void handle_client(int client_socket) {
     init_column_store(2500000);
     init_result_store(2500000);
 
-    if(setup_db_csv() != 0) {
+    if(load_db_csv() != 0) {
         free_db_store();
         free_table_store();
         free_column_store();

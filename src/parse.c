@@ -295,7 +295,7 @@ DbOperator* parse_print(char* query_command, message* send_message) {
     dbo->type = PRINT;
     dbo->operator_fields.print_operator.print_num = count;
     dbo->operator_fields.print_operator.print_name = calloc(count, sizeof(char*));
-    for(int i = 0; i < count; ++i) {
+    for(size_t i = 0; i < count; ++i) {
         char* pitem = next_token_comma(&query_command, &send_message->status);
         if(send_message->status == INCORRECT_FORMAT) {
             return NULL;
@@ -457,6 +457,7 @@ DbOperator* parse_max(char* handle, char* query_command, message* send_message) 
         strcpy(dbo->operator_fields.max_operator.max_vec_pos,max_vec_pos);
         dbo->operator_fields.max_operator.max_vec_value = malloc((strlen(max_vec_value)+1)* sizeof(char));
         strcpy(dbo->operator_fields.max_operator.max_vec_value,max_vec_value);
+        return dbo;
     }
     else {
         int last_char = (int)strlen(query_command) - 1;
@@ -480,7 +481,7 @@ DbOperator* parse_max(char* handle, char* query_command, message* send_message) 
  **/
 DbOperator* parse_min(char* handle, char* query_command, message* send_message) {
     if(has_comma(handle)) {
-
+    
     }
     else {
         int last_char = (int)strlen(query_command) - 1;

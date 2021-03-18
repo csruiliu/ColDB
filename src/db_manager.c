@@ -1,3 +1,5 @@
+#define _DEFAULT_SOURCE
+
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -180,7 +182,7 @@ int set_column_idx_cls(Column* slcol, char* idx_type, char* cls_type) {
     return 0;
 }
 
-int setup_db_csv() {
+int load_db_csv() {
     char cwd[DIRLEN];
     if (getcwd(cwd, DIRLEN) == NULL) {
         log_err("current working dir path is too long");
@@ -292,5 +294,67 @@ int setup_db_csv() {
         }
     }
     closedir(pDir);
+    return 0;
+}
+
+int save_data_csv() {
+    if(current_db == NULL) {
+        log_err("there is no active database\n");
+        return 1;
+    }
+    char cwd[DIRLEN];
+    if (getcwd(cwd, DIRLEN) == NULL) {
+        log_err("Current working dir path is too long");
+        return 1;
+    }
+    strcat(cwd,"/");
+    mkdir("db",0777);
+    strcat(cwd,"db/");
+    strcat(cwd,current_db->name);
+    strcat(cwd,".csv");
+    log_info("Current database is stored at: %s\n", cwd);
+    FILE *fp = NULL;
+    fp = fopen(cwd, "w+");
+    if(fp == NULL) {
+        log_err("cannot open the database store");
+        return 1;
+    }
+    for(size_t i = 0; i < current_db->size; ++i) {
+        Table* stbl = get_table(current_db->tables[i]->name);
+
+        for(size_t j = 0; j < stbl->size; ++j) {
+            fprintf(fp, "%s", current_db->name);
+            fprintf(fp, ",%s", stbl->name);
+            fprintf(fp, ",%s", stbl->pricluster_index_col_name);
+            fprintf(fp, ",%zu", stbl->capacity);
+            Column* scol = get_column(stbl->columns[j]->name);
+            fprintf(fp, ",%s", scol->name);
+            if(scol->idx_type == BTREE) {
+                fprintf(fp, ",btree");
+            }
+            else if(scol->idx_type == SORTED) {
+                fprintf(fp, ",sorted");
+            }
+            else if(scol->idx_type == UNIDX) {
+                fprintf(fp,",unidx");
+            }
+            if(scol->cls_type == CLSR) {
+                fprintf(fp, ",clsr");
+            }
+            else if(scol->cls_type == PRICLSR) {
+                fprintf(fp, ",priclsr");
+            }
+            else if(scol->cls_type == UNCLSR) {
+                fprintf(fp, ",unclsr");
+            }
+            for(size_t k = 0; k < scol->size; ++k) {
+                fprintf(fp, ",%d", scol->rowId[k]);
+                fprintf(fp, ",%d", scol->data[k]);
+            }
+            fprintf(fp, "\n");
+        }
+    }
+    log_info("The database is successfully stored at: %s\n", cwd);
+    fclose(fp);
     return 0;
 }

@@ -28,7 +28,7 @@ char* next_token_comma(char **tokenizer, message_status *status);
 /**
  * a hash function for kv store
  **/
-int hash_func(const char* s, size_t a, size_t m);
+size_t hash_func(const char* s, size_t a, size_t m);
 
 /**
  * judge if the string include period

@@ -53,14 +53,14 @@ char* next_token_comma(char **tokenizer, message_status *status) {
 /**
  * a hash function for kv store
  **/
-int hash_func(const char* s, size_t a, size_t m) {
+size_t hash_func(const char* s, size_t a, size_t m) {
     long hash = 0;
     size_t len_s = strlen(s);
-    for (int i = 0; i < len_s; i++) {
+    for (size_t i = 0; i < len_s; i++) {
         hash += (long)pow(a, (double)len_s - (i+1)) * s[i];
         hash = hash % m;
     }
-    return (int)hash;
+    return (size_t)hash;
 }
 
 /**
@@ -113,9 +113,9 @@ char* trim_newline(char* str) {
  * the string by the number of space characters.
  **/
 char* trim_whitespace(char* str) {
-    int length = strlen(str);
+    size_t length = strlen(str);
     int current = 0;
-    for (int i = 0; i < length; ++i) {
+    for (size_t i = 0; i < length; ++i) {
         if (!isspace(str[i])) {
             str[current++] = str[i];
         }
@@ -151,7 +151,7 @@ char* trim_parenthesis(char* str) {
 char* trim_quote(char* str) {
     size_t length = strlen(str);
     int current = 0;
-    for (int i = 0; i < length; ++i) {
+    for (size_t i = 0; i < length; ++i) {
         if (str[i] != '\"') {
             str[current++] = str[i];
         }

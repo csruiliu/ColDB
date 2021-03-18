@@ -21,7 +21,7 @@ int kv_allocate(kvstore** kv_store, size_t size) {
 }
 
 int kv_deallocate(kvstore* kv_store) {
-    for(int i = 0; i < kv_store->size; ++i) {
+    for(size_t i = 0; i < kv_store->size; ++i) {
         kvpair* ikv = &(kv_store->kv_pair[i]);
         if(ikv != NULL) {
             free(ikv->key);
@@ -33,7 +33,7 @@ int kv_deallocate(kvstore* kv_store) {
 }
 
 int put(kvstore* kv_store, char* key, void* value, size_t value_size) {
-    int index = hash_func(key, PRIME, kv_store->size);
+    size_t index = hash_func(key, PRIME, kv_store->size);
     kvpair* cur_ikv = &(kv_store->kv_pair[index]);
     int prob = 0;
     while(cur_ikv->key != NULL) {
@@ -92,7 +92,7 @@ int put_replace(kvstore* kv_store, char* key, void* value, size_t value_size) {
 }
 
 void* get(kvstore* kv_store, char* key) {
-    int index = hash_func(key, PRIME, kv_store->size);
+    size_t index = hash_func(key, PRIME, kv_store->size);
     kvpair* ikv = &(kv_store->kv_pair[index]);
     int prob = 0;
     while(ikv->key != NULL) {
@@ -127,10 +127,10 @@ int kv_rehash(kvstore** kv_store, size_t nc, size_t value_size) {
         return 1;
     }
     size_t oc = (*kv_store)->size;
-    for(int i = 0; i < oc; ++i) {
+    for(size_t i = 0; i < oc; ++i) {
         kvpair* oikv = &((*kv_store)->kv_pair[i]);
         if(oikv->key != NULL) {
-            int index = hash_func(oikv->key, PRIME, nc);
+            size_t index = hash_func(oikv->key, PRIME, nc);
             kvpair* nikv = &(new_db_store->kv_pair[index]);
             while(nikv->key != NULL) {
                 index++;

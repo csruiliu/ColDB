@@ -12,6 +12,11 @@ Table* create_table(char* db_name, char* table_name, char* pricls_col_name, size
 
 Column* create_column(char* table_name, char* col_name);
 
-int setup_db_csv();
+/**
+ *  load database when start, save database when shutdown
+ **/
+int load_db_csv();
+
+int save_data_csv();
 
 #endif //DB_MANAGER_H

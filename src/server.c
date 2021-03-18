@@ -89,6 +89,21 @@ char* exec_create_col(DbOperator* query) {
 }
 
 /**
+ * exec relational insert, the column names are omitted
+ * values are inserted into the columns of the table in the order those columns were declared in table creation.
+ **/
+char* exec_insert(DbOperator* query) {
+    Table* insert_tbl = query->operator_fields.insert_operator.table;
+    if(insert_data_table(insert_tbl,query->operator_fields.insert_operator.values)) {
+        free_query(query);
+        return "insert data into database failed.\n";
+    }
+    free_query(query);
+    log_info("insert data into database successfully.\n");
+    return "insert data into database successfully.\n";
+}
+
+/**
  * exec load csv file command
  **/
 char* exec_load(DbOperator* query) {
@@ -131,6 +146,9 @@ char* execute_DbOperator(DbOperator* query) {
     }
     else if (query->type == CREATE_COL) {
         return exec_create_col(query);
+    }
+    else if (query->type == INSERT) {
+        return exec_insert(query);
     }
     else if (query->type == LOAD) {
         return exec_load(query);

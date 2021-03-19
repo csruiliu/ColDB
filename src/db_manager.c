@@ -277,7 +277,7 @@ int read_csv(char* data_path) {
             fclose(fp);
             return 1;
         }
-        if(lcol->cls_type == UNCLSR) {
+        if (lcol->cls_type == UNCLSR) {
             int rowId_load = 0;
             while ((getline(&line, &len, fp)) != -1) {
                 char *va = line;
@@ -290,10 +290,10 @@ int read_csv(char* data_path) {
                 rowId_load++;
             }
         }
-        else if(lcol->cls_type == PRICLSR) {
+        else if (lcol->cls_type == PRICLSR) {
 
         }
-        else if(lcol->cls_type == CLSR) {
+        else if (lcol->cls_type == CLSR) {
 
         }
         //TODO: Mutiple clustered indices
@@ -302,8 +302,32 @@ int read_csv(char* data_path) {
      * load the csv file that has multiple columns
      **/
     else {
-
-
+        char* header = trim_newline(line);
+        Column** col_set = calloc(header_count, sizeof(Column*));
+        for(size_t i = 0; i < header_count; ++i) {
+            char* col_name = next_token_comma(&header, &mes_status);
+            col_set[i] = get_column(col_name);
+            if (col_set[i] == NULL) {
+                log_err("[db_manager.c:load_data_csv] cannot find column %s in database\n", col_name);
+                free(line_copy);
+                fclose(fp);
+                return 1;
+            }
+        }
+        int rowId_load = 0;
+        while ((getline(&line, &len, fp)) != -1) {
+            for (size_t i = 0; i < header_count; ++i) {
+                char *va = next_token_comma(&line, &mes_status);
+                int lv = atoi(va);
+                if(insert_data_column(col_set[i], lv, rowId_load) != 0) {
+                    free(line_copy);
+                    fclose(fp);
+                    return 1;
+                }
+                //TODO: pricluster/nonpricluster indices
+            }
+            rowId_load++;
+        }
     }
     return 0;
 }

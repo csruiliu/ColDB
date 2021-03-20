@@ -234,6 +234,197 @@ int set_column_idx_cls(Column* slcol, char* idx_type, char* cls_type) {
 }
 
 /**
+ * select data for result
+ **/
+int select_data_result(Result* srsl_pos, Result* srsl_val, char* handle, char* pre_range, char* post_range) {
+    size_t rsl_size = srsl_pos->num_tuples;
+    int* srsl_pos_payload = srsl_pos->payload;
+    int* srsl_val_payload = srsl_val->payload;
+    int* rsl_payload = calloc(rsl_size, sizeof(int));
+    Result* rsl = malloc(sizeof(Result));
+    if (strncmp(pre_range,"null",4) == 0) {
+        int post = atoi(post_range);
+        size_t size = 0;
+        for(size_t i = 0; i < rsl_size; ++i) {
+            if(srsl_val_payload[i] < post) {
+                rsl_payload[size] = srsl_pos_payload[i];
+                size++;
+            }
+        }
+        rsl->num_tuples = size;
+        rsl->data_type = INT;
+        rsl->payload = calloc(size, sizeof(int));
+        memcpy(rsl->payload, rsl_payload, size*sizeof(int));
+        put_result_replace(handle,rsl);
+    }
+    else if (strncmp(post_range,"null",4) == 0) {
+        int pre = atoi(pre_range);
+        size_t size = 0;
+        for(size_t i = 0; i < rsl_size; ++i) {
+            if(srsl_val_payload[i] >= pre) {
+                rsl_payload[size] = srsl_pos_payload[i];
+                size++;
+            }
+        }
+        rsl->num_tuples = size;
+        rsl->data_type = INT;
+        rsl->payload = calloc(size, sizeof(int));
+        memcpy(rsl->payload, rsl_payload, size*sizeof(int));
+        put_result_replace(handle,rsl);
+    }
+    else {
+        int pre = atoi(pre_range);
+        int post = atoi(post_range);
+        size_t size = 0;
+        for(size_t i = 0; i < rsl_size; ++i) {
+            if(srsl_val_payload[i] < post && srsl_val_payload[i] >= pre) {
+                rsl_payload[size] = srsl_pos_payload[i];
+                size++;
+            }
+        }
+        rsl->num_tuples = size;
+        rsl->data_type = INT;
+        rsl->payload = calloc(size, sizeof(int));
+        memcpy(rsl->payload, rsl_payload, size*sizeof(int));
+        put_result_replace(handle,rsl);
+    }
+    return 0;
+}
+
+/**
+ * select data for un-index column
+ **/
+int select_data_col_unidx(Column* scol, char* handle, char* pre_range, char* post_range) {
+    Result* rsl = malloc(sizeof(Result));
+    if (strncmp(pre_range,"null",4) == 0) {
+        int post = atoi(post_range);
+        int* scol_data = scol->data;
+        int* rsl_data = calloc(scol->size, sizeof(int));
+        unsigned int count = 0;
+        for(size_t i = 0; i < scol->size; ++i) {
+            if(scol_data[i] < post) {
+                rsl_data[count] = i;
+                count++;
+            }
+        }
+        rsl->num_tuples = count;
+        rsl->data_type = INT;
+        rsl->payload = calloc(count, sizeof(int));
+        memcpy(rsl->payload,rsl_data,count* sizeof(int));
+        put_result_replace(handle,rsl);
+    }
+    else if (strncmp(post_range,"null",4) == 0) {
+        int pre = atoi(pre_range);
+        int* scol_data = scol->data;
+        int* rsl_data = calloc(scol->size, sizeof(int));
+        unsigned int count = 0;
+        for(size_t i = 0; i < scol->size; ++i) {
+            if(scol_data[i] >= pre) {
+                rsl_data[count] = i;
+                count++;
+            }
+        }
+        rsl->num_tuples = count;
+        rsl->data_type = INT;
+        rsl->payload = calloc(count, sizeof(int));
+        memcpy(rsl->payload,rsl_data,count* sizeof(int));
+        put_result_replace(handle,rsl);
+    }
+    else {
+        int pre = atoi(pre_range);
+        int post = atoi(post_range);
+        int* scol_data = scol->data;
+        int* rsl_data = calloc(scol->size, sizeof(int));
+        unsigned int count = 0;
+        for(size_t i = 0; i < scol->size; ++i) {
+            if(scol_data[i] >= pre && scol_data[i] < post) {
+                rsl_data[count] = i;
+                count++;
+            }
+        }
+        rsl->num_tuples = count;
+        rsl->data_type = INT;
+        rsl->payload = calloc(count, sizeof(int));
+        memcpy(rsl->payload,rsl_data,count* sizeof(int));
+        put_result_replace(handle,rsl);
+    }
+    return 0;
+}
+
+/**
+ * fetch column data
+ **/
+int fetch_col_data(char* col_val_name, char* rsl_vec_pos, char* handle) {
+    Result* rsl_pos = get_result(rsl_vec_pos);
+    if(rsl_pos == NULL) {
+        log_err("[db_manager.c:fetch_col_data] fetch position didn't exist.\n");
+        return 1;
+    }
+    Column* col_val = get_column(col_val_name);
+    if(col_val == NULL) {
+        log_err("[db_manager.c:fetch_col_data] fetch col didn't exist.\n");
+        return 1;
+    }
+    size_t rsl_size = rsl_pos->num_tuples;
+    Result* rsl = malloc(sizeof(Result));
+    rsl->data_type = INT;
+    rsl->num_tuples = rsl_size;
+    rsl->payload = calloc(rsl_size, sizeof(int));
+    int* row_id = rsl_pos->payload;
+    int* fetch_payload = calloc(rsl_size, sizeof(int));
+    for(size_t i = 0; i < rsl_size; ++i) {
+        fetch_payload[i] = col_val->data[row_id[i]];
+    }
+    memcpy(rsl->payload, fetch_payload, rsl_size*sizeof(int));
+    put_result_replace(handle, rsl);
+    return 0;
+}
+
+/**
+ * print result
+ **/
+char* generate_print_result(size_t print_num, char** print_name) {
+    size_t rsl_total_tuples = 0;
+    for(size_t i = 0; i< print_num; ++i) {
+        Result* rsl = get_result(print_name[i]);
+        rsl_total_tuples += rsl->num_tuples;
+    }
+    char* print_rsl = malloc(rsl_total_tuples * (sizeof(long)+1));
+    sprintf(print_rsl,"");
+    log_info("[Server results]\n");
+    for(size_t i = 0; i< print_num; ++i) {
+        Result* rsl = get_result(print_name[i]);
+        if(rsl->data_type == INT) {
+            for(size_t j = 0; j < rsl->num_tuples; ++j) {
+                log_info("%d\n",((int *)rsl->payload)[j]);
+                //we allocate 1 one to avoid overflow
+                char* tmp_payload_data = malloc(sizeof(int)+1);
+                sprintf(tmp_payload_data, "%d\n", ((int *)rsl->payload)[j]);
+                strcat(print_rsl,tmp_payload_data);
+            }
+        }
+        else if(rsl->data_type == FLOAT) {
+            for(size_t j = 0; j < rsl->num_tuples; ++j) {
+                log_info("%0.2f\n",((double *)rsl->payload)[j]);
+                char* tmp_payload_data = malloc(sizeof(double)+1);
+                sprintf(tmp_payload_data, "%0.2f\n", ((double *)rsl->payload)[j]);
+                strcat(print_rsl,tmp_payload_data);
+            }
+        }
+        else if(rsl->data_type == LONG) {
+            for(size_t j = 0; j < rsl->num_tuples; ++j) {
+                log_info("%ld\n",((double *)rsl->payload)[j]);
+                char* tmp_payload_data = malloc(sizeof(long)+1);
+                sprintf(tmp_payload_data, "%ld\n", ((long *)rsl->payload)[j]);
+                strcat(print_rsl,tmp_payload_data);
+            }
+        }
+    }
+    log_info("\n");
+    return print_rsl;
+}
+
+/**
  * read data from csv file
  **/
 int read_csv(char* data_path) {

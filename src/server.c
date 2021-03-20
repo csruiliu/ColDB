@@ -118,6 +118,90 @@ char* exec_load(DbOperator* query) {
 }
 
 /**
+ * exec select command
+ **/
+char* exec_select(DbOperator* query) {
+    /*
+    if(getUseBatch() == 1) {
+        if(batch_add(query) != 0) {
+            return "the query failed to put into batch\n";
+        }
+        return "the query has been put into batch\n";
+    }
+    */
+    if(query->operator_fields.select_operator.selectType == HANDLE_COL) {
+        char* select_col_name = query->operator_fields.select_operator.select_col;
+        char* handle = query->operator_fields.select_operator.handle;
+        char* pre_range = query->operator_fields.select_operator.pre_range;
+        char* post_range = query->operator_fields.select_operator.post_range;
+        Column* scol = get_column(select_col_name);
+        if(scol == NULL) {
+            log_err("[server.c:execute_DbOperator()] column didn't exist in the database.\n");
+            return "column didn't exist in the database.\n";
+        }
+        if (scol->idx_type == UNIDX) {
+            if(select_data_col_unidx(scol, handle, pre_range, post_range) != 0) {
+                free_query(query);
+                log_err("[server.c:execute_DbOperator()] select data from column in database failed.\n");
+                return "select data from column in database failed.\n";
+            }
+        }
+        free_query(query);
+        log_info("select data from column in database successfully.\n");
+        return "select data from column in database successfully.\n";
+    }
+    else {
+        char* select_rsl_pos = query->operator_fields.select_operator.select_rsl_pos;
+        char* select_rsl_val = query->operator_fields.select_operator.select_rsl_val;
+        char* handle = query->operator_fields.select_operator.handle;
+        char* pre_range = query->operator_fields.select_operator.pre_range;
+        char* post_range = query->operator_fields.select_operator.post_range;
+        Result* srsl_pos = get_result(select_rsl_pos);
+        Result* srsl_val = get_result(select_rsl_val);
+        if(select_data_result(srsl_pos, srsl_val, handle, pre_range, post_range) != 0) {
+            free_query(query);
+            log_err("[server.c:execute_DbOperator()] select data from result in database failed.\n");
+            return "select data from result in database failed.\n";
+        }
+        free_query(query);
+        log_info("select data from result in database successfully.\n");
+        return "select data from result in database successfully.\n";
+    }
+}
+
+/**
+ * exec fetch command
+ **/
+char* exec_fetch(DbOperator* query) {
+    char* col_val_name = query->operator_fields.fetch_operator.col_var_name;
+    char* rsl_vec_pos = query->operator_fields.fetch_operator.rsl_vec_pos;
+    char* handle = query->operator_fields.fetch_operator.handle;
+    if(fetch_col_data(col_val_name,rsl_vec_pos,handle) != 0) {
+        free_query(query);
+        return "fetch data failed.\n";
+    }
+    free_query(query);
+    log_info("[server.c:execute_DbOperator()] fetch data successfully.\n");
+    return "fetch data successfully.\n";
+}
+
+/**
+ * exec print command
+ **/
+char* exec_print(DbOperator* query) {
+    size_t print_num = query->operator_fields.print_operator.print_num;
+    char** print_name = query->operator_fields.print_operator.print_name;
+    char* print_result = generate_print_result(print_num, print_name);
+    if (print_result == NULL){
+        free_query(query);
+        log_err("[server.c:execute_DbOperator()] fetch data failed.\n");
+        return "fetch data failed.\n";
+    }
+    free_query(query);
+    return print_result;
+}
+
+/**
  * exec shutdown command
  **/
 char* exec_shutdown(DbOperator* query) {
@@ -152,6 +236,15 @@ char* execute_DbOperator(DbOperator* query) {
     }
     else if (query->type == LOAD) {
         return exec_load(query);
+    }
+    else if (query->type == SELECT) {
+        return exec_select(query);
+    }
+    else if (query->type == FETCH) {
+        return exec_fetch(query);
+    }
+    else if (query->type == PRINT) {
+        return exec_print(query);
     }
     else if (query->type == SHUTDOWN) {
         return exec_shutdown(query);

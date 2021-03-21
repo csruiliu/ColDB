@@ -481,7 +481,27 @@ DbOperator* parse_max(char* handle, char* query_command, message* send_message) 
  **/
 DbOperator* parse_min(char* handle, char* query_command, message* send_message) {
     if(has_comma(handle)) {
-
+        char* min_handle_pos = next_token_comma(&handle, &send_message->status);
+        char* min_handle_value = next_token_comma(&handle, &send_message->status);
+        char* min_vec_pos = next_token_comma(&query_command, &send_message->status);
+        char* min_vec_value = next_token_comma(&query_command, &send_message->status);
+        int last_char = (int)strlen(min_vec_value) - 1;
+        if (last_char < 0 || min_vec_value[last_char] != ')') {
+            return NULL;
+        }
+        min_vec_value[last_char] = '\0';
+        DbOperator* dbo = malloc(sizeof(DbOperator));
+        dbo->type = MIN;
+        dbo->operator_fields.min_operator.min_type = MIN_POS_VALUE;
+        dbo->operator_fields.min_operator.handle_value = malloc((strlen(min_handle_value)+1)* sizeof(char));
+        strcpy(dbo->operator_fields.min_operator.handle_value, min_handle_value);
+        dbo->operator_fields.min_operator.handle_pos = malloc((strlen(min_handle_pos)+1)* sizeof(char));
+        strcpy(dbo->operator_fields.min_operator.handle_pos, min_handle_pos);
+        dbo->operator_fields.min_operator.min_vec_pos = malloc((strlen(min_vec_pos)+1)* sizeof(char));
+        strcpy(dbo->operator_fields.min_operator.min_vec_pos, min_vec_pos);
+        dbo->operator_fields.min_operator.min_vec_value = malloc((strlen(min_vec_value)+1)* sizeof(char));
+        strcpy(dbo->operator_fields.min_operator.min_vec_value, min_vec_value);
+        return dbo;
     }
     else {
         int last_char = (int)strlen(query_command) - 1;

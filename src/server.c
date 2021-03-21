@@ -186,6 +186,28 @@ char* exec_fetch(DbOperator* query) {
 }
 
 /**
+ * compute average command
+ **/
+char* exec_aggr_avg(DbOperator* query) {
+    char* avg_name = query->operator_fields.avg_operator.avg_name;
+    char* handle = query->operator_fields.avg_operator.handle;
+    if (query->operator_fields.avg_operator.handle_type == HANDLE_COL) {
+        if (avg_column_data(avg_name,handle) != 0) {
+            free_query(query);
+            return "get ave of data failed.\n";
+        }
+    }
+    else {
+        if (avg_result_data(avg_name,handle) != 0) {
+            free_query(query);
+            return "get ave of data failed.\n";
+        }
+    }
+    free_query(query);
+    return "calculate ave of data successfully.\n";
+}
+
+/**
  * exec print command
  **/
 char* exec_print(DbOperator* query) {
@@ -214,7 +236,8 @@ char* exec_shutdown(DbOperator* query) {
     free_column_store();
     free_result_store();
     log_info("persist all the data and shutdown the server.\n");
-    return "persist all the data and shutdown the server.\n";
+    //return "persist all the data and shutdown the server.\n";
+    return NULL;
 }
 
 /** execute_DbOperator takes as input the DbOperator and executes the query.
@@ -242,6 +265,9 @@ char* execute_DbOperator(DbOperator* query) {
     }
     else if (query->type == FETCH) {
         return exec_fetch(query);
+    }
+    else if (query->type == AVG) {
+        return exec_aggr_avg(query);
     }
     else if (query->type == PRINT) {
         return exec_print(query);
@@ -316,10 +342,19 @@ void handle_client(int client_socket) {
             // 2. Handle request
             char* result = execute_DbOperator(query);
 
-            send_message.length = strlen(result);
-            char send_buffer[send_message.length + 1];
-            strcpy(send_buffer, result);
-            send_message.payload = send_buffer;
+            /**
+             * result is NULL when getting a SHUTDOWN cmd, so break the loop
+             */
+            if (result == NULL) {
+                break;
+            }
+            else {
+                send_message.length = strlen(result);
+                char send_buffer[send_message.length + 1];
+                strcpy(send_buffer, result);
+                send_message.payload = send_buffer;
+            }
+
 
             // 3. Send status of the received message (OK, UNKNOWN_QUERY, etc)
             if (send(client_socket, &(send_message), sizeof(message), 0) == -1) {

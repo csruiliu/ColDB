@@ -230,6 +230,119 @@ char* exec_aggr_sum(DbOperator* query) {
 }
 
 /**
+ * compute add command
+ **/
+char* exec_aggr_add(DbOperator* query) {
+    char* add_name1 = query->operator_fields.add_operator.add_name1;
+    char* add_name2 = query->operator_fields.add_operator.add_name2;
+    char* handle = query->operator_fields.add_operator.handle;
+    HandleType add_type1 = query->operator_fields.add_operator.add_type1;
+    HandleType add_type2 = query->operator_fields.add_operator.add_type2;
+    if(add_type1 == HANDLE_COL && add_type2 == HANDLE_COL) {
+        if(add_col_col(add_name1,add_name2,handle) != 0) {
+            free_query(query);
+            return "get addition of data failed.\n";
+        }
+    }
+    else if(add_type1 == HANDLE_RSL && add_type2 == HANDLE_RSL) {
+        if(add_rsl_rsl(add_name1,add_name2,handle) != 0) {
+            free_query(query);
+            return "get addition of data failed.\n";
+        }
+    }
+    else if(add_type1 == HANDLE_COL && add_type2 == HANDLE_RSL) {
+        if(add_col_rsl(add_name1,add_name2,handle) != 0) {
+            free_query(query);
+            return "get addition of data failed.\n";
+        }
+    }
+    else if(add_type1 == HANDLE_RSL && add_type2 == HANDLE_COL) {
+        if(add_rsl_col(add_name1,add_name2,handle) != 0) {
+            free_query(query);
+            return "get addition of data failed.\n";
+        }
+    }
+    free_query(query);
+    return "calculate addition of data successfully.\n";
+}
+
+/**
+ * compute sub command
+ **/
+char* exec_aggr_sub(DbOperator* query) {
+    char* sub_name1 = query->operator_fields.sub_operator.sub_name1;
+    char* sub_name2 = query->operator_fields.sub_operator.sub_name2;
+    char* handle = query->operator_fields.sub_operator.handle;
+    HandleType sub_type1 = query->operator_fields.sub_operator.sub_type1;
+    HandleType sub_type2 = query->operator_fields.sub_operator.sub_type2;
+    if(sub_type1 == HANDLE_COL && sub_type2 == HANDLE_COL) {
+        if(sub_col_col(sub_name1,sub_name2,handle) != 0) {
+            free_query(query);
+            return "get subtraction of data failed.\n";
+        }
+    }
+    else if(sub_type1 == HANDLE_RSL && sub_type2 == HANDLE_RSL) {
+        if(sub_rsl_rsl(sub_name1,sub_name2,handle) != 0) {
+            free_query(query);
+            return "get subtraction of data failed.\n";
+        }
+    }
+    return "get subtraction of data successfully.\n";
+}
+
+/**
+ * compute max command
+ **/
+char* exec_aggr_max(DbOperator* query) {
+    if(query->operator_fields.max_operator.max_type == MAX_VALUE) {
+        char* handle = query->operator_fields.max_operator.handle_value;
+        char* max_vec = query->operator_fields.max_operator.max_vec_value;
+        if (max_rsl_value(max_vec,handle) != 0) {
+            free_query(query);
+            return "get max of data failed.\n";
+        }
+        return "get max of data successfully.\n";
+    }
+    else {
+        char* handle_value = query->operator_fields.max_operator.handle_value;
+        char* handle_pos = query->operator_fields.max_operator.handle_pos;
+        char* max_vec_value = query->operator_fields.max_operator.max_vec_value;
+        char* max_vec_pos = query->operator_fields.max_operator.max_vec_pos;
+        if(max_rsl_value_pos(max_vec_pos,max_vec_value,handle_pos,handle_value) != 0) {
+            free_query(query);
+            return "get max of data and regarding position failed.\n";
+        }
+        return "get max of data and regarding position successfully.\n";
+    }
+}
+
+/**
+ * compute min command
+ **/
+char* exec_aggr_min(DbOperator* query) {
+    if(query->operator_fields.min_operator.min_type == MIN_VALUE) {
+        char* handle = query->operator_fields.min_operator.handle_value;
+        char* min_vec = query->operator_fields.min_operator.min_vec_value;
+        if (min_rsl_value(min_vec,handle) != 0) {
+            free_query(query);
+            return "get min of data failed.\n";
+        }
+        return "get min of data successfully.\n";
+    }
+    else {
+        char* handle_value = query->operator_fields.min_operator.handle_value;
+        char* handle_pos = query->operator_fields.min_operator.handle_pos;
+        char* min_vec_value = query->operator_fields.min_operator.min_vec_value;
+        char* min_vec_pos = query->operator_fields.min_operator.min_vec_pos;
+        if(min_rsl_value_pos(min_vec_pos,min_vec_value,handle_pos,handle_value) != 0) {
+            free_query(query);
+            return "get min of data and regarding position failed.\n";
+        }
+        return "get min of data and regarding position successfully.\n";
+    }
+}
+
+/**
  * exec print command
  **/
 char* exec_print(DbOperator* query) {
@@ -293,6 +406,18 @@ char* execute_DbOperator(DbOperator* query) {
     }
     else if (query->type == SUM) {
         return exec_aggr_sum(query);
+    }
+    else if (query->type == ADD) {
+        return exec_aggr_add(query);
+    }
+    else if (query->type == SUB) {
+        return exec_aggr_sub(query);
+    }
+    else if (query->type == MAX) {
+        return exec_aggr_max(query);
+    }
+    else if (query->type == MIN) {
+        return exec_aggr_min(query);
     }
     else if (query->type == PRINT) {
         return exec_print(query);

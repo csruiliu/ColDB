@@ -208,6 +208,28 @@ char* exec_aggr_avg(DbOperator* query) {
 }
 
 /**
+ * compute sum command
+ **/
+char* exec_aggr_sum(DbOperator* query) {
+    char* sum_name = query->operator_fields.sum_operator.sum_name;
+    char* handle = query->operator_fields.sum_operator.handle;
+    if (query->operator_fields.sum_operator.handle_type == HANDLE_COL) {
+        if (sum_column_data(sum_name,handle) != 0) {
+            free_query(query);
+            return "get sum of data failed.\n";
+        }
+    }
+    else {
+        if (sum_result_data(sum_name,handle) != 0) {
+            free_query(query);
+            return "get sum of data failed.\n";
+        }
+    }
+    free_query(query);
+    return "calculate sum of data successfully.\n";
+}
+
+/**
  * exec print command
  **/
 char* exec_print(DbOperator* query) {
@@ -268,6 +290,9 @@ char* execute_DbOperator(DbOperator* query) {
     }
     else if (query->type == AVG) {
         return exec_aggr_avg(query);
+    }
+    else if (query->type == SUM) {
+        return exec_aggr_sum(query);
     }
     else if (query->type == PRINT) {
         return exec_print(query);

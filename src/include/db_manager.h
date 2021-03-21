@@ -43,6 +43,16 @@ int avg_column_data(char* avg_col_name, char* handle);
 int avg_result_data(char* avg_rsl_name, char* handle);
 
 /**
+ * get the result of an sum query on the column
+ **/
+int sum_column_data(char* avg_col_name, char* handle);
+
+/**
+ * compute sum of the select "result"
+ **/
+int sum_result_data(char* avg_rsl_name, char* handle);
+
+/**
  * print result
  */
 char* generate_print_result(size_t print_num, char** print_name);

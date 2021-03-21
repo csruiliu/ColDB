@@ -457,6 +457,97 @@ int avg_result_data(char* avg_rsl_name, char* handle) {
 }
 
 /**
+ * get the result of an sum query on the column
+ **/
+int sum_column_data(char* sum_col_name, char* handle) {
+    Column* sum_col = get_column(sum_col_name);
+    if (sum_col == NULL) {
+        log_err("[db_manager.c:sum_col_data()]: column didn't exist in the database.\n");
+        return 1;
+    }
+    long sum = 0;
+    int* sum_payload = sum_col->data;
+    for(size_t i = 0; i < sum_col->size; ++i) {
+        sum += sum_payload[i];
+    }
+    Result* rsl = malloc(sizeof(Result));
+    if(rsl == NULL) {
+        log_err("[db_manager.c:avg_col_data()]: init new result failed.\n");
+        return 1;
+    }
+    rsl->data_type = LONG;
+    rsl->num_tuples = 1;
+    rsl->payload = calloc(1, sizeof(long));
+    memcpy(rsl->payload, &sum, sizeof(long));
+    put_result_replace(handle,rsl);
+    return 0;
+}
+
+/**
+ * compute sum of the select "result"
+ **/
+int sum_result_data(char* sum_rsl_name, char* handle) {
+    Result* sum_rsl = get_result(sum_rsl_name);
+    if (sum_rsl == NULL) {
+        log_err("[db_manager.c:sum_rsl_data()]: result didn't exist.\n");
+        return 1;
+    }
+    if(sum_rsl->data_type == FLOAT) {
+        double sum = 0;
+        double* float_sum_payload = sum_rsl->payload;
+        for(size_t i = 0; i < sum_rsl->num_tuples; ++i) {
+            sum += float_sum_payload[i];
+        }
+        Result* rsl = malloc(sizeof(Result));
+        if(rsl == NULL) {
+            log_err("[db_manager.c:avg_col_data()]: init new result failed.\n");
+            return 1;
+        }
+        rsl->data_type = FLOAT;
+        rsl->num_tuples = 1;
+        rsl->payload = calloc(1, sizeof(double));
+        memcpy(rsl->payload, &sum, sizeof(double));
+        put_result_replace(handle,rsl);
+    }
+    else if (sum_rsl->data_type == INT) {
+        long sum = 0;
+        int* int_sum_payload = sum_rsl->payload;
+        for(size_t i = 0; i < sum_rsl->num_tuples; ++i) {
+            sum += int_sum_payload[i];
+        }
+        Result* rsl = malloc(sizeof(Result));
+        if(rsl == NULL) {
+            log_err("[db_manager.c:avg_col_data()]: init new result failed.\n");
+            return 1;
+        }
+        rsl->data_type = LONG;
+        rsl->num_tuples = 1;
+        rsl->payload = calloc(1, sizeof(long));
+        memcpy(rsl->payload, &sum, sizeof(long));
+        put_result_replace(handle,rsl);
+    }
+    else {
+        long sum = 0;
+        long* int_sum_payload = sum_rsl->payload;
+        for(size_t i = 0; i < sum_rsl->num_tuples; ++i) {
+            sum += int_sum_payload[i];
+        }
+        Result* rsl = malloc(sizeof(Result));
+        if(rsl == NULL) {
+            log_err("[db_manager.c:avg_col_data()]: init new result failed.\n");
+            return 1;
+        }
+        rsl->data_type = LONG;
+        rsl->num_tuples = 1;
+        rsl->payload = calloc(1, sizeof(long));
+        memcpy(rsl->payload, &sum, sizeof(long));
+        put_result_replace(handle,rsl);
+    }
+    return 0;
+}
+
+
+/**
  * print result
  **/
 char* generate_print_result(size_t print_num, char** print_name) {

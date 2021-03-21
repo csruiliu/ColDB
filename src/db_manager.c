@@ -381,6 +381,82 @@ int fetch_col_data(char* col_val_name, char* rsl_vec_pos, char* handle) {
 }
 
 /**
+ * get the result of an avg query on the column
+ **/
+int avg_column_data(char* avg_col_name, char* handle) {
+    Column* acol = get_column(avg_col_name);
+    if (acol == NULL) {
+        log_err("[db_manager.c:avg_col_data()]: column didn't exist in the database.\n");
+        return 1;
+    }
+    int sum = 0;
+    int* acol_data = acol->data;
+    for(size_t i = 0; i < acol->size; ++i) {
+        sum += acol_data[i];
+    }
+    double avg = (double) sum / (double) acol->size;
+    Result* arsl = malloc(sizeof(Result));
+    if(arsl == NULL) {
+        log_err("[db_manager.c:avg_col_data()]: init new result failed.\n");
+        return 1;
+    }
+    arsl->data_type = FLOAT;
+    arsl->num_tuples = 1;
+    arsl->payload = calloc(1, sizeof(double));
+    memcpy(arsl->payload, &avg, sizeof(double));
+    put_result_replace(handle,arsl);
+    return 0;
+}
+
+/**
+ * compute average of the select "result"
+ **/
+int avg_result_data(char* avg_rsl_name, char* handle) {
+    Result* avg_rsl = get_result(avg_rsl_name);
+    double avg = 0;
+    if (avg_rsl == NULL) {
+        log_err("[db_manager.c:avg_col_data()]: result didn't exist in the database.\n");
+        return 1;
+    }
+    if(avg_rsl->data_type == INT) {
+        int* int_avg_payload = avg_rsl->payload;
+        int sum = 0;
+        for(size_t i = 0; i < avg_rsl->num_tuples; ++i) {
+            sum += int_avg_payload[i];
+        }
+        avg = (double) sum / (double) avg_rsl->num_tuples;
+    }
+    else if(avg_rsl->data_type == FLOAT) {
+        float* float_avg_payload = avg_rsl->payload;
+        float sum = 0;
+        for(size_t i = 0; i < avg_rsl->num_tuples; ++i) {
+            sum += float_avg_payload[i];
+        }
+        avg = (double) sum / (double) avg_rsl->num_tuples;
+    }
+    else if(avg_rsl->data_type == LONG) {
+        long* long_avg_payload = avg_rsl->payload;
+        long sum = 0;
+        for(size_t i = 0; i < avg_rsl->num_tuples; ++i) {
+            log_info("%d item:%d\n",i,long_avg_payload[i]);
+            sum += long_avg_payload[i];
+        }
+        avg = (double) sum / (double) avg_rsl->num_tuples;
+    }
+    Result* rsl = malloc(sizeof(Result));
+    if(rsl == NULL) {
+        log_err("[db_manager.c:avg_col_data()]: init new result failed.\n");
+        return 1;
+    }
+    rsl->data_type = FLOAT;
+    rsl->num_tuples = 1;
+    rsl->payload = calloc(1, sizeof(double));
+    memcpy(rsl->payload, &avg, sizeof(double));
+    put_result_replace(handle,rsl);
+    return 0;
+}
+
+/**
  * print result
  **/
 char* generate_print_result(size_t print_num, char** print_name) {

@@ -33,6 +33,16 @@ int select_data_result(Result* srsl_pos, Result* srsl_val, char* handle, char* p
 int fetch_col_data(char* col_val_name, char* rsl_vec_pos, char* handle);
 
 /**
+ * get the result of an avg query on the column
+ **/
+int avg_column_data(char* avg_col_name, char* handle);
+
+/**
+ * compute average of the select "result"
+ **/
+int avg_result_data(char* avg_rsl_name, char* handle);
+
+/**
  * print result
  */
 char* generate_print_result(size_t print_num, char** print_name);

@@ -53,6 +53,32 @@ int sum_column_data(char* avg_col_name, char* handle);
 int sum_result_data(char* avg_rsl_name, char* handle);
 
 /**
+ * compute add query
+ **/
+int add_col_col(char* add_name1, char* add_name2, char* handle);
+int add_rsl_rsl(char* add_name1, char* add_name2, char* handle);
+int add_col_rsl(char* add_name1, char* add_name2, char* handle);
+int add_rsl_col(char* add_name1, char* add_name2, char* handle);
+
+/**
+ * compute max query
+ **/
+int max_rsl_value(char* max_vec, char* handle);
+int max_rsl_value_pos(char* max_vec_pos, char* max_vec_value, char* handle_pos, char* handle_value);
+
+/**
+ * compute min query
+ **/
+int min_rsl_value(char* min_vec,char* handle);
+int min_rsl_value_pos(char* min_vec_pos, char* min_vec_value, char* handle_pos, char* handle_value);
+
+/**
+ * compute subtraction
+ **/
+int sub_col_col(char* sub_name1, char* sub_name2, char* handle);
+int sub_rsl_rsl(char* sub_name1, char* sub_name2, char* handle);
+
+/**
  * print result
  */
 char* generate_print_result(size_t print_num, char** print_name);

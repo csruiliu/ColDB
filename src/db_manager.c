@@ -1126,7 +1126,8 @@ char* generate_print_result(size_t print_num, char** print_name) {
         rsl_total_tuples += rsl->num_tuples;
     }
     char* print_rsl = malloc(rsl_total_tuples * (sizeof(long)+1));
-    sprintf(print_rsl,"");
+    strcpy(print_rsl, "");
+    //sprintf(print_rsl,"");
     log_info("[Server results]\n");
     for(size_t i = 0; i< print_num; ++i) {
         Result* rsl = get_result(print_name[i]);

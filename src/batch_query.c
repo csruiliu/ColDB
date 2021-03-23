@@ -27,7 +27,7 @@ int init_batch() {
         log_err("pthread_mutex_init failed\n");
         return 1;
     }
-    return create_batch_queue();
+    return create_bq();
 }
 
 int batch_add(DbOperator *query) {
@@ -99,11 +99,29 @@ void* exec_query() {
     return 0;
 }
 
-int create_thread(size_t size_p) {
+pthread_t* create_thread(size_t thread_id) {
+    pthread_t* new_thread = malloc(sizeof(pthread_t));
+    if (new_thread == NULL) {
+        return NULL;
+    }
+    char* thread_name = "thread" + thread_id;
+    char* thread_message = malloc((sizeof(thread_name)+1)* sizeof(char));
+    int ret_thread = pthread_create(new_thread, NULL, exec_query, (void *)thread_message);
+    if(ret_thread == 0) {
+        log_info("Thread %d create successfully.\n", thread_id);
+    }
+    else {
+        log_info("Thread %d create failed.\n", thread_id);
+        return NULL;
+    }
+    return new_thread;
+    /*
     pths = calloc(size_p, sizeof(pthread_t*));
     pth_messages = calloc(size_p, sizeof(char*));
+
     for(size_t i = 0; i < size_p; ++i) {
         pths[i] = malloc(sizeof(pthread_t));
+
         char* pth_name = "thread" + i;
         pth_messages[i] = malloc((sizeof(pth_name)+1)* sizeof(char));
         strcpy(pth_messages[i],pth_name);
@@ -115,41 +133,48 @@ int create_thread(size_t size_p) {
             log_info("Thread %d create failed.\n", i);
         }
     }
-    return 0;
-}
-
-int batch_schedule_convoy() {
-    show_bqrefine();
-    if(create_refine_batch_queue() != 0) {
-        log_err("[db_batch.c:batch_schedule_convoy] create refined batch queue failed.\n");
-        return 1;
-    }
-    size_t bq_len = get_bq_length();
-    for(size_t i = 0; i < bq_len; ++i) {
-        bqNode* node = pop_head_bq();
-        node->next = NULL;
-        if(push_bqr_convoy(node) != 0) {
-            log_err("[db_batch.c:batch_schedule_convoy] refine batch queue failed.\n");
-            return 1;
-        }
-    }
-    show_bqrefine();
-    return 0;
+    */
 }
 
 int exec_batch_query() {
     void *status;
     //nprocs = get_nprocs() - 1;
     log_info("current available process number: %d\n", nprocs);
-    size_t query_batch_size = get_bq_length();
-    create_thread(query_batch_size);
-    for(size_t i = 0; i < query_batch_size; ++i) {
-        pthread_join(*pths[i], &status);
+    size_t query_batch_size = get_length_bq();
+
+    while(true) {
+        if (query_batch_size == 0) {
+            break;
+        }
+        pthread_t* cur_thread = create_thread(query_batch_size);
+        if (cur_thread != NULL) {
+            query_batch_size--;
+            pthread_join(*cur_thread, &status);
+        }
     }
     if (pthread_mutex_destroy(&mutex) != 0) {
         perror("pthread_mutex_destroy failed\n");
         log_err("pthread_mutex_destroy failed\n");
         return 1;
     }
+    return 0;
+}
+
+int batch_schedule_convoy() {
+    show_bq_opt();
+    if(create_bq_opt() != 0) {
+        log_err("[db_batch.c:batch_schedule_convoy] create refined batch queue failed.\n");
+        return 1;
+    }
+    size_t bq_len = get_length_bq();
+    for(size_t i = 0; i < bq_len; ++i) {
+        bqNode* node = pop_head_bq();
+        node->next = NULL;
+        if(push_node_convoy(node) != 0) {
+            log_err("[db_batch.c:batch_schedule_convoy] refine batch queue failed.\n");
+            return 1;
+        }
+    }
+    show_bq_opt();
     return 0;
 }

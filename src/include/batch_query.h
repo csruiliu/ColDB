@@ -20,6 +20,6 @@ int exec_batch_query();
 
 int batch_schedule_convoy();
 
-int create_thread(size_t size_p);
+pthread_t* create_thread(size_t thread_id);
 
 #endif //BATCH_QUERY_H

@@ -360,6 +360,7 @@ char* set_batch(DbOperator *query) {
 char* exec_batch(DbOperator *query) {
     set_use_batch(0);
     /*
+    // schedule and optimize the batch query
     if(batch_schedule_convoy() != 0) {
         free(query);
         return "schedule batch queries failed.\n";

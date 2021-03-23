@@ -26,6 +26,7 @@
 #include "parse.h"
 #include "utils_func.h"
 #include "db_manager.h"
+#include "batch_query.h"
 
 #define DEFAULT_QUERY_BUFFER_SIZE 1024
 
@@ -121,14 +122,12 @@ char* exec_load(DbOperator* query) {
  * exec select command
  **/
 char* exec_select(DbOperator* query) {
-    /*
-    if(getUseBatch() == 1) {
+    if(get_use_batch() == 1) {
         if(batch_add(query) != 0) {
             return "the query failed to put into batch\n";
         }
         return "the query has been put into batch\n";
     }
-    */
     if(query->operator_fields.select_operator.selectType == HANDLE_COL) {
         char* select_col_name = query->operator_fields.select_operator.select_col;
         char* handle = query->operator_fields.select_operator.handle;
@@ -343,6 +342,38 @@ char* exec_aggr_min(DbOperator* query) {
 }
 
 /**
+ * set use batch flag
+ */
+char* set_batch(DbOperator *query) {
+    set_use_batch(1);
+    if(init_batch() != 0) {
+        free(query);
+        return "batch queries start failed.\n";
+    }
+    free(query);
+    return "batch queries start successfully.\n";
+}
+
+/**
+ * execute batch query
+ */
+char* exec_batch(DbOperator *query) {
+    set_use_batch(0);
+    /*
+    if(batch_schedule_convoy() != 0) {
+        free(query);
+        return "schedule batch queries failed.\n";
+    }
+    */
+    if(exec_batch_query() != 0) {
+        free(query);
+        return "exec batch queries failed.\n";
+    }
+    free(query);
+    return "schedule and execute batch queries successfully.\n";
+}
+
+/**
  * exec print command
  **/
 char* exec_print(DbOperator* query) {
@@ -418,6 +449,12 @@ char* execute_DbOperator(DbOperator* query) {
     }
     else if (query->type == MIN) {
         return exec_aggr_min(query);
+    }
+    else if (query->type == BATCH_QUERY) {
+        return set_batch(query);
+    }
+    else if (query->type == BATCH_EXEC) {
+        return exec_batch(query);
     }
     else if (query->type == PRINT) {
         return exec_print(query);

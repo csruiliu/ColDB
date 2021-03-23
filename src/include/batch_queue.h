@@ -17,34 +17,43 @@ typedef struct batchQueue {
 
 bqNode* create_node(DbOperator *query);
 
-int create_batch_queue();
-
-int create_refine_batch_queue();
-
-batchQueue* get_bq();
-
-batchQueue* get_bqr();
-
-int is_bq_empty();
-
-int is_bqr_empty();
+/**
+ * create batch queue
+ * and the operations
+ */
+int create_bq();
 
 int push_node_bq(bqNode *node);
 
-int push_node_bqrefine(bqNode *node);
-
-size_t get_bq_length();
-
-size_t get_bqr_length();
+bqNode* pop_head_bq();
 
 void show_bq();
 
-void show_bqrefine();
+batchQueue* get_bq();
 
-int push_bqr_convoy(bqNode *node);
+int is_empty_bq();
 
-bqNode* pop_head_bq();
+size_t get_length_bq();
 
-bqNode* pop_head_bqrefine();
+
+/**
+ * create batch queue for optimization
+ * and the operations
+ */
+int create_bq_opt();
+
+int push_node_bq_opt(bqNode *node);
+
+bqNode* pop_head_bq_opt();
+
+batchQueue* get_bq_opt();
+
+int is_empty_bq_opt();
+
+size_t get_length_bq_opt();
+
+void show_bq_opt();
+
+int push_node_convoy(bqNode* ref_node);
 
 #endif //BATCH_QUEUE_H

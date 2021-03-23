@@ -14,10 +14,14 @@ add_executable(coldb
         src/include/operator.h
         src/include/parse.h
         src/include/utils_func.h
+        src/include/batch_query.h
+        src/include/batch_queue.h
         src/client.c
         src/db_element.c
         src/db_manager.c
         src/kv_store.c
         src/parse.c
         src/server.c
+        src/batch_query.c
+        src/batch_queue.c
         src/utils_func.c)

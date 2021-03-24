@@ -16,6 +16,8 @@ add_executable(coldb
         src/include/utils_func.h
         src/include/batch_query.h
         src/include/batch_queue.h
+        src/include/index_btree.h
+        src/include/index_sort.h
         src/client.c
         src/db_element.c
         src/db_manager.c
@@ -24,4 +26,6 @@ add_executable(coldb
         src/server.c
         src/batch_query.c
         src/batch_queue.c
+        src/index_btree.c
+        src/index_sort.c
         src/utils_func.c)

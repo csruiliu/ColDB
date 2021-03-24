@@ -1,12 +1,22 @@
 #ifndef INDEX_SORT_H
 #define INDEX_SORT_H
 
-typedef struct Node {
+typedef struct node {
     int row_id;
     int data;
-    struct Node *next;
-} Node, *ListNode;
+    struct node *next;
+};
 
+void insert_head(int row_id, int data);
 
+struct node* delete(int row_id);
+
+void sort();
+
+void print_list();
+
+int length();
+
+bool is_empty();
 
 #endif //INDEX_SORT_H

@@ -1220,12 +1220,10 @@ int read_csv(char* data_path) {
         }
         else if (lcol->cls_type == PRICLSR) {
             int rowId_load = 0;
-            while ((getline(&line, &len, fp)) != -1) {
-
-            }
+            //TODO: btree/sorted indices
         }
         else if (lcol->cls_type == CLSR) {
-
+            //TODO: btree/sorted indices
         }
         else {
             log_err("the column %s has unsupported cluster index", lcol->name);
@@ -1247,6 +1245,7 @@ int read_csv(char* data_path) {
                 return 1;
             }
         }
+        //TODO: pricluster/nonpricluster indices
         int rowId_load = 0;
         while ((getline(&line, &len, fp)) != -1) {
             for (size_t i = 0; i < header_count; ++i) {
@@ -1257,7 +1256,6 @@ int read_csv(char* data_path) {
                     fclose(fp);
                     return 1;
                 }
-                //TODO: pricluster/nonpricluster indices
             }
             rowId_load++;
         }

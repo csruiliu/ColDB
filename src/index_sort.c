@@ -4,12 +4,12 @@
 
 #include "index_sort.h"
 
-struct node *head = NULL;
+node *head = NULL;
 
 //insert link at the head location
 void insert_head(int row_id, int data) {
     //create a link
-    struct node *link = (struct node*) malloc(sizeof(struct node));
+    node *link = (node*) malloc(sizeof(node));
 
     link->row_id = row_id;
     link->data = data;
@@ -91,7 +91,7 @@ void sort() {
  * print all node data in the list
  */
 void print_list() {
-    struct node *ptr = head;
+    node *ptr = head;
     printf("\n[ ");
 
     //start from the beginning
@@ -107,7 +107,7 @@ void print_list() {
  */
 int length() {
     int length = 0;
-    struct node *current;
+    node *current;
 
     for(current = head; current != NULL; current = current->next) {
         length++;

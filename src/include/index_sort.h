@@ -5,11 +5,11 @@ typedef struct node {
     int row_id;
     int data;
     struct node *next;
-};
+} node;
 
 void insert_head(int row_id, int data);
 
-struct node* delete(int row_id);
+node* delete(int row_id);
 
 void sort();
 

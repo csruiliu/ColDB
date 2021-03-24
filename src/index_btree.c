@@ -1,4 +1,8 @@
+#include <stdlib.h>
 #include <string.h>
+
+#include "utils_func.h"
+#include "index_btree.h"
 
 BTree* btree_init() {
     BTree* btree = (BTree*) malloc(sizeof(BTree));
@@ -11,16 +15,11 @@ BTree* btree_init() {
     return btree;
 }
 
-
 BTree* btree_insert(BTree* btree, int rowId, int value) {
     if(btree->kv_num == MAX_KV_NUM) {
 
     }
     return btree_insert_notfull(btree, rowId, value);
-}
-
-BTree* btree_delete(BTree* btree, int rowId, int value) {
-    return NULL;
 }
 
 /**
@@ -35,7 +34,7 @@ BTree* btree_insert_notfull(BTree* btree_n, int rowId, int value) {
             btree_n->kv_num++;
         }
         else if (value <= btree_n->kvs[0].value) {
-            for(int i = btree_n->kv_num-1; i >= 0; --i) {
+            for(size_t i = btree_n->kv_num-1; i >= 0; --i) {
                 btree_n->kvs[i+1] = btree_n->kvs[i];
             }
             btree_n->kvs[0].value = value;
@@ -43,7 +42,7 @@ BTree* btree_insert_notfull(BTree* btree_n, int rowId, int value) {
             btree_n->kv_num++;
         }
         else {
-            for(int j = btree_n->kv_num-1; j > 0; --j) {
+            for(size_t j = btree_n->kv_num-1; j > 0; --j) {
                 if(value <= btree_n->kvs[j].value && value > btree_n->kvs[j-1].value) {
                     btree_n->kvs[j+1] = btree_n->kvs[j];
                     btree_n->kvs[j].value = value;
@@ -89,10 +88,10 @@ BTree* btree_insert_notfull(BTree* btree_n, int rowId, int value) {
             }
         }
         else {
-            for(int i = btree_n->kv_num-1; i > 0; --i) {
+            for(size_t i = btree_n->kv_num-1; i > 0; --i) {
                 if(value <= btree_n->kvs[i].value && value > btree_n->kvs[i-1].value) {
                     if(btree_n->child[i]->kv_num == MAX_KV_NUM) {
-                        btree_split_child(btree_n,i,btree_n->child[i]);
+                        btree_split_child(btree_n, i, btree_n->child[i]);
                         if(value > btree_n->kvs[i].value) {
                             btree_insert_notfull(btree_n->child[i+1],rowId,value);
                         }
@@ -115,7 +114,7 @@ BTree* btree_insert_notfull(BTree* btree_n, int rowId, int value) {
  * split the pos-th child of the parent, parent is non-full and child is full
  * the larger half is added to new allocated child
  **/
-BTree* btree_split_child(BTree* parent, int pos, BTree* child) {
+BTree* btree_split_child(BTree* parent, size_t pos, BTree* child) {
     BTree* new_child = (BTree*) malloc(sizeof(BTree));
     if(new_child == NULL) {
         log_err("init new btree for splitting failed!\n");
@@ -139,17 +138,18 @@ BTree* btree_split_child(BTree* parent, int pos, BTree* child) {
         }
     }
     //move parents kv for new median value
-    for(int j = parent->kv_num-1; j >= pos; --j) {
+    for(size_t j = parent->kv_num-1; j >= pos; --j) {
         parent->kvs[j+1] = parent->kvs[j];
     }
     //move parents children for new median value
-    for(int k = parent->kv_num; k > pos; --k) {
+    for(size_t k = parent->kv_num; k > pos; --k) {
         parent->child[k+1] = parent->child[k];
     }
     parent->kvs[pos] = child->kvs[T];
     parent->kv_num++;
     parent->child[pos] = child;
     parent->child[pos+1] = new_child;
+    return new_child;
 }
 
 

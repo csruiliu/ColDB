@@ -136,7 +136,7 @@ Column* create_column(char* tbl_name, char* col_name) {
         return col;
     }
     else {
-        log_err("[db_manager.c:create_column()] the associated table is full, cannot create new column %s", col_name);
+        log_err("[db_manager.c:create_column()] the associated table is full, cannot create new column %s\n", col_name);
         return NULL;
     }
 }
@@ -1219,12 +1219,17 @@ int read_csv(char* data_path) {
             }
         }
         else if (lcol->cls_type == PRICLSR) {
+            int rowId_load = 0;
+            while ((getline(&line, &len, fp)) != -1) {
 
+            }
         }
         else if (lcol->cls_type == CLSR) {
 
         }
-        //TODO: Mutiple clustered indices
+        else {
+            log_err("the column %s has unsupported cluster index", lcol->name);
+        }
     }
     /**
      * load the csv file that has multiple columns

@@ -48,6 +48,23 @@ void free_query(DbOperator* query) {
     free(query);
 }
 
+/**
+ * parse table name in create idx statement
+ * assume the input col name has the correct format
+ * Input: db_name.table_name.col_name
+ * Output: db_name.table_name
+ **/
+char* parse_table_name(char* full_col_name) {
+    char* db_part = strtok(full_col_name, ".");
+    char* tbl_part = strtok(NULL, ".");
+    char* table_name = malloc((strlen(db_part)+strlen(tbl_part)+2)* sizeof(char));
+    strcpy(table_name, db_part);
+    strcat(table_name, ".");
+    strcat(table_name, tbl_part);
+
+    return table_name;
+}
+
 char* exec_create_db(DbOperator* query) {
     char* db_name = query->operator_fields.create_db_operator.db_name;
     current_db = create_db(db_name);
@@ -87,6 +104,51 @@ char* exec_create_col(DbOperator* query) {
     free_query(query);
     log_info("create column successfully.\n");
     return "create column successfully.\n";
+}
+
+/**
+ * Creating index is always before loading/inserting data so there is no need to operate data.
+ * All clustered indices will be declared before the insertion of data to a table.
+ **/
+char* exec_create_idx(DbOperator* query) {
+    char* col_name = query->operator_fields.create_idx_operator.idx_col_name;
+    Column* col = get_column(col_name);
+    if(col == NULL) {
+        free_query(query);
+        return "create column index failed. no column found.\n";
+    }
+    col->idx_type = query->operator_fields.create_idx_operator.col_idx;
+    bool is_cluster = query->operator_fields.create_idx_operator.is_cluster;
+
+    if(is_cluster == true) {
+        char* tbl_name = parse_table_name(col_name);
+        if(tbl_name == NULL) {
+            free_query(query);
+            return "parse table name from full column name failed.\n";
+        }
+        Table* tbl_aff = get_table(tbl_name);
+        if(tbl_aff == NULL) {
+            free_query(query);
+            return "no table found.\n";
+        }
+        if(tbl_aff->has_cluster_index == 0) {
+            tbl_aff->has_cluster_index = 1;
+            tbl_aff->pricluster_index_col_name = (char *) realloc(tbl_aff->pricluster_index_col_name, strlen(col_name));
+            strcpy(tbl_aff->pricluster_index_col_name, col_name);
+            col->cls_type = PRICLSR;
+            log_info("the table take the cluster index on column %s as the primary cluster index\n", col_name);
+        }
+        else {
+            log_info("the table already has a primary cluster index on column %s\n", tbl_aff->pricluster_index_col_name);
+            col->cls_type = CLSR;
+        }
+    }
+    else {
+        col->cls_type = UNCLSR;
+    }
+    free_query(query);
+    log_info("created [%d,%d] index for [%s] successfully.\n", col->idx_type, col->cls_type, col_name);
+    return "create column index successfully.\n";
 }
 
 /**
@@ -420,6 +482,9 @@ char* execute_DbOperator(DbOperator* query) {
     }
     else if (query->type == CREATE_COL) {
         return exec_create_col(query);
+    }
+    else if (query->type == CREATE_IDX){
+        return exec_create_idx(query);
     }
     else if (query->type == INSERT) {
         return exec_insert(query);

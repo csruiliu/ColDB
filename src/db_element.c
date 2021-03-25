@@ -141,3 +141,20 @@ void free_result_store() {
         log_info("free result kv store successfully\n");
     }
 }
+
+/**
+ *  All the function definitions used for kv store of index
+ **/
+void init_index_store(size_t size) {
+    if(kv_allocate(&index_store, size) == 1) {
+        log_err("init idx store failed.");
+    }
+}
+
+void free_index_store() {
+    if(kv_deallocate(index_store) != 0) {
+        log_info("free result kv store failed\n");
+    } else {
+        log_info("free result kv store successfully\n");
+    }
+}

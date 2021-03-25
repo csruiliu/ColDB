@@ -557,6 +557,7 @@ void handle_client(int client_socket) {
     init_table_store(500000);
     init_column_store(2500000);
     init_result_store(2500000);
+    init_index_store(2500000);
 
     if(load_database() != 0) {
         free_db_store();

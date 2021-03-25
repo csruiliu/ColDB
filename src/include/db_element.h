@@ -144,4 +144,11 @@ void put_result_replace(char* result_name, Result* result);
 
 void free_result_store();
 
+/**
+ *  All the function definitions used for kv store of index
+ **/
+void init_index_store(size_t size);
+
+void free_index_store();
+
 #endif

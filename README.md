@@ -4,7 +4,7 @@ ColDB: A main-memory optimized column-store.
 
 This is an academic column-based database. It is implemented by C [only with Berkeley BSC].
 
-### Dependencies ###
+## Dependencies ##
 
 The ColDB requires libexplain. You can install this package via:
 
@@ -14,7 +14,7 @@ Sometimes, there will be a fatal error: zconf.h: No such file or directory, it c
 
 > `sudo apt install build-essential zlib1g-dev`
 
-### Client-Server code ###
+## Client-Server Code ##
 
 We have included a simple unix socket implementation of an interactive client-server database implementation. You are recommended to use it as a foundation for your own database implementation. We have also provided a sample makefile that should be compatible with most machines. You are free to use your own makefile as well.
 
@@ -41,7 +41,7 @@ A high-level explanation of what happens is:
 
 6. Back on the server side, if the query is a valid query then it should process it, and then send back the result if it was asked to.
 
-### Logging ###
+## Logging ##
 
 We have included a couple useful logging functions in utils.c. These logging functions depend on #ifdef located within the code. There are multiple ways to enable logging. One way is by adding your own definition at the top of the file:
 
@@ -51,7 +51,7 @@ The other way is to add it during the compilation process. Instead of running ju
 
 > `make CFLAGS+="-DLOG -DLOG_ERR -DLOG_INFO"`
 
-### Database Schema ###
+## Database Schema ##
 
 Each database is stored as a csv file (e.g., `coldb.csv`), located in `./src/db` folder, of course you can redirect it. 
 
@@ -71,8 +71,18 @@ In the csv file, each line (record) describes a single column with the following
 + `row_id`: The row id
 + `value`: data stored in the corresponding row.
 
-
 The schema design is based on the [instructions](Instructions.md). 
+
+## Index ##
+
+The supported index are B Tree and Sort.
+
+Primary Clustered Index: the first declared clustered index, and only this principal copy of the data support support unclustered indices, which means all unclustered indices are built on top that.
+
+Clustered Index: each clustered index will have a copy of data, so each cluster index for a column will lead a new column that has the name [db_name.table_name.col_name.idx_name].
+
+Unclustered Index: the uncluster index is not persisted, so the unclustered index will be discarded when the database is closed.  
+
 
 ## Test ## 
 

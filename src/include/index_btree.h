@@ -1,40 +1,34 @@
-
 #ifndef INDEX_BTREE_H
 #define INDEX_BTREE_H
 
-#define T 127
-#define MAX_KV_NUM (2 * T - 1)
-#define MAX_CHILD_NUM (MAX_KV_NUM + 1)
-
 #include <stdbool.h>
 
-typedef int type_t;
+typedef struct bt_node *btree;
 
 /**
- * only consider int type so far, so the btree_kv are only int
- **/
-typedef struct btree_kv {
-    type_t rowId;
-    type_t value;
-} bkv;
+ * create a new empty tree
+ */
+btree btree_init();
 
-typedef struct btree_t {
-    size_t kv_num;                   /* number of keys in this node */
-    bool leaf;                     /* it is a leaf node or not, '1' is leaf, '0' is not */
-    bkv kvs[MAX_KV_NUM];
-    struct btree_t* child[MAX_CHILD_NUM]; /* subtrees of this tree*/
-} BTree;
+/**
+ * free a tree
+ */
+void btree_destroy(btree t);
 
-BTree* btree_init();
+/**
+ * insert a new element into a tree
+ */
+void btree_insert(btree t, int key);
 
-BTree* btree_insert(BTree* btree_n, int rowId, int value);
+/**
+ * return the key if it is present in a tree
+ */
+int btree_search(btree t, int key);
 
-BTree* btree_delete_by_rowId(BTree* btree_n, int rowId, int value);
-
-BTree* btree_delete_by_value(BTree* btree_n, int rowId, int value);
-
-BTree* btree_split_child(BTree* parent, size_t pos, BTree* child);
-
-BTree* btree_insert_notfull(BTree* btree_n, int rowId, int value);
+/**
+ * return all keys in the tree in order
+ * and store it in the array
+ */
+void btree_all_keys(btree t);
 
 #endif //INDEX_BTREE_H

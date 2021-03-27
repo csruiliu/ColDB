@@ -13,7 +13,7 @@ struct bt_node {
     //how many keys does this node contain
     int num_keys;
     // the keys in the node
-    int keys[MAX_KEYS];
+    kv_pair keys[MAX_KEYS];
     //kids[i] holds nodes < keys[i]
     struct bt_node* kids[MAX_KEYS+1];
 };
@@ -29,7 +29,7 @@ btree btree_init() {
 }
 
 void btree_destroy(btree t) {
-    size_t i;
+    int i;
     if (!t->is_leaf) {
         for(i = 0; i < t->num_keys+1; ++i) {
             btree_destroy(t->kids[i]);
@@ -42,7 +42,7 @@ void btree_destroy(btree t) {
 /**
  * search key in a tree
  */
-static int search_key(int n, const int *a, int key) {
+static int search_key(int n, kv_pair *a, int key) {
     int low;
     int high;
     int mid;
@@ -52,10 +52,10 @@ static int search_key(int n, const int *a, int key) {
 
     while(low + 1 < high) {
         mid = (low + high) / 2;
-        if (a[mid] == key) {
+        if (a[mid].value == key) {
             return mid;
         }
-        else if (a[mid] < key) {
+        else if (a[mid].value < key) {
             low = mid;
         }
         else {
@@ -66,21 +66,29 @@ static int search_key(int n, const int *a, int key) {
     return high;
 }
 
-int btree_search(btree t, int key) {
+kv_pair btree_search(btree t, int key) {
     int pos;
 
     // have to check for empty tree
     if (t->num_keys == 0) {
-        return 0;
+        //create a meaningless kv pair
+        kv_pair null_node = {-1, -1};
+        return null_node;
     }
 
     pos = search_key(t->num_keys, t->keys, key);
 
-    if(pos < t->num_keys && t->keys[pos] == key) {
-        return 1;
+    if(pos < t->num_keys && t->keys[pos].value == key) {
+        return t->keys[pos];
     }
     else {
-        return (!t->is_leaf && btree_search(t->kids[pos], key));
+        if (t->is_leaf == 0) {
+            return btree_search(t->kids[pos], key);
+        }
+        else {
+            kv_pair null_node = {-1, -1};
+            return null_node;
+        }
     }
 }
 
@@ -90,26 +98,26 @@ int btree_search(btree t, int key) {
  * and puts the median in *median
  * else returns 0
  */
-
-static btree btree_insert_internal(btree t, int key, int *median) {
+static btree btree_insert_internal(btree t, kv_pair kv_node, kv_pair *median) {
     int pos;
-    int mid;
+    //int mid;
+    kv_pair mid;
     btree b_new;
 
-    pos = search_key(t->num_keys, t->keys, key);
+    pos = search_key(t->num_keys, t->keys, kv_node.value);
 
-    if(pos < t->num_keys && t->keys[pos] == key) {
-        return 0;
+    if(pos < t->num_keys && t->keys[pos].value == kv_node.value) {
+        return NULL;
     }
 
     if (t->is_leaf) {
         // every key above pos moves up one space
         memmove(&t->keys[pos+1], &t->keys[pos], sizeof(*(t->keys)) * (t->num_keys - pos));
-        t->keys[pos] = key;
+        t->keys[pos] = kv_node;
         t->num_keys++;
     }
     else {
-        b_new = btree_insert_internal(t->kids[pos], key, &mid);
+        b_new = btree_insert_internal(t->kids[pos], kv_node, &mid);
 
         if (b_new) {
             //every key above pos moves up one space
@@ -125,32 +133,32 @@ static btree btree_insert_internal(btree t, int key, int *median) {
 
     //we waste a tiny bit of space by splitting now instead of on next insert
     if(t->num_keys >= MAX_KEYS) {
-        mid = t->num_keys / 2;
-        *median = t->keys[mid];
+        mid.value = t->num_keys / 2;
+        *median = t->keys[mid.value];
         b_new = malloc(sizeof(*b_new));
-        b_new->num_keys = t->num_keys - mid - 1;
+        b_new->num_keys = t->num_keys - mid.value - 1;
         b_new->is_leaf = t->is_leaf;
-        memmove(b_new->keys, &t->keys[mid+1], sizeof(*(t->keys)) * b_new->num_keys);
+        memmove(b_new->keys, &t->keys[mid.value+1], sizeof(*(t->keys)) * b_new->num_keys);
 
         if(!t->is_leaf) {
-            memmove(b_new->kids, &t->kids[mid+1], sizeof(*(t->kids)) * (b_new->num_keys + 1));
+            memmove(b_new->kids, &t->kids[mid.value+1], sizeof(*(t->kids)) * (b_new->num_keys + 1));
         }
-        t->num_keys = mid;
+        t->num_keys = mid.value;
         return b_new;
     }
     else {
-        return 0;
+        return NULL;
     }
 }
 
-void btree_insert(btree t, int key) {
+void btree_insert(btree t, kv_pair kv_node) {
     btree b_left;
     btree b_right;
-    int median;
+    kv_pair median;
 
-    b_right = btree_insert_internal(t, key, &median);
+    b_right = btree_insert_internal(t, kv_node, &median);
 
-    if (b_right) {
+    if (b_right != NULL) {
         //basic issue here is that we are at the root, so if we split, we have to make a new root
         b_left = malloc(sizeof (*b_left));
         assert(b_left);
@@ -165,14 +173,21 @@ void btree_insert(btree t, int key) {
         t->kids[0] = b_left;
         t->kids[1] = b_right;
     }
+    else {
+        log_err("fail to insert new key\n");
+    }
 }
 
-void btree_inorder_traversal(btree t) {
+int btree_inorder_traversal(btree t, int value_array[], int row_id_array[], int index) {
     if (t != NULL) {
-        btree_inorder_traversal(t->kids[0]);
-        for(size_t i = 0; i < t->num_keys; ++i) {
-            printf("%d", t->keys[i]);
+        btree_inorder_traversal(t->kids[0], value_array, row_id_array, index);
+        for(int i = 0; i < t->num_keys; ++i) {
+            printf("row_id:%d, value:%d \n", t->keys[i].row_id, t->keys[i].value);
+            value_array[index] = t->keys[i].value;
+            row_id_array[index] = t->keys[i].row_id;
+            index++;
         }
-        btree_inorder_traversal(t->kids[1]);
+        btree_inorder_traversal(t->kids[1], value_array, row_id_array, index);
     }
+    return index;
 }

@@ -28,8 +28,6 @@
 #include "db_manager.h"
 #include "batch_query.h"
 
-#define DEFAULT_QUERY_BUFFER_SIZE 1024
-
 void free_query(DbOperator* query) {
     if (query->type == CREATE_TBL) {
         free(query->operator_fields.create_table_operator.db_name);

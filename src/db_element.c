@@ -33,6 +33,9 @@ void put_db(char* db_name, Db* db) {
             log_err("persistent database %s failed\n", db_name);
         }
     }
+    else {
+        log_info("persistent database %s successfully\n", db_name);
+    }
 }
 
 void free_db_store() {
@@ -68,6 +71,9 @@ void put_table(char* table_name, Table* table) {
             log_err("persistent table %s failed", table_name);
         }
     }
+    else {
+        log_info("persistent table %s successfully\n", table_name);
+    }
 }
 
 void free_table_store() {
@@ -102,6 +108,9 @@ void put_column(char* col_name, Column* col) {
         if(put(column_store, col_name, col, sizeof(Column)) == 1) {
             log_err("persistent column %s failed", col_name);
         }
+    }
+    else {
+        log_info("persistent column %s successfully\n", col_name);
     }
 }
 
@@ -148,6 +157,27 @@ void free_result_store() {
 void init_index_store(size_t size) {
     if(kv_allocate(&index_store, size) == 1) {
         log_err("init idx store failed.");
+    }
+}
+
+Index* get_index(char* index_name) {
+    Index* index = get(index_store, index_name);
+    return index;
+}
+
+void put_index(char* index_name, Index* index) {
+    int flag = put(index_store, index_name, index, sizeof(Index));
+    if(flag == 1) {
+        log_err("persistent index %s failed\n", index_name);
+    }
+    else if(flag == 2) {
+        log_info("a rehash has been done, re-put index into kv store\n");
+        if(put(index_store, index_name, index, sizeof(Index)) == 1) {
+            log_err("persistent index %s failed\n", index_name);
+        }
+    }
+    else {
+        log_info("persistent index %s successfully\n", index_name);
     }
 }
 

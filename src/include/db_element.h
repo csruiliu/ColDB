@@ -41,6 +41,18 @@ typedef enum ClsType {
     PRICLSR
 } ClsType;
 
+/**
+ * Column
+ * Defines a column structure, which is composed of multiple data and row id
+ * - name: the name of the column, which follows the format [db_name.table_name.col_name]
+ * - aff_table_name: the table_name which the column belongs to
+ * - data: the pointer that point to the actual data in the column
+ * - rowId: the pointer that point to the row id of the actual data in the column
+ * - size: the current size of the column
+ * - capacity: the max amount of column objects in the column
+ * - idx_type: the index type of the column
+ * - cls_type: the cluster index type of the column
+ */
 typedef struct Column {
     char* name;
     char* aff_tbl_name;
@@ -58,7 +70,7 @@ typedef struct Column {
  * We do not require you to dynamically manage the size of your tables,
  * although you are free to append to the struct if you would like to (i.e.,
  * include a size_t table_size).
- * - name: the name of the associated table, which follows the format [db-name.table-name]
+ * - name: the name of the associated table, which follows the format [db_name.table_name]
  * - aff_db_name: the db_name which the table belongs to
  * - columns: the pointer to the array of tables contained in the db.
  * - table_size: the size of the current column objects
@@ -92,7 +104,7 @@ typedef struct Db {
 } Db;
 
 /**
- *  Declares the type of a result column, which includes the number of tuples in the result,
+ *  Declares the type of a result, which includes the number of tuples in the result,
  *  the data type of the result, and a pointer to the result data
  **/
 typedef struct Result {
@@ -100,6 +112,15 @@ typedef struct Result {
     DataType data_type;
     void *payload;
 } Result;
+
+/**
+ *  Declares the type of a index
+ *  the name of an index, and a pointer to the index
+ **/
+typedef struct Index {
+    char* name;
+    void *index_instance;
+} Index;
 
 /**
  *  All the function definitions used for kv store of db
@@ -148,6 +169,10 @@ void free_result_store();
  *  All the function definitions used for kv store of index
  **/
 void init_index_store(size_t size);
+
+Index* get_index(char* index_name);
+
+void put_index(char* index_name, Index* index);
 
 void free_index_store();
 

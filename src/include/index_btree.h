@@ -3,8 +3,6 @@
 
 #include <stdbool.h>
 
-#define MAX_BTREE_SIZE 1024
-
 typedef struct kvpair {
     int row_id;
     int value;

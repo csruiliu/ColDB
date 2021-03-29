@@ -12,10 +12,12 @@
 #include "message.h"
 #include "db_element.h"
 #include "index_btree.h"
+#include "index_sort.h"
 #include "utils_func.h"
 
 #define RESIZE 2
 #define DIRLEN 256
+#define MAX_COLUMN_SIZE 1024
 
 // In this class, there will always be only one active database at a time
 Db* current_db;
@@ -1235,8 +1237,8 @@ int read_csv(char* data_path) {
             if (lcol->idx_type == BTREE) {
                 btree btree_index = btree_init();
                 int rowId_load = 0;
-                int value_array[MAX_BTREE_SIZE];
-                int row_id_array[MAX_BTREE_SIZE];
+                int value_array[MAX_COLUMN_SIZE];
+                int row_id_array[MAX_COLUMN_SIZE];
                 while ((getline(&line, &len, fp)) != -1) {
                     char *va = line;
                     int lv = atoi(va);
@@ -1259,12 +1261,34 @@ int read_csv(char* data_path) {
                 free(index_name);
             }
             else if (lcol->idx_type == SORTED) {
-                //TODO: sorted indices
+                linknode* sorted_index = link_init();
+                int rowId_load = 0;
+                int value_array[MAX_COLUMN_SIZE];
+                int row_id_array[MAX_COLUMN_SIZE];
+
+                while ((getline(&line, &len, fp)) != -1) {
+                    char *va = line;
+                    int lv = atoi(va);
+                    link_insert_head(sorted_index, rowId_load, lv);
+                    rowId_load++;
+                }
+                sorted_index = link_sort(sorted_index);
+                int max_idx = link_traversal(sorted_index, value_array, row_id_array);
+                //store the data according to index since it is pricluster
+                for(int i = 0; i < max_idx; ++i) {
+                    if(insert_data_column(lcol, value_array[i], row_id_array[i]) != 0) {
+                        return 1;
+                    }
+                }
+                char* index_name = malloc((strlen(lcol->name)+strlen(".priclsr.sorted")+1)*sizeof(char));
+                strcpy(index_name, lcol->name);
+                Index* bidx = create_index(index_name, sorted_index);
+                put_index(bidx->name, bidx);
+                free(index_name);
             }
             else {
                 log_err("the index is not supported.\n");
             }
-
         }
         else if (lcol->cls_type == CLSR) {
             //TODO: btree/sorted indices

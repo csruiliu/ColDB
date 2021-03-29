@@ -5,18 +5,18 @@ typedef struct node {
     int row_id;
     int data;
     struct node *next;
-} node;
+} linknode;
 
-void insert_head(int row_id, int data);
+linknode* link_init();
 
-node* delete(int row_id);
+linknode* link_insert_head(linknode* head, int row_id, int data);
 
-void sort();
+linknode* link_delete(linknode* head, int row_id);
 
-void print_list();
+linknode* link_sort(linknode* head);
 
-int length();
+int link_traversal(linknode* head, int value_array[], int row_id_array[]);
 
-bool is_empty();
+int link_length(linknode* head);
 
 #endif //INDEX_SORT_H

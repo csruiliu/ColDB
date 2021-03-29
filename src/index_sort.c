@@ -1,33 +1,43 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "index_sort.h"
 
-node *head = NULL;
+/**
+ * insert link at the head location
+ */
+linknode* link_init() {
+    //create a link node and take it as head
+    linknode* head = (linknode*) malloc(sizeof(linknode));
+    assert(head);
+    head->next = NULL;
+    return head;
+}
 
-//insert link at the head location
-void insert_head(int row_id, int data) {
-    //create a link
-    node *link = (node*) malloc(sizeof(node));
+/**
+ * insert link at the head location
+ */
+linknode* link_insert_head(linknode* head, int row_id, int data) {
+    linknode* new_link = (linknode*) malloc(sizeof(linknode));
 
-    link->row_id = row_id;
-    link->data = data;
+    new_link->row_id = row_id;
+    new_link->data = data;
 
     //point it to old first node
-    link->next = head;
+    new_link->next = head;
 
-    //point first to new first node
-    head = link;
+    return new_link;
 }
 
 /**
  * delete a node with key from the list
  */
-struct node* delete(int row_id) {
+linknode* link_delete(linknode* head, int row_id) {
     //start from the first link
-    struct node* current = head;
-    struct node* previous = NULL;
+    linknode* current = head;
+    linknode* previous = NULL;
 
     //if list is empty
     if(head == NULL) {
@@ -46,24 +56,26 @@ struct node* delete(int row_id) {
     }
 
     //found a match, update the link
+    //the head is the node should be deleted
     if(current == head) {
         head = head->next;
     }
     else {
         previous->next = current->next;
+        free(current);
     }
-    return current;
+    return head;
 }
 
 /**
  * sort the list [asc]
  */
-void sort() {
+linknode* link_sort(linknode* head) {
     int i, j, k, tmp_row_id, tmp_data;
-    struct node *current;
-    struct node *next;
+    linknode* current;
+    linknode* next;
 
-    int size = length();
+    int size = link_length(head);
     k = size;
 
     for (i = 0; i < size - 1; i++, k--) {
@@ -85,39 +97,36 @@ void sort() {
             next = next->next;
         }
     }
+    return head;
 }
 
 /**
- * print all node data in the list
+ * iterate the linked list
  */
-void print_list() {
-    node *ptr = head;
+int link_traversal(linknode* head, int value_array[], int row_id_array[]){
+    int index = 0;
+    linknode* ptr = head;
     printf("\n[ ");
 
     //start from the beginning
     while(ptr != NULL) {
-        printf("(%d, %d) ",ptr->row_id, ptr->data);
+        value_array[index] = ptr->data;
+        row_id_array[index] = ptr->row_id;
         ptr = ptr->next;
+        index++;
     }
-    printf(" ]");
+    return index;
 }
 
 /**
  * get length the list
  */
-int length() {
+int link_length(linknode* head) {
     int length = 0;
-    node *current;
+    linknode* current;
 
     for(current = head; current != NULL; current = current->next) {
         length++;
     }
     return length;
-}
-
-/**
- * is the list empty or not
- */
-bool is_empty() {
-    return head == NULL;
 }

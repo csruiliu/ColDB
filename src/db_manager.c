@@ -154,6 +154,7 @@ Index* create_index(char* index_name, void* index) {
     idx->name = malloc((strlen(index_name)+1)* sizeof(char));
     strcpy(idx->name, index_name);
     idx->index_instance = index;
+    return index;
 }
 
 /**
@@ -1220,20 +1221,69 @@ int read_csv(char* data_path) {
             fclose(fp);
             return 1;
         }
+        // deal with unclustered index
         if (lcol->cls_type == UNCLSR) {
-            int rowId_load = 0;
-            while ((getline(&line, &len, fp)) != -1) {
-                char *va = line;
-                int lv = atoi(va);
-                if(insert_data_column(lcol, lv, rowId_load) != 0) {
-                    free(line_copy);
-                    fclose(fp);
-                    return 1;
+            if (lcol->idx_type == BTREE) {
+                btree btree_index = btree_init();
+                int rowId_load = 0;
+                while ((getline(&line, &len, fp)) != -1) {
+                    char *va = line;
+                    int lv = atoi(va);
+                    kv_pair kv_node = {lv, rowId_load};
+                    btree_insert(btree_index, kv_node);
+                    if(insert_data_column(lcol, lv, rowId_load) != 0) {
+                        free(line_copy);
+                        fclose(fp);
+                        return 1;
+                    }
+                    rowId_load++;
                 }
-                rowId_load++;
+                char* index_name = malloc((strlen(lcol->name)+strlen(".unclsr.btree")+1)*sizeof(char));
+                strcpy(index_name, lcol->name);
+                Index* bidx = create_index(index_name, btree_index);
+                put_index(bidx->name, bidx);
+                free(index_name);
+            }
+            else if (lcol->idx_type == SORTED) {
+                linknode* sorted_index = link_init();
+                int rowId_load = 0;
+                while ((getline(&line, &len, fp)) != -1) {
+                    char *va = line;
+                    int lv = atoi(va);
+                    link_insert_head(sorted_index, rowId_load, lv);
+                    if(insert_data_column(lcol, lv, rowId_load) != 0) {
+                        free(line_copy);
+                        fclose(fp);
+                        return 1;
+                    }
+                    rowId_load++;
+                }
+                sorted_index = link_sort(sorted_index);
+                char* index_name = malloc((strlen(lcol->name)+strlen(".unclsr.sorted")+1)*sizeof(char));
+                strcpy(index_name, lcol->name);
+                Index* bidx = create_index(index_name, sorted_index);
+                put_index(bidx->name, bidx);
+                free(index_name);
+            }
+            else if (lcol->idx_type == UNIDX) {
+                int rowId_load = 0;
+                while ((getline(&line, &len, fp)) != -1) {
+                    char *va = line;
+                    int lv = atoi(va);
+                    if(insert_data_column(lcol, lv, rowId_load) != 0) {
+                        free(line_copy);
+                        fclose(fp);
+                        return 1;
+                    }
+                    rowId_load++;
+                }
+            }
+            else {
+                log_err("the index type is not supported.\n");
             }
         }
-        else if (lcol->cls_type == PRICLSR) {
+        //deal with clustered index (including primary clustered)
+        else if (lcol->cls_type == PRICLSR || lcol->cls_type == CLSR) {
             if (lcol->idx_type == BTREE) {
                 btree btree_index = btree_init();
                 int rowId_load = 0;
@@ -1287,11 +1337,8 @@ int read_csv(char* data_path) {
                 free(index_name);
             }
             else {
-                log_err("the index is not supported.\n");
+                log_err("the index type is not supported.\n");
             }
-        }
-        else if (lcol->cls_type == CLSR) {
-            //TODO: btree/sorted indices
         }
         else {
             log_err("the column %s has unsupported cluster index", lcol->name);

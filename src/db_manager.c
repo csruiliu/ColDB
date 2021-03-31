@@ -1177,6 +1177,7 @@ char* generate_print_result(size_t print_num, char** print_name) {
     return print_rsl;
 }
 
+
 /**
  * read data from csv file
  **/
@@ -1240,6 +1241,7 @@ int read_csv(char* data_path) {
                 }
                 char* index_name = malloc((strlen(lcol->name)+strlen(".unclsr.btree")+1)*sizeof(char));
                 strcpy(index_name, lcol->name);
+                strcat(index_name, ".unclsr.btree");
                 Index* bidx = create_index(index_name, btree_index);
                 put_index(bidx->name, bidx);
                 free(index_name);
@@ -1261,6 +1263,7 @@ int read_csv(char* data_path) {
                 sorted_index = link_sort(sorted_index);
                 char* index_name = malloc((strlen(lcol->name)+strlen(".unclsr.sorted")+1)*sizeof(char));
                 strcpy(index_name, lcol->name);
+                strcat(index_name, ".unclsr.sorted");
                 Index* bidx = create_index(index_name, sorted_index);
                 put_index(bidx->name, bidx);
                 free(index_name);
@@ -1280,6 +1283,7 @@ int read_csv(char* data_path) {
             }
             else {
                 log_err("the index type is not supported.\n");
+                return 1;
             }
         }
         //deal with clustered index (including primary clustered)
@@ -1304,8 +1308,17 @@ int read_csv(char* data_path) {
                         return 1;
                     }
                 }
-                char* index_name = malloc((strlen(lcol->name)+strlen(".priclsr.btree")+1)*sizeof(char));
-                strcpy(index_name, lcol->name);
+                char* index_name;
+                if (lcol->cls_type == PRICLSR) {
+                    index_name = malloc((strlen(lcol->name)+strlen(".priclsr.btree")+1)*sizeof(char));
+                    strcpy(index_name, lcol->name);
+                    strcat(index_name, ".priclsr.btree");
+                }
+                else {
+                    index_name = malloc((strlen(lcol->name)+strlen(".clsr.btree")+1)*sizeof(char));
+                    strcpy(index_name, lcol->name);
+                    strcat(index_name, ".clsr.btree");
+                }
                 Index* bidx = create_index(index_name, btree_index);
                 put_index(bidx->name, bidx);
                 free(index_name);
@@ -1330,18 +1343,29 @@ int read_csv(char* data_path) {
                         return 1;
                     }
                 }
-                char* index_name = malloc((strlen(lcol->name)+strlen(".priclsr.sorted")+1)*sizeof(char));
-                strcpy(index_name, lcol->name);
+                char* index_name;
+                if (lcol->cls_type == PRICLSR) {
+                    index_name = malloc((strlen(lcol->name)+strlen(".priclsr.sorted")+1)*sizeof(char));
+                    strcpy(index_name, lcol->name);
+                    strcat(index_name, ".priclsr.sorted");
+                }
+                else {
+                    index_name = malloc((strlen(lcol->name)+strlen(".clsr.sorted")+1)*sizeof(char));
+                    strcpy(index_name, lcol->name);
+                    strcat(index_name, ".clsr.sorted");
+                }
                 Index* bidx = create_index(index_name, sorted_index);
                 put_index(bidx->name, bidx);
                 free(index_name);
             }
             else {
                 log_err("the index type is not supported.\n");
+                return 1;
             }
         }
         else {
             log_err("the column %s has unsupported cluster index", lcol->name);
+            return 1;
         }
     }
     /**
@@ -1360,19 +1384,120 @@ int read_csv(char* data_path) {
                 return 1;
             }
         }
-        //TODO: pricluster/nonpricluster indices
         int rowId_load = 0;
         while ((getline(&line, &len, fp)) != -1) {
             for (size_t i = 0; i < header_count; ++i) {
                 char *va = next_token_comma(&line, &mes_status);
                 int lv = atoi(va);
-                if(insert_data_column(col_set[i], lv, rowId_load) != 0) {
-                    free(line_copy);
-                    fclose(fp);
+
+                if (col_set[i]->cls_type == UNCLSR) {
+                    if (col_set[i]->idx_type == UNIDX) {
+                        if (insert_data_column(col_set[i], lv, rowId_load) != 0) {
+                            free(line_copy);
+                            fclose(fp);
+                            return 1;
+                        }
+                    }
+                    else if (col_set[i]->idx_type == BTREE) {
+                        btree btree_index = btree_init();
+                        kv_pair kv_node = {lv, rowId_load};
+                        btree_insert(btree_index, kv_node);
+
+                        if (insert_data_column(col_set[i], lv, rowId_load) != 0) {
+                            free(line_copy);
+                            fclose(fp);
+                            return 1;
+                        }
+
+                        char* index_name = malloc((strlen(col_set[i]->name)+strlen(".unclsr.btree")+1)*sizeof(char));
+                        strcpy(index_name, col_set[i]->name);
+                        strcat(index_name, ".unclsr.btree");
+                        Index* bidx = create_index(index_name, btree_index);
+                        put_index(bidx->name, bidx);
+                        free(index_name);
+                    }
+                    else if (col_set[i]->idx_type == SORTED) {
+                        linknode* sorted_index = link_init();
+                        link_insert_head(sorted_index, rowId_load, lv);
+                        sorted_index = link_sort(sorted_index);
+
+                        if (insert_data_column(col_set[i], lv, rowId_load) != 0) {
+                            free(line_copy);
+                            fclose(fp);
+                            return 1;
+                        }
+
+                        char* index_name = malloc((strlen(col_set[i]->name)+strlen(".unclsr.sorted")+1)*sizeof(char));
+                        strcpy(index_name, col_set[i]->name);
+                        strcat(index_name, ".unclsr.sorted");
+                        Index* bidx = create_index(index_name, sorted_index);
+                        put_index(bidx->name, bidx);
+                        free(index_name);
+                    }
+                    else {
+                        log_err("the index type is not supported in unclustered index.\n");
+                        return 1;
+                    }
+                }
+                else if (col_set[i]->cls_type == CLSR || col_set[i]->cls_type == PRICLSR) {
+                    if (col_set[i]->idx_type == BTREE) {
+                        char* index_name;
+                        if (col_set[i]->cls_type == PRICLSR) {
+                            index_name = malloc((strlen(col_set[i]->name)+strlen(".priclsr.btree")+1)*sizeof(char));
+                            strcpy(index_name, col_set[i]->name);
+                            strcat(index_name, ".priclsr.btree");
+                        }
+                        else {
+                            index_name = malloc((strlen(col_set[i]->name)+strlen(".clsr.btree")+1)*sizeof(char));
+                            strcpy(index_name, col_set[i]->name);
+                            strcat(index_name, ".clsr.btree");
+                        }
+                        Index* bidx = get_index(index_name);
+                        if (bidx == NULL) {
+                            btree btree_index = btree_init();
+                            kv_pair kv_node = {lv, rowId_load};
+                            btree_insert(btree_index, kv_node);
+                            bidx = create_index(index_name, btree_index);
+                            put_index(bidx->name, bidx);
+                        }
+                        else {
+                            btree btree_index = bidx->index_instance;
+                            kv_pair kv_node = {lv, rowId_load};
+                            btree_insert(btree_index, kv_node);
+                            bidx->index_instance = btree_index;
+                            put_index(bidx->name, bidx);
+                        }
+                        free(index_name);
+                    }
+                    else if (col_set[i]->idx_type == SORTED) {
+                        //TODO: SORTED INDEX
+                    }
+                    else {
+                        log_err("the index type is not supported in clustered index.\n");
+                        return 1;
+                    }
+                }
+                else {
+                    log_err("the cluster index type is not supported.\n");
                     return 1;
                 }
             }
             rowId_load++;
+        }
+
+
+        //TODO: store the data according to the index
+        for (size_t i = 0; i < header_count; ++i) {
+            /*
+            int tmp_idx = 0;
+            int max_idx = btree_inorder_traversal(btree_index, value_array, row_id_array, tmp_idx);
+            //store the data according to index since it is pricluster
+            for(int i = 0; i < max_idx; ++i) {
+                if(insert_data_column(col_set[i], value_array[i], row_id_array[i]) != 0) {
+                    return 1;
+                }
+            }
+            */
         }
     }
     return 0;

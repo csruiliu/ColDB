@@ -119,7 +119,7 @@ typedef struct Result {
  **/
 typedef struct Index {
     char* name;
-    void *index_instance;
+    void* index_instance;
 } Index;
 
 /**
@@ -161,7 +161,7 @@ void init_result_store(size_t size);
 
 Result* get_result(char* result_name);
 
-void put_result_replace(char* result_name, Result* result);
+void replace_result(char* result_name, Result* result);
 
 void free_result_store();
 
@@ -173,6 +173,8 @@ void init_index_store(size_t size);
 Index* get_index(char* index_name);
 
 void put_index(char* index_name, Index* index);
+
+void replace_index(char* index_name, Index* index);
 
 void free_index_store();
 

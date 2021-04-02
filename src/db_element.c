@@ -136,10 +136,10 @@ Result* get_result(char* result_name) {
     return result;
 }
 
-void put_result_replace(char* result_name, Result* result) {
+void replace_result(char* result_name, Result* result) {
     int flag = put_replace(result_store, result_name, result, sizeof(Result));
     if(flag != 0) {
-        log_err("persistent result %s failed", result_name);
+        log_err("replace result %s failed", result_name);
     }
 }
 
@@ -178,6 +178,13 @@ void put_index(char* index_name, Index* index) {
     }
     else {
         log_info("persistent index %s successfully\n", index_name);
+    }
+}
+
+void replace_index(char* index_name, Index* index) {
+    int flag = put_replace(index_store, index_name, index, sizeof(Index));
+    if(flag != 0) {
+        log_err("replace index %s failed", index_name);
     }
 }
 

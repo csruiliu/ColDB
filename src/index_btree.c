@@ -107,6 +107,7 @@ static btree btree_insert_internal(btree t, kv_pair kv_node, kv_pair *median) {
     pos = search_key(t->num_keys, t->keys, kv_node.value);
 
     if(pos < t->num_keys && t->keys[pos].value == kv_node.value) {
+        //do nothing
         return NULL;
     }
 
@@ -172,9 +173,6 @@ void btree_insert(btree t, kv_pair kv_node) {
         t->keys[0] = median;
         t->kids[0] = b_left;
         t->kids[1] = b_right;
-    }
-    else {
-        log_err("fail to insert new key\n");
     }
 }
 

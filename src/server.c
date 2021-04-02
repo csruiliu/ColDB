@@ -462,6 +462,7 @@ char* exec_shutdown(DbOperator* query) {
     free_table_store();
     free_column_store();
     free_result_store();
+    free_index_store();
     log_info("persist all the data and shutdown the server.\n");
     //return "persist all the data and shutdown the server.\n";
     return NULL;

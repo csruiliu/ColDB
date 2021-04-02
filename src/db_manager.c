@@ -271,7 +271,7 @@ int select_data_result(Result* srsl_pos, Result* srsl_val, char* handle, char* p
         rsl->data_type = INT;
         rsl->payload = calloc(size, sizeof(int));
         memcpy(rsl->payload, rsl_payload, size*sizeof(int));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
     }
     else if (strncmp(post_range,"null",4) == 0) {
         int pre = atoi(pre_range);
@@ -286,7 +286,7 @@ int select_data_result(Result* srsl_pos, Result* srsl_val, char* handle, char* p
         rsl->data_type = INT;
         rsl->payload = calloc(size, sizeof(int));
         memcpy(rsl->payload, rsl_payload, size*sizeof(int));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
     }
     else {
         int pre = atoi(pre_range);
@@ -302,7 +302,7 @@ int select_data_result(Result* srsl_pos, Result* srsl_val, char* handle, char* p
         rsl->data_type = INT;
         rsl->payload = calloc(size, sizeof(int));
         memcpy(rsl->payload, rsl_payload, size*sizeof(int));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
     }
     return 0;
 }
@@ -327,7 +327,7 @@ int select_data_col_unidx(Column* scol, char* handle, char* pre_range, char* pos
         rsl->data_type = INT;
         rsl->payload = calloc(count, sizeof(int));
         memcpy(rsl->payload,rsl_data,count* sizeof(int));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
     }
     else if (strncmp(post_range,"null",4) == 0) {
         int pre = atoi(pre_range);
@@ -344,7 +344,7 @@ int select_data_col_unidx(Column* scol, char* handle, char* pre_range, char* pos
         rsl->data_type = INT;
         rsl->payload = calloc(count, sizeof(int));
         memcpy(rsl->payload,rsl_data,count* sizeof(int));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
     }
     else {
         int pre = atoi(pre_range);
@@ -362,7 +362,7 @@ int select_data_col_unidx(Column* scol, char* handle, char* pre_range, char* pos
         rsl->data_type = INT;
         rsl->payload = calloc(count, sizeof(int));
         memcpy(rsl->payload,rsl_data,count* sizeof(int));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
     }
     return 0;
 }
@@ -392,7 +392,7 @@ int fetch_col_data(char* col_val_name, char* rsl_vec_pos, char* handle) {
         fetch_payload[i] = col_val->data[row_id[i]];
     }
     memcpy(rsl->payload, fetch_payload, rsl_size*sizeof(int));
-    put_result_replace(handle, rsl);
+    replace_result(handle, rsl);
     return 0;
 }
 
@@ -420,7 +420,7 @@ int avg_column_data(char* avg_col_name, char* handle) {
     arsl->num_tuples = 1;
     arsl->payload = calloc(1, sizeof(double));
     memcpy(arsl->payload, &avg, sizeof(double));
-    put_result_replace(handle,arsl);
+    replace_result(handle,arsl);
     return 0;
 }
 
@@ -468,7 +468,7 @@ int avg_result_data(char* avg_rsl_name, char* handle) {
     rsl->num_tuples = 1;
     rsl->payload = calloc(1, sizeof(double));
     memcpy(rsl->payload, &avg, sizeof(double));
-    put_result_replace(handle,rsl);
+    replace_result(handle,rsl);
     return 0;
 }
 
@@ -495,7 +495,7 @@ int sum_column_data(char* sum_col_name, char* handle) {
     rsl->num_tuples = 1;
     rsl->payload = calloc(1, sizeof(long));
     memcpy(rsl->payload, &sum, sizeof(long));
-    put_result_replace(handle,rsl);
+    replace_result(handle,rsl);
     return 0;
 }
 
@@ -523,7 +523,7 @@ int sum_result_data(char* sum_rsl_name, char* handle) {
         rsl->num_tuples = 1;
         rsl->payload = calloc(1, sizeof(double));
         memcpy(rsl->payload, &sum, sizeof(double));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
     }
     else if (sum_rsl->data_type == INT) {
         long sum = 0;
@@ -540,7 +540,7 @@ int sum_result_data(char* sum_rsl_name, char* handle) {
         rsl->num_tuples = 1;
         rsl->payload = calloc(1, sizeof(long));
         memcpy(rsl->payload, &sum, sizeof(long));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
     }
     else {
         long sum = 0;
@@ -557,7 +557,7 @@ int sum_result_data(char* sum_rsl_name, char* handle) {
         rsl->num_tuples = 1;
         rsl->payload = calloc(1, sizeof(long));
         memcpy(rsl->payload, &sum, sizeof(long));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
     }
     return 0;
 }
@@ -584,7 +584,7 @@ int add_col_col(char* add_name1, char* add_name2, char* handle) {
     rsl->data_type = LONG;
     rsl->payload = calloc(count, sizeof(long));
     memcpy(rsl->payload, add_sum, count* sizeof(long));
-    put_result_replace(handle,rsl);
+    replace_result(handle,rsl);
     return 0;
 }
 
@@ -613,7 +613,7 @@ int add_rsl_rsl(char* add_name1, char* add_name2, char* handle) {
         rsl->data_type = LONG;
         rsl->payload = calloc(count, sizeof(long));
         memcpy(rsl->payload, add_sum, count* sizeof(long));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
         return 0;
     }
     else if (add1->data_type == FLOAT || add2->data_type == FLOAT) {
@@ -628,7 +628,7 @@ int add_rsl_rsl(char* add_name1, char* add_name2, char* handle) {
         rsl->data_type = FLOAT;
         rsl->payload = calloc(count, sizeof(double));
         memcpy(rsl->payload, add_sum, count* sizeof(double));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
         return 0;
     }
     else {
@@ -662,7 +662,7 @@ int add_col_rsl(char* add_name1, char* add_name2, char* handle) {
         rsl->data_type = LONG;
         rsl->payload = calloc(count, sizeof(long));
         memcpy(rsl->payload, add_sum, count* sizeof(long));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
         return 0;
     }
     else if (add2->data_type == FLOAT) {
@@ -677,7 +677,7 @@ int add_col_rsl(char* add_name1, char* add_name2, char* handle) {
         rsl->data_type = FLOAT;
         rsl->payload = calloc(count, sizeof(double));
         memcpy(rsl->payload, add_sum, count* sizeof(double));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
         return 0;
     }
     else {
@@ -711,7 +711,7 @@ int add_rsl_col(char* add_name1, char* add_name2, char* handle) {
         rsl->data_type = LONG;
         rsl->payload = calloc(count, sizeof(long));
         memcpy(rsl->payload, add_sum, count* sizeof(long));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
         return 0;
     }
     else if (add1->data_type == FLOAT) {
@@ -726,7 +726,7 @@ int add_rsl_col(char* add_name1, char* add_name2, char* handle) {
         rsl->data_type = FLOAT;
         rsl->payload = calloc(count, sizeof(double));
         memcpy(rsl->payload, add_sum, count* sizeof(double));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
         return 0;
     }
     else {
@@ -757,7 +757,7 @@ int sub_col_col(char* sub_name1, char* sub_name2, char* handle) {
     rsl->data_type = LONG;
     rsl->payload = calloc(count, sizeof(long));
     memcpy(rsl->payload, sub_sum, count* sizeof(long));
-    put_result_replace(handle,rsl);
+    replace_result(handle,rsl);
     return 0;
 }
 
@@ -786,7 +786,7 @@ int sub_rsl_rsl(char* sub_name1, char* sub_name2, char* handle) {
         rsl->data_type = LONG;
         rsl->payload = calloc(count, sizeof(long));
         memcpy(rsl->payload, sub_sum, count* sizeof(long));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
         return 0;
     }
     else if (sub1->data_type == FLOAT || sub2->data_type == FLOAT) {
@@ -801,7 +801,7 @@ int sub_rsl_rsl(char* sub_name1, char* sub_name2, char* handle) {
         rsl->data_type = FLOAT;
         rsl->payload = calloc(count, sizeof(double));
         memcpy(rsl->payload, sub_sum, count* sizeof(double));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
         return 0;
     }
     else {
@@ -833,7 +833,7 @@ int max_rsl_value(char* max_vec, char* handle) {
         rsl->num_tuples = 1;
         rsl->payload = calloc(1, sizeof(int));
         memcpy(rsl->payload, &max, sizeof(int));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
         return 0;
     }
     else if (vrsl->data_type == FLOAT) {
@@ -850,7 +850,7 @@ int max_rsl_value(char* max_vec, char* handle) {
         rsl->num_tuples = 1;
         rsl->payload = calloc(1, sizeof(double));
         memcpy(rsl->payload, &max, sizeof(double));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
         return 0;
     }
     else {
@@ -867,7 +867,7 @@ int max_rsl_value(char* max_vec, char* handle) {
         rsl->num_tuples = 1;
         rsl->payload = calloc(1, sizeof(long));
         memcpy(rsl->payload, &max, sizeof(long));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
         return 0;
     }
 }
@@ -901,14 +901,14 @@ int max_rsl_value_pos(char* max_vec_pos, char* max_vec_value, char* handle_pos, 
         vrsl->num_tuples = 1;
         vrsl->payload = calloc(1, sizeof(int));
         memcpy(vrsl->payload, &max, sizeof(int));
-        put_result_replace(handle_value,vrsl);
+        replace_result(handle_value,vrsl);
 
         Result* prsl = malloc(sizeof(Result));
         prsl->data_type = INT;
         prsl->num_tuples = 1;
         prsl->payload = calloc(1, sizeof(int));
         memcpy(prsl->payload, &max_pos, sizeof(int));
-        put_result_replace(handle_pos,prsl);
+        replace_result(handle_pos,prsl);
         return 0;
     }
     else if (rsl_value->data_type == FLOAT) {
@@ -930,14 +930,14 @@ int max_rsl_value_pos(char* max_vec_pos, char* max_vec_value, char* handle_pos, 
         vrsl->num_tuples = 1;
         vrsl->payload = calloc(1, sizeof(double));
         memcpy(vrsl->payload, &max, sizeof(double));
-        put_result_replace(handle_value,vrsl);
+        replace_result(handle_value,vrsl);
 
         Result* prsl = malloc(sizeof(Result));
         prsl->data_type = INT;
         prsl->num_tuples = 1;
         prsl->payload = calloc(1, sizeof(int));
         memcpy(prsl->payload, &max_pos, sizeof(int));
-        put_result_replace(handle_pos,prsl);
+        replace_result(handle_pos,prsl);
         return 0;
     }
     else {
@@ -959,14 +959,14 @@ int max_rsl_value_pos(char* max_vec_pos, char* max_vec_value, char* handle_pos, 
         vrsl->num_tuples = 1;
         vrsl->payload = calloc(1, sizeof(long));
         memcpy(vrsl->payload, &max, sizeof(long));
-        put_result_replace(handle_value,vrsl);
+        replace_result(handle_value,vrsl);
 
         Result* prsl = malloc(sizeof(Result));
         prsl->data_type = INT;
         prsl->num_tuples = 1;
         prsl->payload = calloc(1, sizeof(int));
         memcpy(prsl->payload, &max_pos, sizeof(int));
-        put_result_replace(handle_pos,prsl);
+        replace_result(handle_pos,prsl);
         return 0;
     }
 }
@@ -994,7 +994,7 @@ int min_rsl_value(char* min_vec,char* handle) {
         rsl->num_tuples = 1;
         rsl->payload = calloc(1, sizeof(int));
         memcpy(rsl->payload, &min, sizeof(int));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
         return 0;
     }
     else if (vrsl->data_type == FLOAT) {
@@ -1011,7 +1011,7 @@ int min_rsl_value(char* min_vec,char* handle) {
         rsl->num_tuples = 1;
         rsl->payload = calloc(1, sizeof(double));
         memcpy(rsl->payload, &min, sizeof(double));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
         return 0;
     }
     else {
@@ -1028,7 +1028,7 @@ int min_rsl_value(char* min_vec,char* handle) {
         rsl->num_tuples = 1;
         rsl->payload = calloc(1, sizeof(long));
         memcpy(rsl->payload, &min, sizeof(long));
-        put_result_replace(handle,rsl);
+        replace_result(handle,rsl);
         return 0;
     }
 }
@@ -1062,14 +1062,14 @@ int min_rsl_value_pos(char* min_vec_pos, char* min_vec_value, char* handle_pos, 
         vrsl->num_tuples = 1;
         vrsl->payload = calloc(1, sizeof(int));
         memcpy(vrsl->payload, &min, sizeof(int));
-        put_result_replace(handle_value,vrsl);
+        replace_result(handle_value,vrsl);
 
         Result* prsl = malloc(sizeof(Result));
         prsl->data_type = INT;
         prsl->num_tuples = 1;
         prsl->payload = calloc(1, sizeof(int));
         memcpy(prsl->payload, &min_pos, sizeof(int));
-        put_result_replace(handle_pos,prsl);
+        replace_result(handle_pos,prsl);
         return 0;
     }
     else if (rsl_value->data_type == FLOAT) {
@@ -1091,14 +1091,14 @@ int min_rsl_value_pos(char* min_vec_pos, char* min_vec_value, char* handle_pos, 
         vrsl->num_tuples = 1;
         vrsl->payload = calloc(1, sizeof(double));
         memcpy(vrsl->payload, &min, sizeof(double));
-        put_result_replace(handle_value,vrsl);
+        replace_result(handle_value,vrsl);
 
         Result* prsl = malloc(sizeof(Result));
         prsl->data_type = INT;
         prsl->num_tuples = 1;
         prsl->payload = calloc(1, sizeof(int));
         memcpy(prsl->payload, &min_pos, sizeof(int));
-        put_result_replace(handle_pos,prsl);
+        replace_result(handle_pos,prsl);
         return 0;
     }
     else {
@@ -1120,14 +1120,14 @@ int min_rsl_value_pos(char* min_vec_pos, char* min_vec_value, char* handle_pos, 
         vrsl->num_tuples = 1;
         vrsl->payload = calloc(1, sizeof(long));
         memcpy(vrsl->payload, &min, sizeof(long));
-        put_result_replace(handle_value,vrsl);
+        replace_result(handle_value,vrsl);
 
         Result* prsl = malloc(sizeof(Result));
         prsl->data_type = INT;
         prsl->num_tuples = 1;
         prsl->payload = calloc(1, sizeof(int));
         memcpy(prsl->payload, &min_pos, sizeof(int));
-        put_result_replace(handle_pos,prsl);
+        replace_result(handle_pos,prsl);
         return 0;
     }
 }
@@ -1392,121 +1392,93 @@ int read_csv(char* data_path) {
                 char *va = next_token_comma(&line, &mes_status);
                 int lv = atoi(va);
 
-                if (col_set[i]->cls_type == UNCLSR) {
-                    if (col_set[i]->idx_type == UNIDX) {
-                        if (insert_data_column(col_set[i], lv, rowId_load) != 0) {
-                            free(line_copy);
-                            fclose(fp);
-                            return 1;
-                        }
+                if (col_set[i]->idx_type == UNIDX) {
+                    if (insert_data_column(col_set[i], lv, rowId_load) != 0) {
+                        free(line_copy);
+                        fclose(fp);
+                        return 1;
                     }
-                    else if (col_set[i]->idx_type == BTREE) {
+                }
+                else if (col_set[i]->idx_type == BTREE) {
+                    char* index_name;
+                    if (col_set[i]->cls_type == UNCLSR) {
+                        index_name = malloc((strlen(col_set[i]->name)+strlen(".unclsr.btree")+1)*sizeof(char));
+                        strcpy(index_name, col_set[i]->name);
+                        strcat(index_name, ".unclsr.btree");
+                    }
+                    else if (col_set[i]->cls_type == PRICLSR) {
+                        index_name = malloc((strlen(col_set[i]->name)+strlen(".priclsr.btree")+1)*sizeof(char));
+                        strcpy(index_name, col_set[i]->name);
+                        strcat(index_name, ".priclsr.btree");
+                    }
+                    else if (col_set[i]->cls_type == CLSR) {
+                        index_name = malloc((strlen(col_set[i]->name)+strlen(".clsr.btree")+1)*sizeof(char));
+                        strcpy(index_name, col_set[i]->name);
+                        strcat(index_name, ".clsr.btree");
+                    }
+                    else {
+                        log_err("clustered index is not supported\n");
+                        return 1;
+                    }
+                    Index* bidx = get_index(index_name);
+                    if (bidx == NULL) {
                         btree btree_index = btree_init();
                         kv_pair kv_node = {lv, rowId_load};
                         btree_insert(btree_index, kv_node);
-
-                        if (insert_data_column(col_set[i], lv, rowId_load) != 0) {
-                            free(line_copy);
-                            fclose(fp);
-                            return 1;
-                        }
-
-                        char* index_name = malloc((strlen(col_set[i]->name)+strlen(".unclsr.btree")+1)*sizeof(char));
-                        strcpy(index_name, col_set[i]->name);
-                        strcat(index_name, ".unclsr.btree");
-                        Index* bidx = create_index(index_name, btree_index);
+                        bidx = create_index(index_name, btree_index);
                         put_index(bidx->name, bidx);
-                        free(index_name);
                     }
-                    else if (col_set[i]->idx_type == SORTED) {
+                    else {
+                        btree btree_index = bidx->index_instance;
+                        kv_pair kv_node = {lv, rowId_load};
+                        btree_insert(btree_index, kv_node);
+                        bidx->index_instance = btree_index;
+                        replace_index(bidx->name, bidx);
+                    }
+                    free(index_name);
+                }
+                else if (col_set[i]->idx_type == SORTED) {
+                    char* index_name;
+                    if (col_set[i]->cls_type == UNCLSR) {
+                        index_name = malloc((strlen(col_set[i]->name)+strlen(".unclsr.sorted")+1)*sizeof(char));
+                        strcpy(index_name, col_set[i]->name);
+                        strcat(index_name, ".unclsr.sorted");
+                    }
+                    else if (col_set[i]->cls_type == PRICLSR) {
+                        index_name = malloc((strlen(col_set[i]->name)+strlen(".priclsr.sorted")+1)*sizeof(char));
+                        strcpy(index_name, col_set[i]->name);
+                        strcat(index_name, ".priclsr.sorted");
+                    }
+                    else if (col_set[i]->cls_type == CLSR) {
+                        index_name = malloc((strlen(col_set[i]->name)+strlen(".clsr.sorted")+1)*sizeof(char));
+                        strcpy(index_name, col_set[i]->name);
+                        strcat(index_name, ".clsr.sorted");
+                    }
+                    else {
+                        log_err("clustered index is not supported\n");
+                        return 1;
+                    }
+                    Index* sidx = get_index(index_name);
+                    if (sidx == NULL) {
                         linknode* sorted_index = link_init();
                         link_insert_head(sorted_index, rowId_load, lv);
                         sorted_index = link_sort(sorted_index);
-
-                        if (insert_data_column(col_set[i], lv, rowId_load) != 0) {
-                            free(line_copy);
-                            fclose(fp);
-                            return 1;
-                        }
-
-                        char* index_name = malloc((strlen(col_set[i]->name)+strlen(".unclsr.sorted")+1)*sizeof(char));
-                        strcpy(index_name, col_set[i]->name);
-                        strcat(index_name, ".unclsr.sorted");
-                        Index* bidx = create_index(index_name, sorted_index);
-                        put_index(bidx->name, bidx);
-                        free(index_name);
+                        sidx = create_index(index_name, sorted_index);
+                        log_info("sorted index:%s\n",sidx->name);
+                        put_index(sidx->name, sidx);
                     }
                     else {
-                        log_err("the index type is not supported in unclustered index.\n");
-                        return 1;
+                        linknode* sorted_index = link_init();
+                        link_insert_head(sorted_index, rowId_load, lv);
+                        sorted_index = link_sort(sorted_index);
+                        sidx->index_instance = sorted_index;
+                        log_info("sorted index:%s\n",sidx->name);
+                        replace_index(sidx->name, sidx);
                     }
-                }
-                else if (col_set[i]->cls_type == CLSR || col_set[i]->cls_type == PRICLSR) {
-                    if (col_set[i]->idx_type == BTREE) {
-                        char* index_name;
-                        if (col_set[i]->cls_type == PRICLSR) {
-                            index_name = malloc((strlen(col_set[i]->name)+strlen(".priclsr.btree")+1)*sizeof(char));
-                            strcpy(index_name, col_set[i]->name);
-                            strcat(index_name, ".priclsr.btree");
-                        }
-                        else {
-                            index_name = malloc((strlen(col_set[i]->name)+strlen(".clsr.btree")+1)*sizeof(char));
-                            strcpy(index_name, col_set[i]->name);
-                            strcat(index_name, ".clsr.btree");
-                        }
-                        Index* bidx = get_index(index_name);
-                        if (bidx == NULL) {
-                            btree btree_index = btree_init();
-                            kv_pair kv_node = {lv, rowId_load};
-                            btree_insert(btree_index, kv_node);
-                            bidx = create_index(index_name, btree_index);
-                            put_index(bidx->name, bidx);
-                        }
-                        else {
-                            btree btree_index = bidx->index_instance;
-                            kv_pair kv_node = {lv, rowId_load};
-                            btree_insert(btree_index, kv_node);
-                            bidx->index_instance = btree_index;
-                            put_index(bidx->name, bidx);
-                        }
-                        free(index_name);
-                    }
-                    else if (col_set[i]->idx_type == SORTED) {
-                        char* index_name;
-                        if (col_set[i]->cls_type == PRICLSR) {
-                            index_name = malloc((strlen(col_set[i]->name)+strlen(".priclsr.sorted")+1)*sizeof(char));
-                            strcpy(index_name, col_set[i]->name);
-                            strcat(index_name, ".priclsr.sorted");
-                        }
-                        else {
-                            index_name = malloc((strlen(col_set[i]->name)+strlen(".clsr.sorted")+1)*sizeof(char));
-                            strcpy(index_name, col_set[i]->name);
-                            strcat(index_name, ".clsr.sorted");
-                        }
-                        Index* sidx = get_index(index_name);
-                        if (sidx == NULL) {
-                            linknode* sorted_index = link_init();
-                            link_insert_head(sorted_index, rowId_load, lv);
-                            sorted_index = link_sort(sorted_index);
-                            sidx = create_index(index_name, sorted_index);
-                            put_index(sidx->name, sidx);
-                        }
-                        else {
-                            linknode* sorted_index = link_init();
-                            link_insert_head(sorted_index, rowId_load, lv);
-                            sorted_index = link_sort(sorted_index);
-                            sidx->index_instance = sorted_index;
-                            put_index(sidx->name, sidx);
-                        }
-                        free(index_name);
-                    }
-                    else {
-                        log_err("the index type is not supported in clustered index.\n");
-                        return 1;
-                    }
+                    free(index_name);
                 }
                 else {
-                    log_err("the cluster index type is not supported.\n");
+                    log_err("index is not supported\n");
                     return 1;
                 }
             }

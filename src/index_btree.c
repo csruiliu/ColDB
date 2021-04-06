@@ -9,9 +9,9 @@
 
 struct bt_node {
     //is this a leaf node? 1 is a leaf node, 0 is not a leaf node
-    int is_leaf;
+    bool is_leaf;
     //how many keys does this node contain
-    int num_keys;
+    long num_keys;
     // the keys in the node
     btree_kvpair keys[MAX_KEYS];
     //kids[i] holds nodes < keys[i]
@@ -22,7 +22,7 @@ btree btree_init() {
     btree b;
     b = malloc(sizeof(*b));
     assert(b);
-    b->is_leaf = 1;
+    b->is_leaf = true;
     b->num_keys = 0;
 
     return b;
@@ -35,17 +35,16 @@ void btree_destroy(btree t) {
             btree_destroy(t->kids[i]);
         }
     }
-
     free(t);
 }
 
 /**
  * search key in a tree
  */
-static int search_key(int n, btree_kvpair *a, int key) {
-    int low;
-    int high;
-    int mid;
+static long search_key(long n, btree_kvpair *a, long key) {
+    long low;
+    long high;
+    long mid;
 
     low = -1;
     high = n;
@@ -66,8 +65,8 @@ static int search_key(int n, btree_kvpair *a, int key) {
     return high;
 }
 
-btree_kvpair btree_search(btree t, int key) {
-    int pos;
+btree_kvpair btree_search(btree t, long key) {
+    long pos;
 
     // have to check for empty tree
     if (t->num_keys == 0) {
@@ -99,7 +98,7 @@ btree_kvpair btree_search(btree t, int key) {
  * else returns 0
  */
 static btree btree_insert_internal(btree t, btree_kvpair kv_node, btree_kvpair *median) {
-    int pos;
+    long pos;
     //int mid;
     btree_kvpair mid;
     btree b_new;
@@ -176,11 +175,11 @@ void btree_insert(btree t, btree_kvpair kv_node) {
     }
 }
 
-int btree_inorder_traversal(btree t, int value_array[], int row_id_array[], int index) {
+long btree_inorder_traversal(btree t, long value_array[], long row_id_array[], long index) {
     if (t != NULL) {
         btree_inorder_traversal(t->kids[0], value_array, row_id_array, index);
         for(int i = 0; i < t->num_keys; ++i) {
-            printf("row_id:%d, value:%d \n", t->keys[i].row_id, t->keys[i].value);
+            printf("row_id:%ld, value:%ld \n", t->keys[i].row_id, t->keys[i].value);
             value_array[index] = t->keys[i].value;
             row_id_array[index] = t->keys[i].row_id;
             index++;

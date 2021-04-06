@@ -1,6 +1,8 @@
 #include "db_element.h"
 #include "kv_store.h"
 #include "utils_func.h"
+#include "index_btree.h"
+#include "index_sort.h"
 
 kvstore* db_store;
 kvstore* table_store;
@@ -160,31 +162,62 @@ void init_index_store(size_t size) {
     }
 }
 
-Index* get_index(char* index_name) {
-    Index* index = get(index_store, index_name);
+void* get_index(char* index_name) {
+    void* index = get(index_store, index_name);
     return index;
 }
 
-void put_index(char* index_name, Index* index) {
-    int flag = put(index_store, index_name, index, sizeof(Index));
-    if(flag == 1) {
-        log_err("persistent index %s failed\n", index_name);
-    }
-    else if(flag == 2) {
-        log_info("a rehash has been done, re-put index into kv store\n");
-        if(put(index_store, index_name, index, sizeof(Index)) == 1) {
+void put_index(char* index_name, void* index, IndexType index_type) {
+    if (index_type == BTREE) {
+        int flag = put(index_store, index_name, index, sizeof(btree));
+        if(flag == 1) {
             log_err("persistent index %s failed\n", index_name);
+        }
+        else if(flag == 2) {
+            log_info("a rehash has been done, re-put index into kv store\n");
+            if(put(index_store, index_name, index, sizeof(btree)) == 1) {
+                log_err("persistent index %s failed\n", index_name);
+            }
+        }
+        else {
+            log_info("persistent index %s successfully\n", index_name);
+        }
+    }
+    else if (index_type == SORTED) {
+        int flag = put(index_store, index_name, index, sizeof(linknode*));
+        if(flag == 1) {
+            log_err("persistent index %s failed\n", index_name);
+        }
+        else if(flag == 2) {
+            log_info("a rehash has been done, re-put index into kv store\n");
+            if(put(index_store, index_name, index, sizeof(linknode*)) == 1) {
+                log_err("persistent index %s failed\n", index_name);
+            }
+        }
+        else {
+            log_info("persistent index %s successfully\n", index_name);
         }
     }
     else {
-        log_info("persistent index %s successfully\n", index_name);
+        log_err("the index type is not supported");
     }
 }
 
-void replace_index(char* index_name, Index* index) {
-    int flag = put_replace(index_store, index_name, index, sizeof(Index));
-    if(flag != 0) {
-        log_err("replace index %s failed", index_name);
+void replace_index(char* index_name, void* index, IndexType index_type) {
+    if (index_type == BTREE) {
+        int flag = put_replace(index_store, index_name, index, sizeof(btree));
+        if(flag != 0) {
+            log_err("replace index %s failed", index_name);
+        }
+    }
+    else if (index_type == SORTED) {
+        int flag = put_replace(index_store, index_name, index, sizeof(linknode*));
+        if(flag != 0) {
+            log_err("replace index %s failed", index_name);
+        }
+    }
+    else {
+        log_err("the index type is not supported");
     }
 }
 

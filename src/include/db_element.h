@@ -116,11 +116,11 @@ typedef struct Result {
 /**
  *  Declares the type of a index
  *  the name of an index, and a pointer to the index
- **/
 typedef struct Index {
     char* name;
     void* index_instance;
 } Index;
+**/
 
 /**
  *  All the function definitions used for kv store of db
@@ -170,11 +170,11 @@ void free_result_store();
  **/
 void init_index_store(size_t size);
 
-Index* get_index(char* index_name);
+void* get_index(char* index_name);
 
-void put_index(char* index_name, Index* index);
+void put_index(char* index_name, void* index, IndexType index_type);
 
-void replace_index(char* index_name, Index* index);
+void replace_index(char* index_name, void* index, IndexType index_type);
 
 void free_index_store();
 

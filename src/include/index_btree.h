@@ -3,10 +3,10 @@
 
 #include <stdbool.h>
 
-typedef struct kvpair {
+typedef struct btree_kvpair {
     int row_id;
     int value;
-} kv_pair;
+} btree_kvpair;
 
 typedef struct bt_node *btree;
 
@@ -23,12 +23,12 @@ void btree_destroy(btree t);
 /**
  * insert a new element into a tree
  */
-void btree_insert(btree t, struct kvpair kv_node);
+void btree_insert(btree t, btree_kvpair kv_node);
 
 /**
  * return the key-value pair if it is present in a tree
  */
-struct kvpair btree_search(btree t, int key);
+btree_kvpair btree_search(btree t, int key);
 
 /**
  * return all keys in the tree in order and store it in the array

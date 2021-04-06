@@ -13,7 +13,7 @@ struct bt_node {
     //how many keys does this node contain
     int num_keys;
     // the keys in the node
-    kv_pair keys[MAX_KEYS];
+    btree_kvpair keys[MAX_KEYS];
     //kids[i] holds nodes < keys[i]
     struct bt_node* kids[MAX_KEYS+1];
 };
@@ -42,7 +42,7 @@ void btree_destroy(btree t) {
 /**
  * search key in a tree
  */
-static int search_key(int n, kv_pair *a, int key) {
+static int search_key(int n, btree_kvpair *a, int key) {
     int low;
     int high;
     int mid;
@@ -66,13 +66,13 @@ static int search_key(int n, kv_pair *a, int key) {
     return high;
 }
 
-kv_pair btree_search(btree t, int key) {
+btree_kvpair btree_search(btree t, int key) {
     int pos;
 
     // have to check for empty tree
     if (t->num_keys == 0) {
         //create a meaningless kv pair
-        kv_pair null_node = {-1, -1};
+        btree_kvpair null_node = {-1, -1};
         return null_node;
     }
 
@@ -86,7 +86,7 @@ kv_pair btree_search(btree t, int key) {
             return btree_search(t->kids[pos], key);
         }
         else {
-            kv_pair null_node = {-1, -1};
+            btree_kvpair null_node = {-1, -1};
             return null_node;
         }
     }
@@ -98,10 +98,10 @@ kv_pair btree_search(btree t, int key) {
  * and puts the median in *median
  * else returns 0
  */
-static btree btree_insert_internal(btree t, kv_pair kv_node, kv_pair *median) {
+static btree btree_insert_internal(btree t, btree_kvpair kv_node, btree_kvpair *median) {
     int pos;
     //int mid;
-    kv_pair mid;
+    btree_kvpair mid;
     btree b_new;
 
     pos = search_key(t->num_keys, t->keys, kv_node.value);
@@ -152,10 +152,10 @@ static btree btree_insert_internal(btree t, kv_pair kv_node, kv_pair *median) {
     }
 }
 
-void btree_insert(btree t, kv_pair kv_node) {
+void btree_insert(btree t, btree_kvpair kv_node) {
     btree b_left;
     btree b_right;
-    kv_pair median;
+    btree_kvpair median;
 
     b_right = btree_insert_internal(t, kv_node, &median);
 

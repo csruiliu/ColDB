@@ -65,7 +65,7 @@ int put(kvstore* kv_store, char* key, void* value, size_t value_size) {
 }
 
 int put_replace(kvstore* kv_store, char* key, void* value, size_t value_size) {
-    int index = hash_func(key, PRIME, kv_store->size);
+    size_t index = hash_func(key, PRIME, kv_store->size);
     kvpair* cur_ikv = &(kv_store->kv_pair[index]);
     if(cur_ikv->key == NULL) {
         kv_store->kv_pair[index].key = malloc(sizeof(char)*(strlen(key)+1));

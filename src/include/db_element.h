@@ -56,8 +56,8 @@ typedef enum ClsType {
 typedef struct Column {
     char* name;
     char* aff_tbl_name;
-    int* data;
-    int* rowId;
+    long* data;
+    size_t* rowId;
     size_t size;
     size_t capacity;
     IndexType idx_type;

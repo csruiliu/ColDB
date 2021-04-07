@@ -62,7 +62,7 @@ typedef struct Comparator {
  **/
 typedef struct InsertOperator {
     Table* table;
-    int* values;
+    long* values;
 } InsertOperator;
 
 /**

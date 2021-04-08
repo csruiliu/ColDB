@@ -15,7 +15,7 @@ Column* create_column(char* table_name, char* col_name);
 /**
  * relational insert
  */
-int insert_data_table(Table* itbl, int* row_values);
+int insert_data_table(Table* itbl, long* row_values);
 
 /**
  * select data for un-index column

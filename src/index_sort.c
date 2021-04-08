@@ -19,7 +19,7 @@ linknode* link_init() {
 /**
  * insert link at the head location
  */
-linknode* link_insert_head(linknode* head, int row_id, int data) {
+linknode* link_insert_head(linknode* head, long row_id, long data) {
     linknode* new_link = (linknode*) malloc(sizeof(linknode));
 
     new_link->row_id = row_id;
@@ -34,7 +34,7 @@ linknode* link_insert_head(linknode* head, int row_id, int data) {
 /**
  * delete a node with key from the list
  */
-linknode* link_delete(linknode* head, int row_id) {
+linknode* link_delete(linknode* head, long row_id) {
     //start from the first link
     linknode* current = head;
     linknode* previous = NULL;
@@ -71,11 +71,11 @@ linknode* link_delete(linknode* head, int row_id) {
  * sort the list [asc]
  */
 linknode* link_sort(linknode* head) {
-    int i, j, k, tmp_row_id, tmp_data;
+    long i, j, k, tmp_row_id, tmp_data;
     linknode* current;
     linknode* next;
 
-    int size = link_length(head);
+    long size = link_length(head);
     k = size;
 
     for (i = 0; i < size - 1; i++, k--) {
@@ -103,7 +103,7 @@ linknode* link_sort(linknode* head) {
 /**
  * iterate the linked list
  */
-int link_traversal(linknode* head, int value_array[], int row_id_array[]){
+long link_traversal(linknode* head, long value_array[], long row_id_array[]){
     int index = 0;
     linknode* ptr = head;
     printf("\n[ ");
@@ -121,8 +121,8 @@ int link_traversal(linknode* head, int value_array[], int row_id_array[]){
 /**
  * get length the list
  */
-int link_length(linknode* head) {
-    int length = 0;
+long link_length(linknode* head) {
+    long length = 0;
     linknode* current;
 
     for(current = head; current != NULL; current = current->next) {

@@ -24,7 +24,7 @@ typedef enum IndexType {
  * additional types.
  **/
 typedef enum DataType {
-    INT,
+    //INT,
     LONG,
     FLOAT
 } DataType;
@@ -57,7 +57,7 @@ typedef struct Column {
     char* name;
     char* aff_tbl_name;
     long* data;
-    size_t* rowId;
+    long* rowId;
     size_t size;
     size_t capacity;
     IndexType idx_type;

@@ -19,7 +19,9 @@
 #define DIRLEN 256
 #define MAX_COLUMN_SIZE 1024
 
-// In this class, there will always be only one active database at a time
+/**
+ * there will always be only one active database at a time
+ */
 Db* current_db;
 
 void* resize(void* data, size_t oc, size_t nc) {
@@ -29,10 +31,17 @@ void* resize(void* data, size_t oc, size_t nc) {
     return ndata;
 }
 
-int* resize_int(int* data, size_t oc, size_t nc) {
+size_t* resize_size_t(size_t* data, size_t oc, size_t nc) {
     assert(oc <= nc);
-    int* ndata = calloc(nc, sizeof(int));
-    memcpy(ndata, data, oc * sizeof(int));
+    size_t* ndata = calloc(nc, sizeof(size_t));
+    memcpy(ndata, data, oc * sizeof(long));
+    return ndata;
+}
+
+long* resize_long(long* data, size_t oc, size_t nc) {
+    assert(oc <= nc);
+    long* ndata = calloc(nc, sizeof(long));
+    memcpy(ndata, data, oc * sizeof(long));
     return ndata;
 }
 
@@ -144,34 +153,10 @@ Column* create_column(char* tbl_name, char* col_name) {
     }
 }
 
-/*
-Index* create_index(char* index_name, void* index_instance, IndexType index_type) {
-    Index* idx = malloc(sizeof(Index));
-    idx->name = malloc((strlen(index_name)+1)* sizeof(char));
-    strcpy(idx->name, index_name);
-
-    if (index_type == BTREE) {
-        idx->index_instance = malloc(sizeof(btree));
-        memcpy(idx->index_instance, index_instance, sizeof(btree));
-        return idx;
-    }
-    else if (index_type == SORTED) {
-        idx->index_instance = malloc(sizeof(linknode*));
-        memcpy(idx->index_instance, index_instance, sizeof(linknode*));
-        return idx;
-    }
-    else {
-        log_err("the index type is not supported\n");
-        return NULL;
-    }
-}
- */
-
-
 /**
  * Insert a piece of data to a single column
  */
-int insert_data_column(Column* col, int data, int rowId) {
+int insert_data_column(Column* col, long data, long rowId) {
     if (col->size >= col->capacity) {
         size_t new_column_length = RESIZE * col->capacity + 1;
         size_t new_length = new_column_length;
@@ -179,17 +164,17 @@ int insert_data_column(Column* col, int data, int rowId) {
         if (old_length == 0) {
             assert(new_length > 0);
             //log_info("column %s has new length %d\n",col->col_name, new_length);
-            col->data = calloc(new_length, sizeof(int));
-            col->rowId = calloc(new_length, sizeof(int));
+            col->data = calloc(new_length, sizeof(long));
+            col->rowId = calloc(new_length, sizeof(long));
         } else {
-            int* dd = resize_int(col->data, old_length, new_length);
-            int* dr = resize_int(col->rowId, old_length, new_length);
+            long* dd = resize_long(col->data, old_length, new_length);
+            long* dr = resize_long(col->rowId, old_length, new_length);
             free(col->data);
             free(col->rowId);
-            col->data = calloc(new_length, sizeof(int));
-            col->rowId = calloc(new_length, sizeof(int));
-            memcpy(col->data, dd, new_length * sizeof(int));
-            memcpy(col->rowId, dr, new_length * sizeof(int));
+            col->data = calloc(new_length, sizeof(long));
+            col->rowId = calloc(new_length, sizeof(size_t));
+            memcpy(col->data, dd, new_length * sizeof(long));
+            memcpy(col->rowId, dr, new_length * sizeof(size_t));
             if (!col->data) {
                 log_err("creating more data space failed.\n");
                 return 1;
@@ -209,10 +194,10 @@ int insert_data_column(Column* col, int data, int rowId) {
  * For example, if there are 3 columns in a table when the table is created like table(col1, col2, col3)
  * Then, INSERT INTO table VALUES (1,2,3) means insert 1 to col1, insert 2 to col2, and insert 3 to col3.
  **/
-int insert_data_table(Table* itbl, int* row_values) {
+int insert_data_table(Table* itbl, long* row_values) {
     for(size_t i = 0; i < itbl->size; ++i) {
         Column* icol = get_column(itbl->columns[i]->name);
-        if(insert_data_column(icol, row_values[i], icol->size+i) != 0) {
+        if(insert_data_column(icol, row_values[i], (long) (icol->size+i)) != 0) {
             log_err("[db_manager.c:insert_data_tbl()] insert table failed.\n");
             return 1;
         }
@@ -265,12 +250,12 @@ int set_column_idx_cls(Column* slcol, char* idx_type, char* cls_type) {
  **/
 int select_data_result(Result* srsl_pos, Result* srsl_val, char* handle, char* pre_range, char* post_range) {
     size_t rsl_size = srsl_pos->num_tuples;
-    int* srsl_pos_payload = srsl_pos->payload;
-    int* srsl_val_payload = srsl_val->payload;
-    int* rsl_payload = calloc(rsl_size, sizeof(int));
+    long* srsl_pos_payload = srsl_pos->payload;
+    long* srsl_val_payload = srsl_val->payload;
+    long* rsl_payload = calloc(rsl_size, sizeof(long));
     Result* rsl = malloc(sizeof(Result));
     if (strncmp(pre_range,"null",4) == 0) {
-        int post = atoi(post_range);
+        long post = strtol(post_range, NULL, 0);
         size_t size = 0;
         for(size_t i = 0; i < rsl_size; ++i) {
             if(srsl_val_payload[i] < post) {
@@ -279,13 +264,13 @@ int select_data_result(Result* srsl_pos, Result* srsl_val, char* handle, char* p
             }
         }
         rsl->num_tuples = size;
-        rsl->data_type = INT;
-        rsl->payload = calloc(size, sizeof(int));
-        memcpy(rsl->payload, rsl_payload, size*sizeof(int));
+        rsl->data_type = LONG;
+        rsl->payload = calloc(size, sizeof(long));
+        memcpy(rsl->payload, rsl_payload, size*sizeof(long));
         replace_result(handle,rsl);
     }
     else if (strncmp(post_range,"null",4) == 0) {
-        int pre = atoi(pre_range);
+        long pre = strtol(post_range, NULL, 0);
         size_t size = 0;
         for(size_t i = 0; i < rsl_size; ++i) {
             if(srsl_val_payload[i] >= pre) {
@@ -294,14 +279,14 @@ int select_data_result(Result* srsl_pos, Result* srsl_val, char* handle, char* p
             }
         }
         rsl->num_tuples = size;
-        rsl->data_type = INT;
-        rsl->payload = calloc(size, sizeof(int));
-        memcpy(rsl->payload, rsl_payload, size*sizeof(int));
+        rsl->data_type = LONG;
+        rsl->payload = calloc(size, sizeof(long));
+        memcpy(rsl->payload, rsl_payload, size*sizeof(long));
         replace_result(handle,rsl);
     }
     else {
-        int pre = atoi(pre_range);
-        int post = atoi(post_range);
+        long pre = strtol(post_range, NULL, 0);
+        long post = strtol(post_range, NULL, 0);
         size_t size = 0;
         for(size_t i = 0; i < rsl_size; ++i) {
             if(srsl_val_payload[i] < post && srsl_val_payload[i] >= pre) {
@@ -310,9 +295,9 @@ int select_data_result(Result* srsl_pos, Result* srsl_val, char* handle, char* p
             }
         }
         rsl->num_tuples = size;
-        rsl->data_type = INT;
-        rsl->payload = calloc(size, sizeof(int));
-        memcpy(rsl->payload, rsl_payload, size*sizeof(int));
+        rsl->data_type = LONG;
+        rsl->payload = calloc(size, sizeof(long));
+        memcpy(rsl->payload, rsl_payload, size*sizeof(long));
         replace_result(handle,rsl);
     }
     return 0;
@@ -324,55 +309,55 @@ int select_data_result(Result* srsl_pos, Result* srsl_val, char* handle, char* p
 int select_data_col_unidx(Column* scol, char* handle, char* pre_range, char* post_range) {
     Result* rsl = malloc(sizeof(Result));
     if (strncmp(pre_range,"null",4) == 0) {
-        int post = atoi(post_range);
-        int* scol_data = scol->data;
-        int* rsl_data = calloc(scol->size, sizeof(int));
-        unsigned int count = 0;
+        long post = strtol(post_range, NULL, 0);
+        long* scol_data = scol->data;
+        long* rsl_data = calloc(scol->size, sizeof(long));
+        size_t count = 0;
         for(size_t i = 0; i < scol->size; ++i) {
             if(scol_data[i] < post) {
-                rsl_data[count] = i;
+                rsl_data[count] = (long) i;
                 count++;
             }
         }
         rsl->num_tuples = count;
-        rsl->data_type = INT;
-        rsl->payload = calloc(count, sizeof(int));
-        memcpy(rsl->payload,rsl_data,count* sizeof(int));
+        rsl->data_type = LONG;
+        rsl->payload = calloc(count, sizeof(long));
+        memcpy(rsl->payload,rsl_data,count* sizeof(long));
         replace_result(handle,rsl);
     }
     else if (strncmp(post_range,"null",4) == 0) {
-        int pre = atoi(pre_range);
-        int* scol_data = scol->data;
-        int* rsl_data = calloc(scol->size, sizeof(int));
-        unsigned int count = 0;
+        long pre = strtol(pre_range, NULL, 0);
+        long* scol_data = scol->data;
+        long* rsl_data = calloc(scol->size, sizeof(long));
+        size_t count = 0;
         for(size_t i = 0; i < scol->size; ++i) {
             if(scol_data[i] >= pre) {
-                rsl_data[count] = i;
+                rsl_data[count] = (long) i;
                 count++;
             }
         }
         rsl->num_tuples = count;
-        rsl->data_type = INT;
-        rsl->payload = calloc(count, sizeof(int));
-        memcpy(rsl->payload,rsl_data,count* sizeof(int));
+        rsl->data_type = LONG;
+        rsl->payload = calloc(count, sizeof(long));
+        memcpy(rsl->payload,rsl_data,count* sizeof(long));
         replace_result(handle,rsl);
     }
     else {
-        int pre = atoi(pre_range);
-        int post = atoi(post_range);
-        int* scol_data = scol->data;
-        int* rsl_data = calloc(scol->size, sizeof(int));
-        unsigned int count = 0;
+        long pre = strtol(pre_range, NULL, 0);
+        long post = strtol(post_range, NULL, 0);
+        long* scol_data = scol->data;
+        long* rsl_data = calloc(scol->size, sizeof(long));
+        size_t count = 0;
         for(size_t i = 0; i < scol->size; ++i) {
             if(scol_data[i] >= pre && scol_data[i] < post) {
-                rsl_data[count] = i;
+                rsl_data[count] = (long) i;
                 count++;
             }
         }
         rsl->num_tuples = count;
-        rsl->data_type = INT;
-        rsl->payload = calloc(count, sizeof(int));
-        memcpy(rsl->payload,rsl_data,count* sizeof(int));
+        rsl->data_type = LONG;
+        rsl->payload = calloc(count, sizeof(long));
+        memcpy(rsl->payload,rsl_data,count* sizeof(long));
         replace_result(handle,rsl);
     }
     return 0;
@@ -394,15 +379,15 @@ int fetch_col_data(char* col_val_name, char* rsl_vec_pos, char* handle) {
     }
     size_t rsl_size = rsl_pos->num_tuples;
     Result* rsl = malloc(sizeof(Result));
-    rsl->data_type = INT;
+    rsl->data_type = LONG;
     rsl->num_tuples = rsl_size;
-    rsl->payload = calloc(rsl_size, sizeof(int));
-    int* row_id = rsl_pos->payload;
-    int* fetch_payload = calloc(rsl_size, sizeof(int));
+    rsl->payload = calloc(rsl_size, sizeof(long));
+    long* row_id = rsl_pos->payload;
+    long* fetch_payload = calloc(rsl_size, sizeof(long));
     for(size_t i = 0; i < rsl_size; ++i) {
         fetch_payload[i] = col_val->data[row_id[i]];
     }
-    memcpy(rsl->payload, fetch_payload, rsl_size*sizeof(int));
+    memcpy(rsl->payload, fetch_payload, rsl_size*sizeof(long));
     replace_result(handle, rsl);
     return 0;
 }
@@ -416,8 +401,8 @@ int avg_column_data(char* avg_col_name, char* handle) {
         log_err("[db_manager.c:avg_col_data()]: column didn't exist in the database.\n");
         return 1;
     }
-    int sum = 0;
-    int* acol_data = acol->data;
+    long sum = 0;
+    long* acol_data = acol->data;
     for(size_t i = 0; i < acol->size; ++i) {
         sum += acol_data[i];
     }
@@ -445,11 +430,11 @@ int avg_result_data(char* avg_rsl_name, char* handle) {
         log_err("[db_manager.c:avg_col_data()]: result didn't exist in the database.\n");
         return 1;
     }
-    if(avg_rsl->data_type == INT) {
-        int* int_avg_payload = avg_rsl->payload;
-        int sum = 0;
+    if(avg_rsl->data_type == LONG) {
+        long* long_avg_payload = avg_rsl->payload;
+        long sum = 0;
         for(size_t i = 0; i < avg_rsl->num_tuples; ++i) {
-            sum += int_avg_payload[i];
+            sum += long_avg_payload[i];
         }
         avg = (double) sum / (double) avg_rsl->num_tuples;
     }
@@ -458,15 +443,6 @@ int avg_result_data(char* avg_rsl_name, char* handle) {
         float sum = 0;
         for(size_t i = 0; i < avg_rsl->num_tuples; ++i) {
             sum += float_avg_payload[i];
-        }
-        avg = (double) sum / (double) avg_rsl->num_tuples;
-    }
-    else if(avg_rsl->data_type == LONG) {
-        long* long_avg_payload = avg_rsl->payload;
-        long sum = 0;
-        for(size_t i = 0; i < avg_rsl->num_tuples; ++i) {
-            log_info("%d item:%d\n",i,long_avg_payload[i]);
-            sum += long_avg_payload[i];
         }
         avg = (double) sum / (double) avg_rsl->num_tuples;
     }
@@ -493,7 +469,7 @@ int sum_column_data(char* sum_col_name, char* handle) {
         return 1;
     }
     long sum = 0;
-    int* sum_payload = sum_col->data;
+    long* sum_payload = sum_col->data;
     for(size_t i = 0; i < sum_col->size; ++i) {
         sum += sum_payload[i];
     }
@@ -536,11 +512,11 @@ int sum_result_data(char* sum_rsl_name, char* handle) {
         memcpy(rsl->payload, &sum, sizeof(double));
         replace_result(handle,rsl);
     }
-    else if (sum_rsl->data_type == INT) {
+    else if (sum_rsl->data_type == LONG) {
         long sum = 0;
-        int* int_sum_payload = sum_rsl->payload;
+        long* long_sum_payload = sum_rsl->payload;
         for(size_t i = 0; i < sum_rsl->num_tuples; ++i) {
-            sum += int_sum_payload[i];
+            sum += long_sum_payload[i];
         }
         Result* rsl = malloc(sizeof(Result));
         if(rsl == NULL) {
@@ -554,21 +530,8 @@ int sum_result_data(char* sum_rsl_name, char* handle) {
         replace_result(handle,rsl);
     }
     else {
-        long sum = 0;
-        long* int_sum_payload = sum_rsl->payload;
-        for(size_t i = 0; i < sum_rsl->num_tuples; ++i) {
-            sum += int_sum_payload[i];
-        }
-        Result* rsl = malloc(sizeof(Result));
-        if(rsl == NULL) {
-            log_err("[db_manager.c:avg_col_data()]: init new result failed.\n");
-            return 1;
-        }
-        rsl->data_type = LONG;
-        rsl->num_tuples = 1;
-        rsl->payload = calloc(1, sizeof(long));
-        memcpy(rsl->payload, &sum, sizeof(long));
-        replace_result(handle,rsl);
+        log_err("[sum_result_data]:the data type of result is not supported\n");
+        return 1;
     }
     return 0;
 }
@@ -612,10 +575,10 @@ int add_rsl_rsl(char* add_name1, char* add_name2, char* handle) {
         return 1;
     }
     size_t count = add1->num_tuples;
-    if(add1->data_type == INT && add2->data_type == INT) {
+    if(add1->data_type == LONG && add2->data_type == LONG) {
         long* add_sum = calloc(count, sizeof(long));
-        int* add1_payload = add1->payload;
-        int* add2_payload = add2->payload;
+        long* add1_payload = add1->payload;
+        long* add2_payload = add2->payload;
         for(size_t i = 0; i < count; ++i) {
             add_sum[i] = add1_payload[i] + add2_payload[i];
         }
@@ -643,7 +606,7 @@ int add_rsl_rsl(char* add_name1, char* add_name2, char* handle) {
         return 0;
     }
     else {
-        log_err("data types for adding are unsupported.\n");
+        log_err("[add_rsl_rsl]:data types for adding are unsupported.\n");
         return 1;
     }
 }
@@ -661,10 +624,10 @@ int add_col_rsl(char* add_name1, char* add_name2, char* handle) {
         return 1;
     }
     size_t count = add1->size;
-    if (add2->data_type == INT) {
+    if (add2->data_type == LONG) {
         long* add_sum = calloc(count, sizeof(long));
-        int* add1_payload = add1->data;
-        int* add2_payload = add2->payload;
+        long* add1_payload = add1->data;
+        long* add2_payload = add2->payload;
         for(size_t i = 0; i < count; ++i) {
             add_sum[i] = add1_payload[i] + add2_payload[i];
         }
@@ -692,7 +655,7 @@ int add_col_rsl(char* add_name1, char* add_name2, char* handle) {
         return 0;
     }
     else {
-        log_err("data types for adding are unsupported.\n");
+        log_err("[add_col_rsl]:data types for adding are unsupported.\n");
         return 1;
     }
 }
@@ -710,10 +673,10 @@ int add_rsl_col(char* add_name1, char* add_name2, char* handle) {
         return 1;
     }
     size_t count = add1->num_tuples;
-    if (add1->data_type == INT) {
+    if (add1->data_type == LONG) {
         long* add_sum = calloc(count, sizeof(long));
-        int* add1_payload = add1->payload;
-        int* add2_payload = add2->data;
+        long* add1_payload = add1->payload;
+        long* add2_payload = add2->data;
         for(size_t i = 0; i < count; ++i) {
             add_sum[i] = add1_payload[i] + add2_payload[i];
         }
@@ -741,7 +704,7 @@ int add_rsl_col(char* add_name1, char* add_name2, char* handle) {
         return 0;
     }
     else {
-        log_err("data types for adding are unsupported.\n");
+        log_err("[add_rsl_col]:data types for adding are unsupported.\n");
         return 1;
     }
 }
@@ -785,10 +748,10 @@ int sub_rsl_rsl(char* sub_name1, char* sub_name2, char* handle) {
         return 1;
     }
     size_t count = sub1->num_tuples;
-    if(sub1->data_type == INT && sub2->data_type == INT) {
+    if(sub1->data_type == LONG && sub2->data_type == LONG) {
         long* sub_sum = calloc(count, sizeof(long));
-        int* sub1_payload = sub1->payload;
-        int* sub2_payload = sub2->payload;
+        long* sub1_payload = sub1->payload;
+        long* sub2_payload = sub2->payload;
         for(size_t i = 0; i < count; ++i) {
             sub_sum[i] = sub1_payload[i] - sub2_payload[i];
         }
@@ -816,7 +779,7 @@ int sub_rsl_rsl(char* sub_name1, char* sub_name2, char* handle) {
         return 0;
     }
     else {
-        log_err("data types for adding are unsupported.\n");
+        log_err("[sub_rsl_rsl]:data types for adding are unsupported.\n");
         return 1;
     }
 }
@@ -830,9 +793,9 @@ int max_rsl_value(char* max_vec, char* handle) {
         log_err("the result %s for max didn't exist in the database", max_vec);
         return 1;
     }
-    if(vrsl->data_type == INT) {
-        int* vrsl_payload = vrsl->payload;
-        int max = vrsl_payload[0];
+    if(vrsl->data_type == LONG) {
+        long* vrsl_payload = vrsl->payload;
+        long max = vrsl_payload[0];
         size_t max_cnt = vrsl->num_tuples;
         for(size_t i = 1; i < max_cnt; ++i) {
             if(max < vrsl_payload[i]) {
@@ -840,10 +803,10 @@ int max_rsl_value(char* max_vec, char* handle) {
             }
         }
         Result* rsl = malloc(sizeof(Result));
-        rsl->data_type = INT;
+        rsl->data_type = LONG;
         rsl->num_tuples = 1;
-        rsl->payload = calloc(1, sizeof(int));
-        memcpy(rsl->payload, &max, sizeof(int));
+        rsl->payload = calloc(1, sizeof(long));
+        memcpy(rsl->payload, &max, sizeof(long));
         replace_result(handle,rsl);
         return 0;
     }
@@ -865,21 +828,8 @@ int max_rsl_value(char* max_vec, char* handle) {
         return 0;
     }
     else {
-        long* vrsl_payload = vrsl->payload;
-        long max = vrsl_payload[0];
-        size_t max_cnt = vrsl->num_tuples;
-        for(size_t i = 1; i < max_cnt; ++i) {
-            if(max < vrsl_payload[i]) {
-                max = vrsl_payload[i];
-            }
-        }
-        Result* rsl = malloc(sizeof(Result));
-        rsl->data_type = LONG;
-        rsl->num_tuples = 1;
-        rsl->payload = calloc(1, sizeof(long));
-        memcpy(rsl->payload, &max, sizeof(long));
-        replace_result(handle,rsl);
-        return 0;
+        log_err("[max_rsl_value]:the data type is not supported\n");
+        return 1;
     }
 }
 
@@ -893,77 +843,19 @@ int max_rsl_value_pos(char* max_vec_pos, char* max_vec_value, char* handle_pos, 
         log_err("the result %s/%s for max didn't exist in the database", max_vec_pos, max_vec_value);
         return 1;
     }
-    if (rsl_value->data_type == INT) {
-        int* rsl_value_payload = rsl_value->payload;
-        int max = rsl_value_payload[0];
-        size_t max_cnt = rsl_value->num_tuples;
-        int pmax;
-        for(size_t i = 1; i < max_cnt; ++i) {
-            if(max < rsl_value_payload[i]) {
-                max = rsl_value_payload[i];
-                pmax = i;
-            }
-        }
-        int* max_pos_payload = rsl_pos->payload;
-        int max_pos = max_pos_payload[pmax];
-
-        Result* vrsl = malloc(sizeof(Result));
-        vrsl->data_type = INT;
-        vrsl->num_tuples = 1;
-        vrsl->payload = calloc(1, sizeof(int));
-        memcpy(vrsl->payload, &max, sizeof(int));
-        replace_result(handle_value,vrsl);
-
-        Result* prsl = malloc(sizeof(Result));
-        prsl->data_type = INT;
-        prsl->num_tuples = 1;
-        prsl->payload = calloc(1, sizeof(int));
-        memcpy(prsl->payload, &max_pos, sizeof(int));
-        replace_result(handle_pos,prsl);
-        return 0;
-    }
-    else if (rsl_value->data_type == FLOAT) {
-        double* rsl_value_payload = rsl_value->payload;
-        double max = rsl_value_payload[0];
-        size_t max_cnt = rsl_value->num_tuples;
-        int pmax;
-        for(size_t i = 1; i < max_cnt; ++i) {
-            if(max < rsl_value_payload[i]) {
-                max = rsl_value_payload[i];
-                pmax = i;
-            }
-        }
-        int* max_pos_payload = rsl_pos->payload;
-        int max_pos = max_pos_payload[pmax];
-
-        Result* vrsl = malloc(sizeof(Result));
-        vrsl->data_type = FLOAT;
-        vrsl->num_tuples = 1;
-        vrsl->payload = calloc(1, sizeof(double));
-        memcpy(vrsl->payload, &max, sizeof(double));
-        replace_result(handle_value,vrsl);
-
-        Result* prsl = malloc(sizeof(Result));
-        prsl->data_type = INT;
-        prsl->num_tuples = 1;
-        prsl->payload = calloc(1, sizeof(int));
-        memcpy(prsl->payload, &max_pos, sizeof(int));
-        replace_result(handle_pos,prsl);
-        return 0;
-    }
-    else {
+    if (rsl_value->data_type == LONG) {
         long* rsl_value_payload = rsl_value->payload;
         long max = rsl_value_payload[0];
         size_t max_cnt = rsl_value->num_tuples;
-        int pmax;
+        size_t pmax = 0;
         for(size_t i = 1; i < max_cnt; ++i) {
             if(max < rsl_value_payload[i]) {
                 max = rsl_value_payload[i];
                 pmax = i;
             }
         }
-        int* max_pos_payload = rsl_pos->payload;
-        int max_pos = max_pos_payload[pmax];
+        long* max_pos_payload = rsl_pos->payload;
+        long max_pos = max_pos_payload[pmax];
 
         Result* vrsl = malloc(sizeof(Result));
         vrsl->data_type = LONG;
@@ -973,12 +865,45 @@ int max_rsl_value_pos(char* max_vec_pos, char* max_vec_value, char* handle_pos, 
         replace_result(handle_value,vrsl);
 
         Result* prsl = malloc(sizeof(Result));
-        prsl->data_type = INT;
+        prsl->data_type = LONG;
         prsl->num_tuples = 1;
-        prsl->payload = calloc(1, sizeof(int));
-        memcpy(prsl->payload, &max_pos, sizeof(int));
+        prsl->payload = calloc(1, sizeof(long));
+        memcpy(prsl->payload, &max_pos, sizeof(long));
         replace_result(handle_pos,prsl);
         return 0;
+    }
+    else if (rsl_value->data_type == FLOAT) {
+        double* rsl_value_payload = rsl_value->payload;
+        double max = rsl_value_payload[0];
+        size_t max_cnt = rsl_value->num_tuples;
+        size_t pmax = 0;
+        for(size_t i = 1; i < max_cnt; ++i) {
+            if(max < rsl_value_payload[i]) {
+                max = rsl_value_payload[i];
+                pmax = i;
+            }
+        }
+        long* max_pos_payload = rsl_pos->payload;
+        long max_pos = max_pos_payload[pmax];
+
+        Result* vrsl = malloc(sizeof(Result));
+        vrsl->data_type = FLOAT;
+        vrsl->num_tuples = 1;
+        vrsl->payload = calloc(1, sizeof(double));
+        memcpy(vrsl->payload, &max, sizeof(double));
+        replace_result(handle_value,vrsl);
+
+        Result* prsl = malloc(sizeof(Result));
+        prsl->data_type = LONG;
+        prsl->num_tuples = 1;
+        prsl->payload = calloc(1, sizeof(long));
+        memcpy(prsl->payload, &max_pos, sizeof(long));
+        replace_result(handle_pos,prsl);
+        return 0;
+    }
+    else {
+        log_err("[max_rsl_value_pos]:the data type is not supported\n");
+        return 1;
     }
 }
 
@@ -991,9 +916,9 @@ int min_rsl_value(char* min_vec,char* handle) {
         log_err("the result %s for min didn't exist in the database", min_vec);
         return 1;
     }
-    if(vrsl->data_type == INT) {
-        int* vrsl_payload = vrsl->payload;
-        int min = vrsl_payload[0];
+    if(vrsl->data_type == LONG) {
+        long* vrsl_payload = vrsl->payload;
+        long min = vrsl_payload[0];
         size_t min_cnt = vrsl->num_tuples;
         for(size_t i = 1; i < min_cnt; ++i) {
             if(min > vrsl_payload[i]) {
@@ -1001,10 +926,10 @@ int min_rsl_value(char* min_vec,char* handle) {
             }
         }
         Result* rsl = malloc(sizeof(Result));
-        rsl->data_type = INT;
+        rsl->data_type = LONG;
         rsl->num_tuples = 1;
-        rsl->payload = calloc(1, sizeof(int));
-        memcpy(rsl->payload, &min, sizeof(int));
+        rsl->payload = calloc(1, sizeof(long));
+        memcpy(rsl->payload, &min, sizeof(long));
         replace_result(handle,rsl);
         return 0;
     }
@@ -1026,21 +951,8 @@ int min_rsl_value(char* min_vec,char* handle) {
         return 0;
     }
     else {
-        long* vrsl_payload = vrsl->payload;
-        long min = vrsl_payload[0];
-        size_t min_cnt = vrsl->num_tuples;
-        for(size_t i = 1; i < min_cnt; ++i) {
-            if(min > vrsl_payload[i]) {
-                min = vrsl_payload[i];
-            }
-        }
-        Result* rsl = malloc(sizeof(Result));
-        rsl->data_type = LONG;
-        rsl->num_tuples = 1;
-        rsl->payload = calloc(1, sizeof(long));
-        memcpy(rsl->payload, &min, sizeof(long));
-        replace_result(handle,rsl);
-        return 0;
+        log_err("[min_rsl_value]:the data type is not supported\n");
+        return 1;
     }
 }
 
@@ -1054,77 +966,19 @@ int min_rsl_value_pos(char* min_vec_pos, char* min_vec_value, char* handle_pos, 
         log_err("the result %s/%s for min didn't exist in the database", min_vec_pos, min_vec_value);
         return 1;
     }
-    if (rsl_value->data_type == INT) {
-        int* rsl_value_payload = rsl_value->payload;
-        int min = rsl_value_payload[0];
-        size_t min_cnt = rsl_value->num_tuples;
-        int pmin;
-        for(size_t i = 1; i < min_cnt; ++i) {
-            if(min > rsl_value_payload[i]) {
-                min = rsl_value_payload[i];
-                pmin = i;
-            }
-        }
-        int* min_pos_payload = rsl_pos->payload;
-        int min_pos = min_pos_payload[pmin];
-
-        Result* vrsl = malloc(sizeof(Result));
-        vrsl->data_type = INT;
-        vrsl->num_tuples = 1;
-        vrsl->payload = calloc(1, sizeof(int));
-        memcpy(vrsl->payload, &min, sizeof(int));
-        replace_result(handle_value,vrsl);
-
-        Result* prsl = malloc(sizeof(Result));
-        prsl->data_type = INT;
-        prsl->num_tuples = 1;
-        prsl->payload = calloc(1, sizeof(int));
-        memcpy(prsl->payload, &min_pos, sizeof(int));
-        replace_result(handle_pos,prsl);
-        return 0;
-    }
-    else if (rsl_value->data_type == FLOAT) {
-        double* rsl_value_payload = rsl_value->payload;
-        double min = rsl_value_payload[0];
-        size_t min_cnt = rsl_value->num_tuples;
-        int pmin;
-        for(size_t i = 1; i < min_cnt; ++i) {
-            if(min > rsl_value_payload[i]) {
-                min = rsl_value_payload[i];
-                pmin = i;
-            }
-        }
-        int* min_pos_payload = rsl_pos->payload;
-        int min_pos = min_pos_payload[pmin];
-
-        Result* vrsl = malloc(sizeof(Result));
-        vrsl->data_type = FLOAT;
-        vrsl->num_tuples = 1;
-        vrsl->payload = calloc(1, sizeof(double));
-        memcpy(vrsl->payload, &min, sizeof(double));
-        replace_result(handle_value,vrsl);
-
-        Result* prsl = malloc(sizeof(Result));
-        prsl->data_type = INT;
-        prsl->num_tuples = 1;
-        prsl->payload = calloc(1, sizeof(int));
-        memcpy(prsl->payload, &min_pos, sizeof(int));
-        replace_result(handle_pos,prsl);
-        return 0;
-    }
-    else {
+    if (rsl_value->data_type == LONG) {
         long* rsl_value_payload = rsl_value->payload;
         long min = rsl_value_payload[0];
         size_t min_cnt = rsl_value->num_tuples;
-        int pmin;
+        size_t pmin = 0;
         for(size_t i = 1; i < min_cnt; ++i) {
             if(min > rsl_value_payload[i]) {
                 min = rsl_value_payload[i];
                 pmin = i;
             }
         }
-        int* min_pos_payload = rsl_pos->payload;
-        int min_pos = min_pos_payload[pmin];
+        long* min_pos_payload = rsl_pos->payload;
+        long min_pos = min_pos_payload[pmin];
 
         Result* vrsl = malloc(sizeof(Result));
         vrsl->data_type = LONG;
@@ -1134,12 +988,45 @@ int min_rsl_value_pos(char* min_vec_pos, char* min_vec_value, char* handle_pos, 
         replace_result(handle_value,vrsl);
 
         Result* prsl = malloc(sizeof(Result));
-        prsl->data_type = INT;
+        prsl->data_type = LONG;
         prsl->num_tuples = 1;
-        prsl->payload = calloc(1, sizeof(int));
-        memcpy(prsl->payload, &min_pos, sizeof(int));
+        prsl->payload = calloc(1, sizeof(long));
+        memcpy(prsl->payload, &min_pos, sizeof(long));
         replace_result(handle_pos,prsl);
         return 0;
+    }
+    else if (rsl_value->data_type == FLOAT) {
+        double* rsl_value_payload = rsl_value->payload;
+        double min = rsl_value_payload[0];
+        size_t min_cnt = rsl_value->num_tuples;
+        size_t pmin = 0;
+        for(size_t i = 1; i < min_cnt; ++i) {
+            if(min > rsl_value_payload[i]) {
+                min = rsl_value_payload[i];
+                pmin = i;
+            }
+        }
+        long* min_pos_payload = rsl_pos->payload;
+        long min_pos = min_pos_payload[pmin];
+
+        Result* vrsl = malloc(sizeof(Result));
+        vrsl->data_type = FLOAT;
+        vrsl->num_tuples = 1;
+        vrsl->payload = calloc(1, sizeof(double));
+        memcpy(vrsl->payload, &min, sizeof(double));
+        replace_result(handle_value,vrsl);
+
+        Result* prsl = malloc(sizeof(Result));
+        prsl->data_type = LONG;
+        prsl->num_tuples = 1;
+        prsl->payload = calloc(1, sizeof(long));
+        memcpy(prsl->payload, &min_pos, sizeof(long));
+        replace_result(handle_pos,prsl);
+        return 0;
+    }
+    else {
+        log_err("[min_rsl_value_pos]:the data type is not supported\n");
+        return 1;
     }
 }
 
@@ -1158,12 +1045,11 @@ char* generate_print_result(size_t print_num, char** print_name) {
     log_info("[Server results]\n");
     for(size_t i = 0; i< print_num; ++i) {
         Result* rsl = get_result(print_name[i]);
-        if(rsl->data_type == INT) {
+        if(rsl->data_type == LONG) {
             for(size_t j = 0; j < rsl->num_tuples; ++j) {
-                log_info("%d\n",((int *)rsl->payload)[j]);
-                //we allocate 1 one to avoid overflow
-                char* tmp_payload_data = malloc(sizeof(int)+1);
-                sprintf(tmp_payload_data, "%d\n", ((int *)rsl->payload)[j]);
+                log_info("%ld\n",((double *)rsl->payload)[j]);
+                char* tmp_payload_data = malloc(sizeof(long)+1);
+                sprintf(tmp_payload_data, "%ld\n", ((long *)rsl->payload)[j]);
                 strcat(print_rsl,tmp_payload_data);
             }
         }
@@ -1175,13 +1061,8 @@ char* generate_print_result(size_t print_num, char** print_name) {
                 strcat(print_rsl,tmp_payload_data);
             }
         }
-        else if(rsl->data_type == LONG) {
-            for(size_t j = 0; j < rsl->num_tuples; ++j) {
-                log_info("%ld\n",((double *)rsl->payload)[j]);
-                char* tmp_payload_data = malloc(sizeof(long)+1);
-                sprintf(tmp_payload_data, "%ld\n", ((long *)rsl->payload)[j]);
-                strcat(print_rsl,tmp_payload_data);
-            }
+        else {
+            log_err("[generate_print_result]:the data type is not supported\n");
         }
     }
     log_info("\n");
@@ -1201,7 +1082,7 @@ int read_csv(char* data_path) {
     }
     char *line = NULL;
     size_t len = 0;
-    int read = getline(&line, &len, fp);
+    ssize_t read = getline(&line, &len, fp);
     if (read == -1) {
         log_err("[db_manager.c:load_data_csv()] read file header failed.\n");
         return 1;
@@ -1234,10 +1115,10 @@ int read_csv(char* data_path) {
             return 1;
         }
         if (lcol->idx_type == UNIDX) {
-            int rowId_load = 0;
+            long rowId_load = 0;
             while ((getline(&line, &len, fp)) != -1) {
                 char *va = line;
-                int lv = atoi(va);
+                long lv = strtol(va, NULL, 0);
                 if(insert_data_column(lcol, lv, rowId_load) != 0) {
                     free(line_copy);
                     fclose(fp);
@@ -1268,10 +1149,10 @@ int read_csv(char* data_path) {
                 return 1;
             }
             btree btree_index = btree_init();
-            int rowId_load = 0;
+            long rowId_load = 0;
             while ((getline(&line, &len, fp)) != -1) {
                 char *va = line;
-                int lv = atoi(va);
+                long lv = strtol(va, NULL, 0);
                 btree_kvpair kv_node = {lv, rowId_load};
                 btree_insert(btree_index, kv_node);
                 rowId_load++;
@@ -1279,11 +1160,11 @@ int read_csv(char* data_path) {
             put_index(index_name, btree_index, BTREE);
 
             //store the data according to index since it is clustered
-            int value_array[MAX_COLUMN_SIZE];
-            int row_id_array[MAX_COLUMN_SIZE];
+            long value_array[MAX_COLUMN_SIZE];
+            long row_id_array[MAX_COLUMN_SIZE];
             if (lcol->cls_type == PRICLSR || lcol->cls_type == CLSR) {
                 int tmp_idx = 0;
-                int max_idx = btree_inorder_traversal(btree_index, value_array, row_id_array, tmp_idx);
+                long max_idx = btree_inorder_traversal(btree_index, value_array, row_id_array, tmp_idx);
 
                 for(int i = 0; i < max_idx; ++i) {
                     if(insert_data_column(lcol, value_array[i], row_id_array[i]) != 0) {
@@ -1320,7 +1201,7 @@ int read_csv(char* data_path) {
             int rowId_load = 0;
             while ((getline(&line, &len, fp)) != -1) {
                 char *va = line;
-                int lv = atoi(va);
+                long lv = strtol(va, NULL, 0);
                 link_insert_head(sorted_index, rowId_load, lv);
                 rowId_load++;
             }
@@ -1328,9 +1209,9 @@ int read_csv(char* data_path) {
             put_index(index_name, sorted_index, SORTED);
 
             //store the data according to index since it is pricluster
-            int value_array[MAX_COLUMN_SIZE];
-            int row_id_array[MAX_COLUMN_SIZE];
-            int max_idx = link_traversal(sorted_index, value_array, row_id_array);
+            long value_array[MAX_COLUMN_SIZE];
+            long row_id_array[MAX_COLUMN_SIZE];
+            long max_idx = link_traversal(sorted_index, value_array, row_id_array);
             for(int i = 0; i < max_idx; ++i) {
                 if(insert_data_column(lcol, value_array[i], row_id_array[i]) != 0) {
                     return 1;
@@ -1364,8 +1245,7 @@ int read_csv(char* data_path) {
         while ((getline(&line, &len, fp)) != -1) {
             for (size_t i = 0; i < header_count; ++i) {
                 char *va = next_token_comma(&line, &mes_status);
-                int lv = atoi(va);
-
+                long lv = strtol(va, NULL, 0);
                 if (col_set[i]->idx_type == UNIDX) {
                     if (insert_data_column(col_set[i], lv, rowId_load) != 0) {
                         free(line_copy);
@@ -1394,6 +1274,7 @@ int read_csv(char* data_path) {
                         log_err("clustered index is not supported\n");
                         return 1;
                     }
+                    log_info("index name:%s\n", index_name);
                     btree btree_index = get_index(index_name);
                     if (btree_index == NULL) {
                         btree_index = btree_init();
@@ -1459,8 +1340,8 @@ int read_csv(char* data_path) {
          * store the data according to index
          */
         for (size_t i = 0; i < header_count; ++i) {
-            int value_array[MAX_COLUMN_SIZE];
-            int row_id_array[MAX_COLUMN_SIZE];
+            long value_array[MAX_COLUMN_SIZE];
+            long row_id_array[MAX_COLUMN_SIZE];
 
             char* index_name;
             if (col_set[i]->idx_type == BTREE) {
@@ -1479,10 +1360,10 @@ int read_csv(char* data_path) {
                     return 1;
                 }
                 btree btree_index = get_index(index_name);
-                int tmp_idx = 0;
-                int max_idx = btree_inorder_traversal(btree_index, value_array, row_id_array, tmp_idx);
-                for(int i = 0; i < max_idx; ++i) {
-                    if(insert_data_column(col_set[i], value_array[i], row_id_array[i]) != 0) {
+                long tmp_idx = 0;
+                long max_idx = btree_inorder_traversal(btree_index, value_array, row_id_array, tmp_idx);
+                for(size_t j = 0; j < (size_t) max_idx; ++j) {
+                    if(insert_data_column(col_set[j], value_array[j], row_id_array[j]) != 0) {
                         return 1;
                     }
                 }
@@ -1503,9 +1384,9 @@ int read_csv(char* data_path) {
                     return 1;
                 }
                 linknode* sorted_index = get_index(index_name);
-                int max_idx = link_traversal(sorted_index, value_array, row_id_array);
-                for(int j = 0; j < max_idx; ++j) {
-                    if(insert_data_column(col_set[j], value_array[j], row_id_array[j]) != 0) {
+                long max_idx = link_traversal(sorted_index, value_array, row_id_array);
+                for(size_t k = 0; k < (size_t) max_idx; ++k) {
+                    if(insert_data_column(col_set[k], value_array[k], row_id_array[k]) != 0) {
                         return 1;
                     }
                 }
@@ -1567,7 +1448,8 @@ int load_database() {
                     log_err("[db_manager.c:setup_db_csv()] setup database failed.\n");
                     return 1;
                 }
-                Table* setup_tbl = create_table(db_name, tbl_name, tbl_pricls_col_name, atoi(tbl_capacity));
+                Table* setup_tbl = create_table(db_name, tbl_name, tbl_pricls_col_name,
+                                                (size_t) strtol(tbl_capacity, NULL, 0));
                 if(setup_tbl == NULL) {
                     log_err("[db_manager.c:setup_db_csv()] setup table failed.\n");
                     return 1;
@@ -1587,7 +1469,7 @@ int load_database() {
                 int count = 0;
                 while ((slvle = next_token_comma(&line,&mes_status))!= NULL) {
                     if(count % 2 == 0) {
-                        int rlv = atoi(slvle);
+                        long rlv = strtol(slvle, NULL, 0);
                         if(setup_col->size >= setup_col->capacity) {
                             size_t new_column_length = RESIZE * setup_col->capacity + 1;
                             size_t new_length = new_column_length;
@@ -1598,14 +1480,14 @@ int load_database() {
                                 setup_col->rowId = calloc(new_length,sizeof(int));
                             }
                             else {
-                                int* dd = resize_int(setup_col->data, old_length, new_length);
-                                int* dr = resize_int(setup_col->rowId, old_length, new_length);
+                                long* dd = resize_long(setup_col->data, old_length, new_length);
+                                long* dr = resize_long(setup_col->rowId, old_length, new_length);
                                 free(setup_col->data);
                                 free(setup_col->rowId);
-                                setup_col->data = calloc(new_length, sizeof(int));
-                                setup_col->rowId = calloc(new_length, sizeof(int));
-                                memcpy(setup_col->data,dd,new_length*sizeof(int));
-                                memcpy(setup_col->rowId,dr,new_length*sizeof(int));
+                                setup_col->data = calloc(new_length, sizeof(long));
+                                setup_col->rowId = calloc(new_length, sizeof(long));
+                                memcpy(setup_col->data,dd,new_length*sizeof(long));
+                                memcpy(setup_col->rowId,dr,new_length*sizeof(long));
                                 if(!setup_col->data || !setup_col->rowId) {
                                     log_err("creating more data space failed.\n");
                                     free(setup_col);
@@ -1616,7 +1498,7 @@ int load_database() {
                         setup_col->rowId[setup_col->size] = rlv;
                     }
                     else {
-                        int slv = atoi(slvle);
+                        long slv = strtol(slvle, NULL, 0);
                         setup_col->data[setup_col->size] = slv;
 
                         setup_col->size++;
@@ -1684,8 +1566,8 @@ int save_database() {
                 fprintf(fp, ",unclsr");
             }
             for(size_t k = 0; k < scol->size; ++k) {
-                fprintf(fp, ",%d", scol->rowId[k]);
-                fprintf(fp, ",%d", scol->data[k]);
+                fprintf(fp, ",%ld", scol->rowId[k]);
+                fprintf(fp, ",%ld", scol->data[k]);
             }
             fprintf(fp, "\n");
         }

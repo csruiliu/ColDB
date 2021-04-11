@@ -3,10 +3,23 @@
 
 #include <stdbool.h>
 
+#define MAX_KEYS (16)
+
 typedef struct btree_kvpair {
     long row_id;
     long value;
 } btree_kvpair;
+
+struct bt_node {
+    //is this a leaf node? 1 is a leaf node, 0 is not a leaf node
+    bool is_leaf;
+    //how many keys does this node contain
+    long num_keys;
+    // the keys in the node
+    btree_kvpair keys[MAX_KEYS];
+    //kids[i] holds nodes < keys[i]
+    struct bt_node* kids[MAX_KEYS+1];
+};
 
 typedef struct bt_node *btree;
 

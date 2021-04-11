@@ -195,13 +195,13 @@ void put_index(char* index_name, void* index, IndexType index_type) {
         }
     }
     else if (index_type == SORTED) {
-        int flag = put(index_store, index_name, index, sizeof(linknode*));
+        int flag = put(index_store, index_name, index, sizeof(linknode));
         if(flag == 1) {
             log_err("persistent index %s failed\n", index_name);
         }
         else if(flag == 2) {
             log_info("a rehash has been done, re-put index into kv store\n");
-            if(put(index_store, index_name, index, sizeof(linknode*)) == 1) {
+            if(put(index_store, index_name, index, sizeof(linknode)) == 1) {
                 log_err("persistent index %s failed\n", index_name);
             }
         }

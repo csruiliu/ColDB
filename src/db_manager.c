@@ -1335,9 +1335,12 @@ int read_csv(char* data_path) {
                     }
                     else {
                         log_info("find the sorted index:%s \n", index_name);
-                        sorted_index = link_insert_head(sorted_index, rowId_load, lv);
-                        sorted_index = link_sort(sorted_index);
-                        //replace_index(index_name, sorted_index, SORTED);
+                        linknode* sorted_index_cpy = link_init();
+                        memmove(sorted_index_cpy, sorted_index, sizeof(linknode));
+                        delete_index(index_name);
+                        sorted_index_cpy = link_insert_head(sorted_index_cpy, rowId_load, lv);
+                        sorted_index_cpy = link_sort(sorted_index_cpy);
+                        put_index(index_name, sorted_index_cpy, SORTED);
                     }
                     free(index_name);
                 }

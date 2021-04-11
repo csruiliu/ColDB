@@ -174,7 +174,7 @@ void* get_index(char* index_name);
 
 void put_index(char* index_name, void* index, IndexType index_type);
 
-void replace_index(char* index_name, void* index, IndexType index_type);
+void delete_index(char* index_name);
 
 void free_index_store();
 

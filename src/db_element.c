@@ -167,9 +167,20 @@ void* get_index(char* index_name) {
     return index;
 }
 
+void delete_index(char* index_name) {
+    int flag = delete(index_store, index_name);
+    if (flag == 0) {
+        log_info("delete index %s successfully\n", index_name);
+    }
+    else {
+        log_err("delete index %s failed\n", index_name);
+    }
+
+}
+
 void put_index(char* index_name, void* index, IndexType index_type) {
     if (index_type == BTREE) {
-        int flag = put(index_store, index_name, index, sizeof(btree));
+        int flag = put(index_store, index_name, index, sizeof(struct bt_node));
         if(flag == 1) {
             log_err("persistent index %s failed\n", index_name);
         }
@@ -196,24 +207,6 @@ void put_index(char* index_name, void* index, IndexType index_type) {
         }
         else {
             log_info("persistent index %s successfully\n", index_name);
-        }
-    }
-    else {
-        log_err("the index type is not supported");
-    }
-}
-
-void replace_index(char* index_name, void* index, IndexType index_type) {
-    if (index_type == BTREE) {
-        int flag = put_replace(index_store, index_name, index, sizeof(btree));
-        if(flag != 0) {
-            log_err("replace index %s failed", index_name);
-        }
-    }
-    else if (index_type == SORTED) {
-        int flag = put_replace(index_store, index_name, index, sizeof(linknode*));
-        if(flag != 0) {
-            log_err("replace index %s failed", index_name);
         }
     }
     else {

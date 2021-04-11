@@ -23,7 +23,7 @@ int kv_allocate(kvstore** kv_store, size_t size) {
 int kv_deallocate(kvstore* kv_store) {
     for(size_t i = 0; i < kv_store->size; ++i) {
         kvpair* ikv = &(kv_store->kv_pair[i]);
-        if(ikv != NULL) {
+        if(ikv->key != NULL) {
             free(ikv->key);
             free(ikv->value);
         }
@@ -64,6 +64,22 @@ int put(kvstore* kv_store, char* key, void* value, size_t value_size) {
     return 0;
 }
 
+int delete(kvstore* kv_store, char* key) {
+    size_t index = hash_func(key, PRIME, kv_store->size);
+    kvpair* cur_ikv = &(kv_store->kv_pair[index]);
+    if(cur_ikv->key == NULL) {
+        log_err("no item found\n");
+    }
+    else {
+        free(kv_store->kv_pair[index].key);
+        free(kv_store->kv_pair[index].value);
+        kv_store->kv_pair[index].key = NULL;
+        kv_store->kv_pair[index].value = NULL;
+    }
+    kv_store->count--;
+    return 0;
+}
+
 int put_replace(kvstore* kv_store, char* key, void* value, size_t value_size) {
     size_t index = hash_func(key, PRIME, kv_store->size);
     kvpair* cur_ikv = &(kv_store->kv_pair[index]);
@@ -74,7 +90,7 @@ int put_replace(kvstore* kv_store, char* key, void* value, size_t value_size) {
             return 1;
         }
         strcpy(kv_store->kv_pair[index].key, key);
-        memcpy(kv_store->kv_pair[index].value, value, value_size);
+        memmove(kv_store->kv_pair[index].value, value, value_size);
         kv_store->count++;
     }
     else {
@@ -86,7 +102,7 @@ int put_replace(kvstore* kv_store, char* key, void* value, size_t value_size) {
             return 1;
         }
         strcpy(kv_store->kv_pair[index].key, key);
-        memcpy(kv_store->kv_pair[index].value, value, value_size);
+        memmove(kv_store->kv_pair[index].value, value, value_size);
     }
     return 0;
 }
@@ -115,15 +131,15 @@ void* get(kvstore* kv_store, char* key) {
 
 int kv_rehash(kvstore** kv_store, size_t nc, size_t value_size) {
     log_info("rehash start.\n");
-    kvstore* new_db_store;
-    new_db_store = malloc(sizeof(kvstore));
-    if(new_db_store == NULL) {
+    kvstore* new_store;
+    new_store = malloc(sizeof(kvstore));
+    if(new_store == NULL) {
         return 1;
     }
-    new_db_store->size = nc;
-    new_db_store->count = 0;
-    new_db_store->kv_pair = calloc(nc, sizeof(kvpair));
-    if(new_db_store->kv_pair == NULL) {
+    new_store->size = nc;
+    new_store->count = 0;
+    new_store->kv_pair = calloc(nc, sizeof(kvpair));
+    if(new_store->kv_pair == NULL) {
         return 1;
     }
     size_t oc = (*kv_store)->size;
@@ -131,24 +147,25 @@ int kv_rehash(kvstore** kv_store, size_t nc, size_t value_size) {
         kvpair* oikv = &((*kv_store)->kv_pair[i]);
         if(oikv->key != NULL) {
             size_t index = hash_func(oikv->key, PRIME, nc);
-            kvpair* nikv = &(new_db_store->kv_pair[index]);
+            kvpair* nikv = &(new_store->kv_pair[index]);
             while(nikv->key != NULL) {
                 index++;
                 if (index >= nc) {
                     index = 0;
                 }
-                nikv = &(new_db_store->kv_pair[index]);
+                nikv = &(new_store->kv_pair[index]);
             }
-            new_db_store->kv_pair[index].key = malloc((strlen(oikv->key)+1)* sizeof(char));
-            strcpy(new_db_store->kv_pair[index].key, oikv->key);
-            new_db_store->kv_pair[index].value = malloc(value_size);
-            memcpy(new_db_store->kv_pair[index].value, oikv->value, value_size);
-            new_db_store->count++;
+            new_store->kv_pair[index].key = malloc((strlen(oikv->key)+1)* sizeof(char));
+            strcpy(new_store->kv_pair[index].key, oikv->key);
+            new_store->kv_pair[index].value = malloc(value_size);
+            memmove(new_store->kv_pair[index].value, oikv->value, value_size);
+            new_store->count++;
         }
     }
     kv_deallocate(*kv_store);
+    //free(*kv_store);
     *kv_store = malloc(sizeof(kvstore));
-    memcpy(*kv_store, new_db_store, sizeof(kvstore));
+    memmove(*kv_store, new_store, sizeof(kvstore));
     log_info("rehash complete.\n");
     return 0;
 }

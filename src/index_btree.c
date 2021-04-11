@@ -5,19 +5,6 @@
 #include "utils_func.h"
 #include "index_btree.h"
 
-#define MAX_KEYS (16)
-
-struct bt_node {
-    //is this a leaf node? 1 is a leaf node, 0 is not a leaf node
-    bool is_leaf;
-    //how many keys does this node contain
-    long num_keys;
-    // the keys in the node
-    btree_kvpair keys[MAX_KEYS];
-    //kids[i] holds nodes < keys[i]
-    struct bt_node* kids[MAX_KEYS+1];
-};
-
 btree btree_init() {
     btree b;
     b = malloc(sizeof(*b));
@@ -109,7 +96,6 @@ static btree btree_insert_internal(btree t, btree_kvpair kv_node, btree_kvpair *
         //do nothing
         return NULL;
     }
-
     if (t->is_leaf) {
         // every key above pos moves up one space
         memmove(&t->keys[pos+1], &t->keys[pos], sizeof(*(t->keys)) * (t->num_keys - pos));
@@ -118,13 +104,11 @@ static btree btree_insert_internal(btree t, btree_kvpair kv_node, btree_kvpair *
     }
     else {
         b_new = btree_insert_internal(t->kids[pos], kv_node, &mid);
-
-        if (b_new) {
+        if (b_new != NULL) {
             //every key above pos moves up one space
             memmove(&t->keys[pos+1], &t->keys[pos], sizeof(*(t->keys)) * (t->num_keys - pos));
             //new kid goes in pos + 1
             memmove(&t->kids[pos+2], &t->kids[pos+1], sizeof(*(t->keys)) * (t->num_keys - pos));
-
             t->keys[pos] = mid;
             t->kids[pos+1] = b_new;
             t->num_keys++;
@@ -141,7 +125,7 @@ static btree btree_insert_internal(btree t, btree_kvpair kv_node, btree_kvpair *
         memmove(b_new->keys, &t->keys[mid.value+1], sizeof(*(t->keys)) * b_new->num_keys);
 
         if(!t->is_leaf) {
-            memmove(b_new->kids, &t->kids[mid.value+1], sizeof(*(t->kids)) * (b_new->num_keys + 1));
+            memmove(b_new->kids, &t->kids[mid.value+1], sizeof(*(t->keys)) * (b_new->num_keys + 1));
         }
         t->num_keys = mid.value;
         return b_new;

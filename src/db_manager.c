@@ -14,6 +14,7 @@
 #include "index_btree.h"
 #include "index_sort.h"
 #include "utils_func.h"
+#include "db_manager.h"
 
 #define RESIZE 2
 #define DIRLEN 256
@@ -1153,7 +1154,7 @@ int read_csv(char* data_path) {
             while ((getline(&line, &len, fp)) != -1) {
                 char *va = line;
                 long lv = strtol(va, NULL, 0);
-                btree_kvpair kv_node = {lv, rowId_load};
+                btree_kvpair kv_node = {rowId_load, lv};
                 btree_insert(btree_index, kv_node);
                 rowId_load++;
             }
@@ -1241,7 +1242,7 @@ int read_csv(char* data_path) {
                 return 1;
             }
         }
-        int rowId_load = 0;
+        long rowId_load = 0;
         while ((getline(&line, &len, fp)) != -1) {
             for (size_t i = 0; i < header_count; ++i) {
                 char *va = next_token_comma(&line, &mes_status);
@@ -1259,6 +1260,11 @@ int read_csv(char* data_path) {
                         index_name = malloc((strlen(col_set[i]->name)+strlen(".unclsr.btree")+1)*sizeof(char));
                         strcpy(index_name, col_set[i]->name);
                         strcat(index_name, ".unclsr.btree");
+                        if (insert_data_column(col_set[i], lv, rowId_load) != 0) {
+                            free(line_copy);
+                            fclose(fp);
+                            return 1;
+                        }
                     }
                     else if (col_set[i]->cls_type == PRICLSR) {
                         index_name = malloc((strlen(col_set[i]->name)+strlen(".priclsr.btree")+1)*sizeof(char));
@@ -1278,16 +1284,18 @@ int read_csv(char* data_path) {
                     btree btree_index = get_index(index_name);
                     if (btree_index == NULL) {
                         btree_index = btree_init();
-                        btree_kvpair kv_node = {lv, rowId_load};
+                        btree_kvpair kv_node = {rowId_load, lv};
                         btree_insert(btree_index, kv_node);
                         log_info("create a btree index:%s \n",index_name);
                         put_index(index_name, btree_index, BTREE);
                     }
                     else {
-                        log_info("find the btree index:%s \n",index_name);
-                        btree_kvpair kv_node = {lv, rowId_load};
-                        btree_insert(btree_index, kv_node);
-                        replace_index(index_name, btree_index, BTREE);
+                        btree btree_index_cpy = btree_init();
+                        memmove(btree_index_cpy, btree_index, sizeof(struct bt_node));
+                        delete_index(index_name);
+                        btree_kvpair kv_node = {rowId_load, lv};
+                        btree_insert(btree_index_cpy, kv_node);
+                        put_index(index_name, btree_index_cpy, BTREE);
                     }
                     free(index_name);
                 }
@@ -1297,6 +1305,11 @@ int read_csv(char* data_path) {
                         index_name = malloc((strlen(col_set[i]->name)+strlen(".unclsr.sorted")+1)*sizeof(char));
                         strcpy(index_name, col_set[i]->name);
                         strcat(index_name, ".unclsr.sorted");
+                        if (insert_data_column(col_set[i], lv, rowId_load) != 0) {
+                            free(line_copy);
+                            fclose(fp);
+                            return 1;
+                        }
                     }
                     else if (col_set[i]->cls_type == PRICLSR) {
                         index_name = malloc((strlen(col_set[i]->name)+strlen(".priclsr.sorted")+1)*sizeof(char));
@@ -1324,7 +1337,7 @@ int read_csv(char* data_path) {
                         log_info("find the sorted index:%s \n", index_name);
                         sorted_index = link_insert_head(sorted_index, rowId_load, lv);
                         sorted_index = link_sort(sorted_index);
-                        replace_index(index_name, sorted_index, SORTED);
+                        //replace_index(index_name, sorted_index, SORTED);
                     }
                     free(index_name);
                 }
@@ -1356,8 +1369,8 @@ int read_csv(char* data_path) {
                     strcat(index_name, ".priclsr.btree");
                 }
                 else {
-                    log_err("the clustered type index is unsupported\n");
-                    return 1;
+                    log_info("the index is not clustered\n");
+                    continue;
                 }
                 btree btree_index = get_index(index_name);
                 long tmp_idx = 0;
@@ -1380,8 +1393,8 @@ int read_csv(char* data_path) {
                     strcat(index_name, ".priclsr.sorted");
                 }
                 else {
-                    log_err("the clustered type index is unsupported\n");
-                    return 1;
+                    log_info("the index is not clustered\n");
+                    continue;
                 }
                 linknode* sorted_index = get_index(index_name);
                 long max_idx = link_traversal(sorted_index, value_array, row_id_array);
@@ -1466,7 +1479,7 @@ int load_database() {
                     return 1;
                 }
                 char* slvle = NULL;
-                int count = 0;
+                long count = 0;
                 while ((slvle = next_token_comma(&line,&mes_status))!= NULL) {
                     if(count % 2 == 0) {
                         long rlv = strtol(slvle, NULL, 0);
@@ -1476,8 +1489,8 @@ int load_database() {
                             size_t old_length = setup_col->capacity;
                             if(old_length == 0){
                                 assert(new_length > 0);
-                                setup_col->data = calloc(new_length,sizeof(int));
-                                setup_col->rowId = calloc(new_length,sizeof(int));
+                                setup_col->data = calloc(new_length,sizeof(long));
+                                setup_col->rowId = calloc(new_length,sizeof(long));
                             }
                             else {
                                 long* dd = resize_long(setup_col->data, old_length, new_length);

@@ -1334,7 +1334,7 @@ int read_csv(char* data_path) {
                         put_index(index_name, sorted_index, SORTED);
                     }
                     else {
-                        log_info("find the sorted index:%s \n", index_name);
+                        //log_info("find the sorted index:%s \n", index_name);
                         linknode* sorted_index_cpy = link_init();
                         memmove(sorted_index_cpy, sorted_index, sizeof(linknode));
                         delete_index(index_name);
@@ -1351,24 +1351,24 @@ int read_csv(char* data_path) {
             }
             rowId_load++;
         }
-
         /**
          * store the data according to index
          */
-        for (size_t i = 0; i < header_count; ++i) {
+        log_info("start to store the date according to index\n");
+        for (size_t col_idx = 0; col_idx < header_count; ++col_idx) {
             long value_array[MAX_COLUMN_SIZE];
             long row_id_array[MAX_COLUMN_SIZE];
 
             char* index_name;
-            if (col_set[i]->idx_type == BTREE) {
-                if (col_set[i]->cls_type == CLSR) {
-                    index_name = malloc((strlen(col_set[i]->name)+strlen(".clsr.btree")+1)*sizeof(char));
-                    strcpy(index_name, col_set[i]->name);
+            if (col_set[col_idx]->idx_type == BTREE) {
+                if (col_set[col_idx]->cls_type == CLSR) {
+                    index_name = malloc((strlen(col_set[col_idx]->name)+strlen(".clsr.btree")+1)*sizeof(char));
+                    strcpy(index_name, col_set[col_idx]->name);
                     strcat(index_name, ".clsr.btree");
                 }
-                else if (col_set[i]->cls_type == PRICLSR) {
-                    index_name = malloc((strlen(col_set[i]->name)+strlen(".priclsr.btree")+1)*sizeof(char));
-                    strcpy(index_name, col_set[i]->name);
+                else if (col_set[col_idx]->cls_type == PRICLSR) {
+                    index_name = malloc((strlen(col_set[col_idx]->name)+strlen(".priclsr.btree")+1)*sizeof(char));
+                    strcpy(index_name, col_set[col_idx]->name);
                     strcat(index_name, ".priclsr.btree");
                 }
                 else {
@@ -1379,20 +1379,20 @@ int read_csv(char* data_path) {
                 long tmp_idx = 0;
                 long max_idx = btree_inorder_traversal(btree_index, value_array, row_id_array, tmp_idx);
                 for(size_t j = 0; j < (size_t) max_idx; ++j) {
-                    if(insert_data_column(col_set[j], value_array[j], row_id_array[j]) != 0) {
+                    if(insert_data_column(col_set[col_idx], value_array[j], row_id_array[j]) != 0) {
                         return 1;
                     }
                 }
             }
-            else if (col_set[i]->idx_type == SORTED) {
-                if (col_set[i]->cls_type == CLSR) {
-                    index_name = malloc((strlen(col_set[i]->name)+strlen(".clsr.sorted")+1)*sizeof(char));
-                    strcpy(index_name, col_set[i]->name);
+            else if (col_set[col_idx]->idx_type == SORTED) {
+                if (col_set[col_idx]->cls_type == CLSR) {
+                    index_name = malloc((strlen(col_set[col_idx]->name)+strlen(".clsr.sorted")+1)*sizeof(char));
+                    strcpy(index_name, col_set[col_idx]->name);
                     strcat(index_name, ".clsr.sorted");
                 }
-                else if (col_set[i]->cls_type == PRICLSR) {
-                    index_name = malloc((strlen(col_set[i]->name)+strlen(".priclsr.sorted")+1)*sizeof(char));
-                    strcpy(index_name, col_set[i]->name);
+                else if (col_set[col_idx]->cls_type == PRICLSR) {
+                    index_name = malloc((strlen(col_set[col_idx]->name)+strlen(".priclsr.sorted")+1)*sizeof(char));
+                    strcpy(index_name, col_set[col_idx]->name);
                     strcat(index_name, ".priclsr.sorted");
                 }
                 else {
@@ -1402,7 +1402,7 @@ int read_csv(char* data_path) {
                 linknode* sorted_index = get_index(index_name);
                 long max_idx = link_traversal(sorted_index, value_array, row_id_array);
                 for(size_t k = 0; k < (size_t) max_idx; ++k) {
-                    if(insert_data_column(col_set[k], value_array[k], row_id_array[k]) != 0) {
+                    if(insert_data_column(col_set[col_idx], value_array[k], row_id_array[k]) != 0) {
                         return 1;
                     }
                 }

@@ -206,46 +206,6 @@ int insert_data_table(Table* itbl, long* row_values) {
     return 0;
 }
 
-int set_column_idx_cls(Column* slcol, char* idx_type, char* cls_type) {
-    if (strcmp(idx_type,"unidx") == 0) {
-        slcol->idx_type = UNIDX;
-        slcol->cls_type = UNCLSR;
-    }
-    else if (strcmp(idx_type,"btree") == 0 && strcmp(cls_type,"priclsr") == 0) {
-        slcol->idx_type = BTREE;
-        slcol->cls_type = PRICLSR;
-        Table* tbl_aff = get_table(slcol->aff_tbl_name);
-        tbl_aff->has_cluster_index = 1;
-        tbl_aff->pricluster_index_col_name = malloc((strlen(slcol->name)+1)* sizeof(char));
-        strcpy(tbl_aff->pricluster_index_col_name, slcol->name);
-    }
-    else if (strcmp(idx_type,"btree") == 0 && strcmp(cls_type,"clsr") == 0) {
-        slcol->idx_type = BTREE;
-        slcol->cls_type = CLSR;
-    }
-    else if (strcmp(idx_type,"btree") == 0 && strcmp(cls_type,"unclsr") == 0) {
-        slcol->idx_type = BTREE;
-        slcol->cls_type = UNCLSR;
-    }
-    else if (strcmp(idx_type,"sorted") == 0 && strcmp(cls_type,"priclsr") == 0) {
-        slcol->idx_type = SORTED;
-        slcol->cls_type = PRICLSR;
-        Table* tbl_aff = get_table(slcol->aff_tbl_name);
-        tbl_aff->has_cluster_index = 1;
-        tbl_aff->pricluster_index_col_name = malloc((strlen(slcol->name)+1)* sizeof(char));
-        strcpy(tbl_aff->pricluster_index_col_name, slcol->name);
-    }
-    else if (strcmp(idx_type,"sorted") == 0 && strcmp(cls_type,"clsr") == 0) {
-        slcol->idx_type = SORTED;
-        slcol->cls_type = CLSR;
-    }
-    else if (strcmp(idx_type,"sorted") == 0 && strcmp(cls_type,"unclsr") == 0) {
-        slcol->idx_type = SORTED;
-        slcol->cls_type = UNCLSR;
-    }
-    return 0;
-}
-
 /**
  * select data for result
  **/
@@ -301,6 +261,22 @@ int select_data_result(Result* srsl_pos, Result* srsl_val, char* handle, char* p
         memcpy(rsl->payload, rsl_payload, size*sizeof(long));
         replace_result(handle,rsl);
     }
+    return 0;
+}
+
+/**
+ * select data for the column with btree index
+ **/
+//TODO
+int select_data_col_btree() {
+    return 0;
+}
+
+/**
+ * select data for the column with sorted index
+ **/
+//TODO
+int select_data_col_sorted() {
     return 0;
 }
 
@@ -1415,6 +1391,49 @@ int read_csv(char* data_path) {
     return 0;
 }
 
+/**
+ * set the index type and clustered type
+ **/
+int set_column_idx_cls(Column* slcol, char* idx_type, char* cls_type) {
+    if (strcmp(idx_type,"unidx") == 0) {
+        slcol->idx_type = UNIDX;
+        slcol->cls_type = UNCLSR;
+    }
+    else if (strcmp(idx_type,"btree") == 0 && strcmp(cls_type,"priclsr") == 0) {
+        slcol->idx_type = BTREE;
+        slcol->cls_type = PRICLSR;
+        Table* tbl_aff = get_table(slcol->aff_tbl_name);
+        tbl_aff->has_cluster_index = 1;
+        tbl_aff->pricluster_index_col_name = malloc((strlen(slcol->name)+1)* sizeof(char));
+        strcpy(tbl_aff->pricluster_index_col_name, slcol->name);
+    }
+    else if (strcmp(idx_type,"btree") == 0 && strcmp(cls_type,"clsr") == 0) {
+        slcol->idx_type = BTREE;
+        slcol->cls_type = CLSR;
+    }
+    else if (strcmp(idx_type,"btree") == 0 && strcmp(cls_type,"unclsr") == 0) {
+        slcol->idx_type = BTREE;
+        slcol->cls_type = UNCLSR;
+    }
+    else if (strcmp(idx_type,"sorted") == 0 && strcmp(cls_type,"priclsr") == 0) {
+        slcol->idx_type = SORTED;
+        slcol->cls_type = PRICLSR;
+        Table* tbl_aff = get_table(slcol->aff_tbl_name);
+        tbl_aff->has_cluster_index = 1;
+        tbl_aff->pricluster_index_col_name = malloc((strlen(slcol->name)+1)* sizeof(char));
+        strcpy(tbl_aff->pricluster_index_col_name, slcol->name);
+    }
+    else if (strcmp(idx_type,"sorted") == 0 && strcmp(cls_type,"clsr") == 0) {
+        slcol->idx_type = SORTED;
+        slcol->cls_type = CLSR;
+    }
+    else if (strcmp(idx_type,"sorted") == 0 && strcmp(cls_type,"unclsr") == 0) {
+        slcol->idx_type = SORTED;
+        slcol->cls_type = UNCLSR;
+    }
+    return 0;
+}
+
 int load_database() {
     char cwd[DIRLEN];
     if (getcwd(cwd, DIRLEN) == NULL) {
@@ -1477,34 +1496,36 @@ int load_database() {
                 }
                 log_info("table size:%d\n",setup_tbl->size);
                 Column* setup_col = get_column(col_name);
+
+                // setup the index for each column
                 if(set_column_idx_cls(setup_col,idx_type,cls_type) != 0) {
                     log_err("[db_manager.c:setup_db_csv()] setup column index and clustering failed.\n");
                     return 1;
                 }
+
                 char* slvle = NULL;
                 long count = 0;
                 while ((slvle = next_token_comma(&line,&mes_status))!= NULL) {
-                    if(count % 2 == 0) {
+                    if (count % 2 == 0) {
                         long rlv = strtol(slvle, NULL, 0);
-                        if(setup_col->size >= setup_col->capacity) {
+                        if (setup_col->size >= setup_col->capacity) {
                             size_t new_column_length = RESIZE * setup_col->capacity + 1;
                             size_t new_length = new_column_length;
                             size_t old_length = setup_col->capacity;
-                            if(old_length == 0){
+                            if (old_length == 0) {
                                 assert(new_length > 0);
-                                setup_col->data = calloc(new_length,sizeof(long));
-                                setup_col->rowId = calloc(new_length,sizeof(long));
-                            }
-                            else {
-                                long* dd = resize_long(setup_col->data, old_length, new_length);
-                                long* dr = resize_long(setup_col->rowId, old_length, new_length);
+                                setup_col->data = calloc(new_length, sizeof(long));
+                                setup_col->rowId = calloc(new_length, sizeof(long));
+                            } else {
+                                long *dd = resize_long(setup_col->data, old_length, new_length);
+                                long *dr = resize_long(setup_col->rowId, old_length, new_length);
                                 free(setup_col->data);
                                 free(setup_col->rowId);
                                 setup_col->data = calloc(new_length, sizeof(long));
                                 setup_col->rowId = calloc(new_length, sizeof(long));
-                                memcpy(setup_col->data,dd,new_length*sizeof(long));
-                                memcpy(setup_col->rowId,dr,new_length*sizeof(long));
-                                if(!setup_col->data || !setup_col->rowId) {
+                                memcpy(setup_col->data, dd, new_length * sizeof(long));
+                                memcpy(setup_col->rowId, dr, new_length * sizeof(long));
+                                if (!setup_col->data || !setup_col->rowId) {
                                     log_err("creating more data space failed.\n");
                                     free(setup_col);
                                 }
@@ -1512,8 +1533,7 @@ int load_database() {
                             setup_col->capacity = new_length;
                         }
                         setup_col->rowId[setup_col->size] = rlv;
-                    }
-                    else {
+                    } else {
                         long slv = strtol(slvle, NULL, 0);
                         setup_col->data[setup_col->size] = slv;
 
@@ -1521,6 +1541,78 @@ int load_database() {
                     }
                     count++;
                 }
+
+                /**
+                 * building the index for each column after reading
+                 */
+                char* index_name;
+
+                if(setup_col->idx_type == BTREE) {
+                    if (setup_col->cls_type == UNCLSR) {
+                        index_name = malloc((strlen(setup_col->name)+strlen(".unclsr.btree")+1)*sizeof(char));
+                        strcpy(index_name, setup_col->name);
+                        strcat(index_name, ".unclsr.btree");
+                    }
+                    else if (setup_col->cls_type == PRICLSR) {
+                        index_name = malloc((strlen(setup_col->name)+strlen(".priclsr.btree")+1)*sizeof(char));
+                        strcpy(index_name, setup_col->name);
+                        strcat(index_name, ".priclsr.btree");
+                    }
+                    else if (setup_col->cls_type == CLSR) {
+                        index_name = malloc((strlen(setup_col->name)+strlen(".clsr.btree")+1)*sizeof(char));
+                        strcpy(index_name, setup_col->name);
+                        strcat(index_name, ".clsr.btree");
+                    }
+                    else {
+                        log_err("clustered index is not supported\n");
+                        return 1;
+                    }
+                    btree btree_index = btree_init();
+                    log_info("create a btree index:%s \n",index_name);
+                    for(size_t i = 0; i < setup_col->size; ++i) {
+                        btree_kvpair kv_node = {setup_col->rowId[i], setup_col->data[i]};
+                        btree_insert(btree_index, kv_node);
+                    }
+                    put_index(index_name, btree_index, BTREE);
+                    free(index_name);
+                }
+                else if(setup_col->idx_type == SORTED) {
+                    if (setup_col->cls_type == UNCLSR) {
+                        index_name = malloc((strlen(setup_col->name)+strlen(".unclsr.sorted")+1)*sizeof(char));
+                        strcpy(index_name, setup_col->name);
+                        strcat(index_name, ".unclsr.sorted");
+                    }
+                    else if (setup_col->cls_type == PRICLSR) {
+                        index_name = malloc((strlen(setup_col->name)+strlen(".priclsr.sorted")+1)*sizeof(char));
+                        strcpy(index_name, setup_col->name);
+                        strcat(index_name, ".priclsr.sorted");
+                    }
+                    else if (setup_col->cls_type == CLSR) {
+                        index_name = malloc((strlen(setup_col->name)+strlen(".clsr.sorted")+1)*sizeof(char));
+                        strcpy(index_name, setup_col->name);
+                        strcat(index_name, ".clsr.sorted");
+                    }
+                    else {
+                        log_err("clustered index is not supported\n");
+                        return 1;
+                    }
+                    linknode* sorted_index = link_init();
+                    log_info("create a sorted index:%s \n", index_name);
+                    for(size_t i = 0; i < setup_col->size; ++i) {
+                        sorted_index = link_insert_head(sorted_index, setup_col->rowId[i], setup_col->data[i]);
+                        sorted_index = link_sort(sorted_index);
+                    }
+                    put_index(index_name, sorted_index, SORTED);
+                    free(index_name);
+                }
+                else if (setup_col->idx_type == UNIDX) {
+                    log_info("the column is un-index. \n");
+                }
+                else {
+                    log_err("[db_manager.c:load_database()] the index type or clustered type is not supported\n");
+                    return 1;
+                }
+
             }
             free(line);
             free(db_file);

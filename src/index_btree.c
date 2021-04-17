@@ -178,18 +178,4 @@ void btree_inorder_traversal(btree t, long value_array[], long row_id_array[], l
         }
         btree_inorder_traversal(t->kids[t->num_keys], value_array, row_id_array, index);
     }
-
-    /*
-    if (t->is_leaf) {
-        return;
-    }
-    btree_inorder_traversal(t->kids[0], value_array, row_id_array, index);
-    for(long i = 0; i < t->num_keys; ++i) {
-        log_info("row_id:%ld, value:%ld \n", t->keys[i].row_id, t->keys[i].value);
-        value_array[*index] = t->keys[i].value;
-        row_id_array[*index] = t->keys[i].row_id;
-        (*index)++;
-    }
-    btree_inorder_traversal(t->kids[1], value_array, row_id_array, index);
-    */
 }

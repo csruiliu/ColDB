@@ -15,6 +15,8 @@ linknode* link_delete(linknode* head, long row_id);
 
 linknode* link_sort(linknode* head);
 
+linknode* link_search(linknode* head, long data);
+
 long link_traversal(linknode* head, long value_array[], long row_id_array[]);
 
 long link_length(linknode* head);

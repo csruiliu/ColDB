@@ -1158,7 +1158,7 @@ char* generate_print_result(size_t print_num, char** print_name) {
         Result* rsl = get_result(print_name[i]);
         if(rsl->data_type == LONG) {
             for(size_t j = 0; j < rsl->num_tuples; ++j) {
-                log_info("%ld\n",((double *)rsl->payload)[j]);
+                log_info("%ld\n",((long *)rsl->payload)[j]);
                 char* tmp_payload_data = malloc(sizeof(long)+1);
                 sprintf(tmp_payload_data, "%ld\n", ((long *)rsl->payload)[j]);
                 strcat(print_rsl,tmp_payload_data);
@@ -1274,10 +1274,13 @@ int read_csv(char* data_path) {
             long value_array[MAX_COLUMN_SIZE];
             long row_id_array[MAX_COLUMN_SIZE];
             if (lcol->cls_type == PRICLSR || lcol->cls_type == CLSR) {
-                int tmp_idx = 0;
-                long max_idx = btree_inorder_traversal(btree_index, value_array, row_id_array, tmp_idx);
+                //int tmp_idx = 0;
+                //long max_idx = btree_inorder_traversal(btree_index, value_array, row_id_array, tmp_idx);
+                long btree_count = 0;
+                long *p = &btree_count;
+                btree_inorder_traversal(btree_index, value_array, row_id_array, p);
 
-                for(int i = 0; i < max_idx; ++i) {
+                for(long i = 0; i < btree_count; ++i) {
                     if(insert_data_column(lcol, value_array[i], row_id_array[i]) != 0) {
                         return 1;
                     }
@@ -1468,7 +1471,6 @@ int read_csv(char* data_path) {
         for (size_t col_idx = 0; col_idx < header_count; ++col_idx) {
             long value_array[MAX_COLUMN_SIZE];
             long row_id_array[MAX_COLUMN_SIZE];
-
             char* index_name;
             if (col_set[col_idx]->idx_type == BTREE) {
                 if (col_set[col_idx]->cls_type == CLSR) {
@@ -1486,9 +1488,12 @@ int read_csv(char* data_path) {
                     continue;
                 }
                 btree btree_index = get_index(index_name);
-                long tmp_idx = 0;
-                long max_idx = btree_inorder_traversal(btree_index, value_array, row_id_array, tmp_idx);
-                for(size_t j = 0; j < (size_t) max_idx; ++j) {
+                long btree_count = 0;
+                long *p = &btree_count;
+
+                btree_inorder_traversal(btree_index, value_array, row_id_array, p);
+
+                for(long j = 0; j < btree_count; ++j) {
                     if(insert_data_column(col_set[col_idx], value_array[j], row_id_array[j]) != 0) {
                         return 1;
                     }

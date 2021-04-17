@@ -46,6 +46,7 @@ btree_kvpair btree_search(btree t, long row_id);
 /**
  * return all keys in the tree in order and store it in the array
  */
-long btree_inorder_traversal(btree t, long value_array[], long row_id_array[], long index);
+//long btree_inorder_traversal(btree t, long value_array[], long row_id_array[], long index);
+void btree_inorder_traversal(btree t, long value_array[], long row_id_array[], long* index);
 
 #endif //INDEX_BTREE_H

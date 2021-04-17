@@ -101,6 +101,31 @@ linknode* link_sort(linknode* head) {
 }
 
 /**
+ * search a node in the linked list
+ */
+linknode* link_search(linknode* head, long data) {
+    linknode* current = head;
+    //if list is empty
+    if(head == NULL) {
+        return NULL;
+    }
+    //navigate through list
+    while(current->data != data) {
+
+        //if it is last node
+        if(current->next == NULL) {
+            return NULL;
+        } else {
+            //go to next link
+            current = current->next;
+        }
+    }
+
+    //if data found, return the current Link
+    return current;
+}
+
+/**
  * iterate the linked list
  */
 long link_traversal(linknode* head, long value_array[], long row_id_array[]){

@@ -265,22 +265,6 @@ int select_data_result(Result* srsl_pos, Result* srsl_val, char* handle, char* p
 }
 
 /**
- * select data for the column with btree index
- **/
-//TODO
-int select_data_col_btree() {
-    return 0;
-}
-
-/**
- * select data for the column with sorted index
- **/
-//TODO
-int select_data_col_sorted() {
-    return 0;
-}
-
-/**
  * select data for un-index column
  **/
 int select_data_col_unidx(Column* scol, char* handle, char* pre_range, char* post_range) {
@@ -330,6 +314,156 @@ int select_data_col_unidx(Column* scol, char* handle, char* pre_range, char* pos
                 rsl_data[count] = (long) i;
                 count++;
             }
+        }
+        rsl->num_tuples = count;
+        rsl->data_type = LONG;
+        rsl->payload = calloc(count, sizeof(long));
+        memcpy(rsl->payload,rsl_data,count* sizeof(long));
+        replace_result(handle,rsl);
+    }
+    return 0;
+}
+
+/**
+ * select data for the column with btree index
+ **/
+int select_data_col_btree(Column* scol, char* handle, char* pre_range, char* post_range) {
+    Result* rsl = malloc(sizeof(Result));
+
+    char* index_name;
+
+    if (scol->cls_type == CLSR) {
+        index_name = malloc((strlen(scol->name)+strlen(".clsr.btree")+1)*sizeof(char));
+        strcpy(index_name, scol->name);
+        strcat(index_name, ".clsr.btree");
+    }
+    else if (scol->cls_type == PRICLSR) {
+        index_name = malloc((strlen(scol->name)+strlen(".priclsr.btree")+1)*sizeof(char));
+        strcpy(index_name, scol->name);
+        strcat(index_name, ".priclsr.btree");
+    }
+    else if (scol->cls_type == UNCLSR) {
+        index_name = malloc((strlen(scol->name)+strlen(".unclsr.btree")+1)*sizeof(char));
+        strcpy(index_name, scol->name);
+        strcat(index_name, ".unclsr.btree");
+    }
+    else {
+        log_err("[db_manager.c:select_data_col_btree()] the clustered index is not supported.\n");
+        return 1;
+    }
+    if (strncmp(pre_range,"null",4) == 0) {
+        long post = strtol(post_range, NULL, 0);
+        long* rsl_data = calloc(scol->size, sizeof(long));
+        btree btree_index = get_index(index_name);
+        btree_kvpair kvpair = btree_search(btree_index, post);
+        long row_id = kvpair.row_id;
+        for(long i = 0; i < row_id; ++i) {
+            rsl_data[i] = i;
+        }
+    }
+    else if (strncmp(post_range,"null",4) == 0) {
+        long pre = strtol(pre_range, NULL, 0);
+        long* rsl_data = calloc(scol->size, sizeof(long));
+        btree btree_index = get_index(index_name);
+        btree_kvpair kvpair = btree_search(btree_index, pre);
+        size_t count = 0;
+        for(long i = kvpair.row_id; i < (long) scol->size; ++i) {
+            rsl_data[count] = i;
+            count++;
+        }
+        rsl->num_tuples = count;
+        rsl->data_type = LONG;
+        rsl->payload = calloc(count, sizeof(long));
+        memcpy(rsl->payload,rsl_data,count* sizeof(long));
+        replace_result(handle,rsl);
+    }
+    else {
+        long pre = strtol(pre_range, NULL, 0);
+        long post = strtol(post_range, NULL, 0);
+        long* rsl_data = calloc(scol->size, sizeof(long));
+
+        btree btree_index = get_index(index_name);
+        btree_kvpair kvpair_pre = btree_search(btree_index, pre);
+        btree_kvpair kvpair_post = btree_search(btree_index, post);
+
+        size_t count = 0;
+        for(long i = kvpair_pre.row_id; i < kvpair_post.row_id; ++i) {
+                rsl_data[count] = i;
+                count++;
+        }
+        rsl->num_tuples = count;
+        rsl->data_type = LONG;
+        rsl->payload = calloc(count, sizeof(long));
+        memcpy(rsl->payload,rsl_data,count* sizeof(long));
+        replace_result(handle,rsl);
+    }
+    return 0;
+}
+
+/**
+ * select data for the column with sorted index
+ **/
+int select_data_col_sorted(Column* scol, char* handle, char* pre_range, char* post_range) {
+    Result* rsl = malloc(sizeof(Result));
+
+    char* index_name;
+
+    if (scol->cls_type == CLSR) {
+        index_name = malloc((strlen(scol->name)+strlen(".clsr.sorted")+1)*sizeof(char));
+        strcpy(index_name, scol->name);
+        strcat(index_name, ".clsr.sorted");
+    }
+    else if (scol->cls_type == PRICLSR) {
+        index_name = malloc((strlen(scol->name)+strlen(".priclsr.sorted")+1)*sizeof(char));
+        strcpy(index_name, scol->name);
+        strcat(index_name, ".priclsr.sorted");
+    }
+    else if (scol->cls_type == UNCLSR) {
+        index_name = malloc((strlen(scol->name)+strlen(".unclsr.sorted")+1)*sizeof(char));
+        strcpy(index_name, scol->name);
+        strcat(index_name, ".unclsr.sorted");
+    }
+    else {
+        log_err("[db_manager.c:select_data_col_sorted()] the clustered index is not supported.\n");
+        return 1;
+    }
+    if (strncmp(pre_range,"null",4) == 0) {
+        long post = strtol(post_range, NULL, 0);
+        long* rsl_data = calloc(scol->size, sizeof(long));
+        linknode* sorted_index = get_index(index_name);
+        linknode* node_post = link_search(sorted_index, post);
+        long row_id = node_post->row_id;
+        for(long i = 0; i < row_id; ++i) {
+            rsl_data[i] = i;
+        }
+    }
+    else if (strncmp(post_range,"null",4) == 0) {
+        long pre = strtol(pre_range, NULL, 0);
+        long* rsl_data = calloc(scol->size, sizeof(long));
+        linknode* sorted_index = get_index(index_name);
+        linknode* node_pre = link_search(sorted_index, pre);
+        size_t count = 0;
+        for(long i = node_pre->row_id; i < (long) scol->size; ++i) {
+            rsl_data[count] = i;
+            count++;
+        }
+        rsl->num_tuples = count;
+        rsl->data_type = LONG;
+        rsl->payload = calloc(count, sizeof(long));
+        memcpy(rsl->payload,rsl_data,count* sizeof(long));
+        replace_result(handle,rsl);
+    }
+    else {
+        long pre = strtol(pre_range, NULL, 0);
+        long post = strtol(post_range, NULL, 0);
+        long* rsl_data = calloc(scol->size, sizeof(long));
+        linknode* sorted_index = get_index(index_name);
+        linknode* node_pre = link_search(sorted_index, pre);
+        linknode* node_post = link_search(sorted_index, post);
+        size_t count = 0;
+        for(long i = node_pre->row_id; i < node_post->row_id; ++i) {
+            rsl_data[count] = i;
+            count++;
         }
         rsl->num_tuples = count;
         rsl->data_type = LONG;

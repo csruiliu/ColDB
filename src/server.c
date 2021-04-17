@@ -201,9 +201,27 @@ char* exec_select(DbOperator* query) {
         if (scol->idx_type == UNIDX) {
             if(select_data_col_unidx(scol, handle, pre_range, post_range) != 0) {
                 free_query(query);
-                log_err("[server.c:execute_DbOperator()] select data from column in database failed.\n");
-                return "select data from column in database failed.\n";
+                log_err("[server.c:execute_DbOperator()] select data from column failed (no index).\n");
+                return "select data from column in database failed with no index.\n";
             }
+        }
+        else if (scol->idx_type == BTREE) {
+            if(select_data_col_btree(scol, handle, pre_range, post_range) != 0) {
+                free_query(query);
+                log_err("[server.c:execute_DbOperator()] select data from column failed (btree).\n");
+                return "select data from column in database failed with btree index.\n";
+            }
+        }
+        else if (scol->idx_type == SORTED) {
+            if(select_data_col_sorted(scol, handle, pre_range, post_range) != 0) {
+                free_query(query);
+                log_err("[server.c:execute_DbOperator()] select data from column failed (sorted).\n");
+                return "select data from column in database failed with sorted index.\n";
+            }
+        }
+        else {
+            log_err("[server.c:exec_select()] the index type is not supported. \n");
+            return "select data from result in database failed.\n";
         }
         free_query(query);
         log_info("select data from column in database successfully.\n");

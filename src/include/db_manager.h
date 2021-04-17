@@ -18,9 +18,13 @@ Column* create_column(char* table_name, char* col_name);
 int insert_data_table(Table* itbl, long* row_values);
 
 /**
- * select data for un-index column
+ * select data for the column with unindex, btree, sorted
  */
 int select_data_col_unidx(Column* scol, char* handle, char* pre_range, char* post_range);
+
+int select_data_col_btree(Column* scol, char* handle, char* pre_range, char* post_range);
+
+int select_data_col_sorted(Column* scol, char* handle, char* pre_range, char* post_range);
 
 /**
  * select data for result

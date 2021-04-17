@@ -152,23 +152,44 @@ void btree_insert(btree t, btree_kvpair kv_node) {
 
         //make root point to b_left and b_right
         t->num_keys = 1;
-        t->is_leaf = 0;
+        t->is_leaf = false;
         t->keys[0] = median;
         t->kids[0] = b_left;
         t->kids[1] = b_right;
     }
 }
 
-long btree_inorder_traversal(btree t, long value_array[], long row_id_array[], long index) {
-    if (t != NULL) {
-        btree_inorder_traversal(t->kids[0], value_array, row_id_array, index);
-        for(int i = 0; i < t->num_keys; ++i) {
-            printf("row_id:%ld, value:%ld \n", t->keys[i].row_id, t->keys[i].value);
-            value_array[index] = t->keys[i].value;
-            row_id_array[index] = t->keys[i].row_id;
-            index++;
+void btree_inorder_traversal(btree t, long value_array[], long row_id_array[], long* index) {
+    if (t->is_leaf) {
+        for(long i = 0; i < t->num_keys; ++i) {
+            log_info("row_id:%ld, value:%ld \n", t->keys[i].row_id, t->keys[i].value);
+            value_array[*index] = t->keys[i].value;
+            row_id_array[*index] = t->keys[i].row_id;
+            (*index)++;
         }
-        btree_inorder_traversal(t->kids[1], value_array, row_id_array, index);
     }
-    return index;
+    else {
+        for (long j = 0; j < t->num_keys; j++) {
+            btree_inorder_traversal(t->kids[j], value_array, row_id_array, index);
+            log_info("row_id:%ld, value:%ld \n", t->keys[j].row_id, t->keys[j].value);
+            value_array[*index] = t->keys[j].value;
+            row_id_array[*index] = t->keys[j].row_id;
+            (*index)++;
+        }
+        btree_inorder_traversal(t->kids[t->num_keys], value_array, row_id_array, index);
+    }
+
+    /*
+    if (t->is_leaf) {
+        return;
+    }
+    btree_inorder_traversal(t->kids[0], value_array, row_id_array, index);
+    for(long i = 0; i < t->num_keys; ++i) {
+        log_info("row_id:%ld, value:%ld \n", t->keys[i].row_id, t->keys[i].value);
+        value_array[*index] = t->keys[i].value;
+        row_id_array[*index] = t->keys[i].row_id;
+        (*index)++;
+    }
+    btree_inorder_traversal(t->kids[1], value_array, row_id_array, index);
+    */
 }

@@ -263,6 +263,36 @@ char* exec_fetch(DbOperator* query) {
 }
 
 /**
+ * exec join command
+ **/
+char* exec_join(DbOperator* query) {
+    char* vec_val_left = query->operator_fields.join_operator.vec_val_left;
+    char* vec_pos_left = query->operator_fields.join_operator.vec_pos_left;
+    char* vec_val_right = query->operator_fields.join_operator.vec_val_right;
+    char* vec_pos_right = query->operator_fields.join_operator.vec_pos_right;
+
+    if (query->operator_fields.join_operator.join_type == HASH) {
+        if(hash_join(vec_val_left, vec_pos_left, vec_val_right, vec_pos_right) != 0) {
+            free_query(query);
+            return "join data failed.\n";
+        }
+    }
+    else if (query->operator_fields.join_operator.join_type == NEST_LOOP) {
+        if(nested_loop_join(vec_val_left, vec_pos_left, vec_val_right, vec_pos_right) != 0) {
+            free_query(query);
+            return "join data failed.\n";
+        }
+    }
+    else {
+        log_err("[db_manager.c:exec_join()]: the join type is not supported.\n");
+        return "failed to join data.\n";
+    }
+    free_query(query);
+    log_info("[server.c:execute_DbOperator()] join data successfully.\n");
+    return "join data successfully.\n";
+}
+
+/**
  * compute average command
  **/
 char* exec_aggr_avg(DbOperator* query) {
@@ -514,6 +544,9 @@ char* execute_DbOperator(DbOperator* query) {
     }
     else if (query->type == FETCH) {
         return exec_fetch(query);
+    }
+    else if (query->type == JOIN) {
+        return exec_join(query);
     }
     else if (query->type == AVG) {
         return exec_aggr_avg(query);

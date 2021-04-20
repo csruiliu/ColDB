@@ -32,6 +32,13 @@ int select_data_col_sorted(Column* scol, char* handle, char* pre_range, char* po
 int select_data_result(Result* srsl_pos, Result* srsl_val, char* handle, char* pre_range, char* post_range);
 
 /**
+ * join data for result
+ */
+int hash_join(char* vec_val_left, char* vec_pos_left, char* vec_val_right, char* vec_pos_right);
+
+int nested_loop_join(char* vec_val_left, char* vec_pos_left, char* vec_val_right, char* vec_pos_right);
+
+/**
  * fetch column data
  */
 int fetch_col_data(char* col_val_name, char* rsl_vec_pos, char* handle);

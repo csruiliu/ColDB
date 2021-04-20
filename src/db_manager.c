@@ -504,6 +504,20 @@ int fetch_col_data(char* col_val_name, char* rsl_vec_pos, char* handle) {
 }
 
 /**
+ * hash join two inputs, given both the values and respective positions of each input.
+ **/
+int hash_join(char* vec_val_left, char* vec_pos_left, char* vec_val_right, char* vec_pos_right) {
+    return 0;
+}
+
+/**
+ * nested-loop join two inputs, given both the values and respective positions of each input.
+ **/
+int nested_loop_join(char* vec_val_left, char* vec_pos_left, char* vec_val_right, char* vec_pos_right) {
+    return 0;
+}
+
+/**
  * get the result of an avg query on the column
  **/
 int avg_column_data(char* avg_col_name, char* handle) {

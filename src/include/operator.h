@@ -202,6 +202,8 @@ typedef struct JoinOperator {
     char* vec_val_right;
     char* vec_pos_right;
     JoinType join_type;
+    char* handle_left;
+    char* handle_right;
 } JoinOperator;
 
 /**

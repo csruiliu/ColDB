@@ -270,15 +270,16 @@ char* exec_join(DbOperator* query) {
     char* vec_pos_left = query->operator_fields.join_operator.vec_pos_left;
     char* vec_val_right = query->operator_fields.join_operator.vec_val_right;
     char* vec_pos_right = query->operator_fields.join_operator.vec_pos_right;
-
+    char* handle_left = query->operator_fields.join_operator.handle_left;
+    char* handle_right = query->operator_fields.join_operator.handle_right;
     if (query->operator_fields.join_operator.join_type == HASH) {
-        if(hash_join(vec_val_left, vec_pos_left, vec_val_right, vec_pos_right) != 0) {
+        if(hash_join(vec_val_left, vec_pos_left, vec_val_right, vec_pos_right, handle_left, handle_right) != 0) {
             free_query(query);
             return "join data failed.\n";
         }
     }
     else if (query->operator_fields.join_operator.join_type == NEST_LOOP) {
-        if(nested_loop_join(vec_val_left, vec_pos_left, vec_val_right, vec_pos_right) != 0) {
+        if(nested_loop_join(vec_val_left, vec_pos_left, vec_val_right, vec_pos_right, handle_left, handle_right) != 0) {
             free_query(query);
             return "join data failed.\n";
         }

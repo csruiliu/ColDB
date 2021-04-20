@@ -504,18 +504,108 @@ int fetch_col_data(char* col_val_name, char* rsl_vec_pos, char* handle) {
 }
 
 /**
- * hash join two inputs, given both the values and respective positions of each input.
+ * nested-loop join two inputs, given both the values and respective positions of each input.
  **/
-int hash_join(char* vec_val_left, char* vec_pos_left, char* vec_val_right, char* vec_pos_right) {
+int nested_loop_join(char* vec_val_left,
+                     char* vec_pos_left,
+                     char* vec_val_right,
+                     char* vec_pos_right,
+                     char* handle_left,
+                     char* handle_right) {
+
+    Result* rsl_val_left = get_result(vec_val_left);
+    Result* rsl_pos_left = get_result(vec_pos_left);
+    Result* rsl_val_right = get_result(vec_val_right);
+    Result* rsl_pos_right = get_result(vec_pos_right);
+    if(rsl_val_left == NULL) {
+        log_err("[db_manager.c:hash_join] fetch left value didn't exist.\n");
+        return 1;
+    }
+    if(rsl_pos_left == NULL) {
+        log_err("[db_manager.c:hash_join] fetch left position didn't exist.\n");
+        return 1;
+    }
+    if(rsl_val_right == NULL) {
+        log_err("[db_manager.c:hash_join] fetch right value didn't exist.\n");
+        return 1;
+    }
+    if(rsl_pos_right == NULL) {
+        log_err("[db_manager.c:hash_join] fetch right position didn't exist.\n");
+        return 1;
+    }
+    Result* rsl_left = malloc(sizeof(Result));
+    rsl_left->data_type = LONG;
+    long* payload_left = calloc(rsl_pos_left->num_tuples, sizeof(long));
+
+    Result* rsl_right = malloc(sizeof(Result));
+    rsl_right->data_type = LONG;
+    long* payload_right = calloc(rsl_pos_right->num_tuples, sizeof(long));
+
+    long* val_payload_left = rsl_val_left->payload;
+    long* val_payload_right = rsl_val_right->payload;
+    long* pos_payload_left = rsl_pos_left->payload;
+    long* pos_payload_right = rsl_pos_right->payload;
+
+    size_t count = 0;
+    for (size_t i = 0; i < rsl_val_left->num_tuples; ++i) {
+        long cur_val_left = val_payload_left[i];
+        for (size_t j = 0; j < rsl_val_right->num_tuples; ++j) {
+            long cur_val_right = val_payload_right[j];
+            if (cur_val_left == cur_val_right) {
+                payload_left[count] = pos_payload_left[i];
+                payload_right[count] = pos_payload_right[j];
+                count++;
+            }
+        }
+    }
+    rsl_left->num_tuples = count;
+    rsl_right->num_tuples = count;
+    rsl_left->payload = calloc(count, sizeof(long));
+    memcpy(rsl_left->payload, payload_left, count*sizeof(long));
+    rsl_right->payload = calloc(count, sizeof(long));
+    memcpy(rsl_right->payload, payload_right, count*sizeof(long));
+
+    put_result(handle_left, rsl_left);
+    put_result(handle_right, rsl_right);
+
     return 0;
 }
 
+
 /**
- * nested-loop join two inputs, given both the values and respective positions of each input.
+ * hash join two inputs, given both the values and respective positions of each input.
  **/
-int nested_loop_join(char* vec_val_left, char* vec_pos_left, char* vec_val_right, char* vec_pos_right) {
+int hash_join(char* vec_val_left,
+              char* vec_pos_left,
+              char* vec_val_right,
+              char* vec_pos_right,
+              char* handle_left,
+              char* handle_right) {
+    Result* rsl_val_left = get_result(vec_val_left);
+    Result* rsl_pos_left = get_result(vec_pos_left);
+    Result* rsl_val_right = get_result(vec_val_right);
+    Result* rsl_pos_right = get_result(vec_pos_right);
+
+    if(rsl_val_left == NULL) {
+        log_err("[db_manager.c:hash_join] fetch left value didn't exist.\n");
+        return 1;
+    }
+    if(rsl_pos_left == NULL) {
+        log_err("[db_manager.c:hash_join] fetch left position didn't exist.\n");
+        return 1;
+    }
+    if(rsl_val_right == NULL) {
+        log_err("[db_manager.c:hash_join] fetch right value didn't exist.\n");
+        return 1;
+    }
+    if(rsl_pos_right == NULL) {
+        log_err("[db_manager.c:hash_join] fetch right position didn't exist.\n");
+        return 1;
+    }
+
     return 0;
 }
+
 
 /**
  * get the result of an avg query on the column

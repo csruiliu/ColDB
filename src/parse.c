@@ -274,10 +274,13 @@ DbOperator* parse_fetch(char* query_command, char* handle, message* send_message
  * parse join command
  **/
 DbOperator* parse_join(char* query_command, char* handle, message* send_message) {
+    char* handle_left = next_token_comma(&handle, &send_message->status);
+    char* handle_right = next_token_comma(&handle, &send_message->status);
     char* vec_val_left = next_token_comma(&query_command, &send_message->status);
     char* vec_pos_left = next_token_comma(&query_command, &send_message->status);
     char* vec_val_right = next_token_comma(&query_command, &send_message->status);
     char* vec_pos_right = next_token_comma(&query_command, &send_message->status);
+
     char* join_type = next_token_comma(&query_command, &send_message->status);
     if (send_message->status == INCORRECT_FORMAT) {
         return NULL;
@@ -308,6 +311,11 @@ DbOperator* parse_join(char* query_command, char* handle, message* send_message)
     strcpy(dbo->operator_fields.join_operator.vec_val_right, vec_val_right);
     dbo->operator_fields.join_operator.vec_pos_right = malloc((strlen(vec_pos_right)+1)* sizeof(char));
     strcpy(dbo->operator_fields.join_operator.vec_pos_right, vec_pos_right);
+    dbo->operator_fields.join_operator.handle_left = malloc((strlen(handle_left)+1)* sizeof(char));
+    strcpy(dbo->operator_fields.join_operator.handle_left, handle_left);
+    dbo->operator_fields.join_operator.handle_right = malloc((strlen(handle_right)+1)* sizeof(char));
+    strcpy(dbo->operator_fields.join_operator.handle_right, handle_right);
+
     return dbo;
 }
 

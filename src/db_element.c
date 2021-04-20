@@ -138,6 +138,22 @@ Result* get_result(char* result_name) {
     return result;
 }
 
+void put_result(char* result_name, Result* result) {
+    int flag = put(result_store, result_name, result, sizeof(Result));
+    if(flag == 1) {
+        log_err("persistent result %s failed", result_name);
+    }
+    else if(flag == 2) {
+        log_info("a rehash has been done, re-put column into kv store\n");
+        if(put(result_store, result_name, result, sizeof(Result)) == 1) {
+            log_err("persistent result %s failed", result_name);
+        }
+    }
+    else {
+        log_info("persistent result %s successfully\n", result_name);
+    }
+}
+
 void replace_result(char* result_name, Result* result) {
     int flag = put_replace(result_store, result_name, result, sizeof(Result));
     if(flag != 0) {

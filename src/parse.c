@@ -271,6 +271,47 @@ DbOperator* parse_fetch(char* query_command, char* handle, message* send_message
 }
 
 /**
+ * parse join command
+ **/
+DbOperator* parse_join(char* query_command, char* handle, message* send_message) {
+    char* vec_val_left = next_token_comma(&query_command, &send_message->status);
+    char* vec_pos_left = next_token_comma(&query_command, &send_message->status);
+    char* vec_val_right = next_token_comma(&query_command, &send_message->status);
+    char* vec_pos_right = next_token_comma(&query_command, &send_message->status);
+    char* join_type = next_token_comma(&query_command, &send_message->status);
+    if (send_message->status == INCORRECT_FORMAT) {
+        return NULL;
+    }
+    int last_char = (int)strlen(join_type) - 1;
+    if (last_char < 0 || join_type[last_char] != ')') {
+        return NULL;
+    }
+    join_type[last_char] = '\0';
+
+    DbOperator* dbo = malloc(sizeof(DbOperator));
+    dbo->type = JOIN;
+    if(strcmp(join_type, "hash") == 0) {
+        dbo->operator_fields.join_operator.join_type = HASH;
+    }
+    else if (strcmp(join_type, "nested-loop") == 0) {
+        dbo->operator_fields.join_operator.join_type = NEST_LOOP;
+    }
+    else {
+        log_err("the join type is not supported\n");
+        return NULL;
+    }
+    dbo->operator_fields.join_operator.vec_val_left = malloc((strlen(vec_val_left)+1)* sizeof(char));
+    strcpy(dbo->operator_fields.join_operator.vec_val_left, vec_val_left);
+    dbo->operator_fields.join_operator.vec_pos_left = malloc((strlen(vec_pos_left)+1)* sizeof(char));
+    strcpy(dbo->operator_fields.join_operator.vec_pos_left, vec_pos_left);
+    dbo->operator_fields.join_operator.vec_val_right = malloc((strlen(vec_val_right)+1)* sizeof(char));
+    strcpy(dbo->operator_fields.join_operator.vec_val_right, vec_val_right);
+    dbo->operator_fields.join_operator.vec_pos_right = malloc((strlen(vec_pos_right)+1)* sizeof(char));
+    strcpy(dbo->operator_fields.join_operator.vec_pos_right, vec_pos_right);
+    return dbo;
+}
+
+/**
  * parse print command
  **/
 DbOperator* parse_print(char* query_command, message* send_message) {
@@ -583,6 +624,10 @@ DbOperator* parse_command(char* query_command, message* send_message, int client
     else if (strncmp(query_command, "fetch(", 6) == 0) {
         query_command += 6;
         dbo = parse_fetch(query_command, handle, send_message);
+    }
+    else if (strncmp(query_command, "join(", 5) == 0) {
+        query_command += 5;
+        dbo = parse_join(query_command, handle, send_message);
     }
     else if (strncmp(query_command, "print(", 6) == 0) {
         query_command += 6;

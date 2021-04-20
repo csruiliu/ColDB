@@ -164,6 +164,7 @@ typedef enum OperatorType {
     INSERT,
     SELECT,
     FETCH,
+    JOIN,
     PRINT,
     AVG,
     SUM,
@@ -183,6 +184,25 @@ typedef struct FetchOperator {
     char* rsl_vec_pos;
     char* handle;
 } FetchOperator;
+
+/**
+ * Supported type of operator
+ **/
+typedef enum JoinType {
+    HASH,
+    NEST_LOOP
+} JoinType;
+
+/**
+ * necessary fields for Join
+ **/
+typedef struct JoinOperator {
+    char* vec_val_left;
+    char* vec_pos_left;
+    char* vec_val_right;
+    char* vec_pos_right;
+    JoinType join_type;
+} JoinOperator;
 
 /**
  * necessary fields for print
@@ -277,6 +297,7 @@ typedef union OperatorFields {
     LoadOperator load_operator;
     SelectOperator select_operator;
     FetchOperator fetch_operator;
+    JoinOperator join_operator;
     PrintOperator print_operator;
     AvgOperator avg_operator;
     SumOperator sum_operator;

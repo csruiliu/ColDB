@@ -161,6 +161,8 @@ void init_result_store(size_t size);
 
 Result* get_result(char* result_name);
 
+void put_result(char* result_name, Result* result);
+
 void replace_result(char* result_name, Result* result);
 
 void free_result_store();

@@ -34,9 +34,9 @@ int select_data_result(Result* srsl_pos, Result* srsl_val, char* handle, char* p
 /**
  * join data for result
  */
-int hash_join(char* vec_val_left, char* vec_pos_left, char* vec_val_right, char* vec_pos_right);
+int hash_join(char* vec_val_left, char* vec_pos_left, char* vec_val_right, char* vec_pos_right, char* handle_left, char* handle_right);
 
-int nested_loop_join(char* vec_val_left, char* vec_pos_left, char* vec_val_right, char* vec_pos_right);
+int nested_loop_join(char* vec_val_left, char* vec_pos_left, char* vec_val_right, char* vec_pos_right, char* handle_left, char* handle_right);
 
 /**
  * fetch column data

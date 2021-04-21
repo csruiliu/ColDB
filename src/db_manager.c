@@ -19,6 +19,7 @@
 #define RESIZE 2
 #define DIRLEN 256
 #define MAX_COLUMN_SIZE 1024
+#define RAND_PRIME 6108689
 
 /**
  * there will always be only one active database at a time
@@ -452,6 +453,7 @@ int select_data_col_sorted(Column* scol, char* handle, char* pre_range, char* po
         rsl->payload = calloc(count, sizeof(long));
         memcpy(rsl->payload,rsl_data,count* sizeof(long));
         replace_result(handle,rsl);
+        free(rsl_data);
     }
     else {
         long pre = strtol(pre_range, NULL, 0);
@@ -470,6 +472,7 @@ int select_data_col_sorted(Column* scol, char* handle, char* pre_range, char* po
         rsl->payload = calloc(count, sizeof(long));
         memcpy(rsl->payload,rsl_data,count* sizeof(long));
         replace_result(handle,rsl);
+        free(rsl_data);
     }
     return 0;
 }
@@ -500,6 +503,7 @@ int fetch_col_data(char* col_val_name, char* rsl_vec_pos, char* handle) {
     }
     memcpy(rsl->payload, fetch_payload, rsl_size*sizeof(long));
     replace_result(handle, rsl);
+    free(fetch_payload);
     return 0;
 }
 
@@ -567,10 +571,17 @@ int nested_loop_join(char* vec_val_left,
 
     put_result(handle_left, rsl_left);
     put_result(handle_right, rsl_right);
-
+    free(payload_right);
+    free(payload_left);
     return 0;
 }
 
+long hash_function_join(long hash_input){
+    long c1 = 3;
+    long c2 = 10000;
+    long hash_output = (c1*hash_input + c2) % RAND_PRIME;
+    return hash_output;
+}
 
 /**
  * hash join two inputs, given both the values and respective positions of each input.
@@ -581,11 +592,11 @@ int hash_join(char* vec_val_left,
               char* vec_pos_right,
               char* handle_left,
               char* handle_right) {
+
     Result* rsl_val_left = get_result(vec_val_left);
     Result* rsl_pos_left = get_result(vec_pos_left);
     Result* rsl_val_right = get_result(vec_val_right);
     Result* rsl_pos_right = get_result(vec_pos_right);
-
     if(rsl_val_left == NULL) {
         log_err("[db_manager.c:hash_join] fetch left value didn't exist.\n");
         return 1;
@@ -603,6 +614,63 @@ int hash_join(char* vec_val_left,
         return 1;
     }
 
+    long* val_payload_left = rsl_val_left->payload;
+    long* val_payload_right = rsl_val_right->payload;
+    long* pos_payload_left = rsl_pos_left->payload;
+    long* pos_payload_right = rsl_pos_right->payload;
+
+    Result* rsl_left = malloc(sizeof(Result));
+    rsl_left->data_type = LONG;
+    long* payload_left = calloc(rsl_pos_left->num_tuples, sizeof(long));
+
+    Result* rsl_right = malloc(sizeof(Result));
+    rsl_right->data_type = LONG;
+    long* payload_right = calloc(rsl_pos_right->num_tuples, sizeof(long));
+
+    long* hash_table_join = calloc(RAND_PRIME, sizeof(long));
+    for (size_t i = 0; i < RAND_PRIME; ++i) {
+        hash_table_join[i] = -1;
+    }
+
+    size_t count = 0;
+    if(rsl_val_right->num_tuples > rsl_val_left->num_tuples) {
+        for (size_t j = 0; j < rsl_val_left->num_tuples; ++j) {
+            hash_table_join[hash_function_join(val_payload_left[j])] = (long) j;
+        }
+        for (size_t k = 0; k < rsl_val_right->num_tuples; ++k) {
+            if (hash_table_join[hash_function_join(val_payload_right[k])] != -1) {
+                long left_index = hash_table_join[hash_function_join(val_payload_right[k])];
+                payload_left[count] = pos_payload_left[left_index];
+                payload_right[count] = pos_payload_right[k];
+                count++;
+            }
+        }
+    }
+    else {
+        for (size_t j = 0; j < rsl_val_right->num_tuples; ++j) {
+            hash_table_join[hash_function_join(val_payload_right[j])] = (long) j;
+        }
+        for (size_t k = 0; k < rsl_val_left->num_tuples; ++k) {
+            if (hash_table_join[hash_function_join(val_payload_left[k])] != -1) {
+                long right_index = hash_table_join[hash_function_join(val_payload_left[k])];
+                payload_left[count] = pos_payload_left[k];
+                payload_right[count] = pos_payload_right[right_index];
+                count++;
+            }
+        }
+    }
+    rsl_left->num_tuples = count;
+    rsl_right->num_tuples = count;
+    rsl_left->payload = calloc(count, sizeof(long));
+    memcpy(rsl_left->payload, payload_left, count*sizeof(long));
+    rsl_right->payload = calloc(count, sizeof(long));
+    memcpy(rsl_right->payload, payload_right, count*sizeof(long));
+
+    put_result(handle_left, rsl_left);
+    put_result(handle_right, rsl_right);
+    free(hash_table_join);
+    free(payload_left);
+    free(payload_right);
     return 0;
 }
 

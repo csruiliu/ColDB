@@ -635,7 +635,7 @@ int hash_join(char* vec_val_left,
     size_t count = 0;
     if(rsl_val_right->num_tuples > rsl_val_left->num_tuples) {
         for (size_t j = 0; j < rsl_val_left->num_tuples; ++j) {
-            hash_table_join[hash_function_join(val_payload_left[j])] = (long) j;
+            hash_table_join[hash_function_join(val_payload_left[j])] = pos_payload_left[j];
         }
         for (size_t k = 0; k < rsl_val_right->num_tuples; ++k) {
             if (hash_table_join[hash_function_join(val_payload_right[k])] != -1) {
@@ -648,7 +648,7 @@ int hash_join(char* vec_val_left,
     }
     else {
         for (size_t j = 0; j < rsl_val_right->num_tuples; ++j) {
-            hash_table_join[hash_function_join(val_payload_right[j])] = (long) j;
+            hash_table_join[hash_function_join(val_payload_right[j])] = pos_payload_right[j];
         }
         for (size_t k = 0; k < rsl_val_left->num_tuples; ++k) {
             if (hash_table_join[hash_function_join(val_payload_left[k])] != -1) {

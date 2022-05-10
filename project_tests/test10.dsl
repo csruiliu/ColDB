@@ -10,7 +10,7 @@ create(col,"col3",db1.tbl3_batch)
 create(col,"col4",db1.tbl3_batch)
 --
 -- Load data immediately
-load("/home/ruiliu/Development/coldb/project_tests/data3_batch.csv")
+load("/home/ruiliu/Develop/ColDB/project_tests/data3_batch.csv")
 --
 -- Testing that the data is durable on disk.
 shutdown

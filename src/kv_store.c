@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <memory.h>
+
 #include "kv_store.h"
 #include "utils_func.h"
 
@@ -7,7 +8,7 @@
 #define MAX_PROB 10
 
 int kv_allocate(kvstore** kv_store, size_t size) {
-    *kv_store = malloc(sizeof(kv_store));
+    *kv_store = malloc(sizeof(kvstore));
     if(*kv_store == NULL) {
         return 1;
     }
@@ -28,6 +29,7 @@ int kv_deallocate(kvstore* kv_store) {
             free(ikv->value);
         }
     }
+    free(kv_store->kv_pair);
     free(kv_store);
     return 0;
 }

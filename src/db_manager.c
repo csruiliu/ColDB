@@ -54,14 +54,14 @@ Db* create_db(char* db_name) {
         return current_db;
     }
     db = malloc(sizeof(Db));
-    db->name = malloc((strlen(db_name)+1)* sizeof(char));
+    db->name = calloc(strlen(db_name)+1, sizeof(char));
     strcpy(db->name, db_name);
     db->capacity = 0;
     db->size = 0;
     db->tables = NULL;
 
     put_db(db_name,db);
-    log_info("create db %s successfully.\n",db_name);
+    log_info("create db %s successfully.\n", db_name);
     return db;
 }
 
@@ -99,13 +99,13 @@ Table* create_table(char* db_name, char* table_name, char* pricls_col_name, size
             current_db->capacity = more_table_capacity;
         }
         tbl = malloc(sizeof(Table));
-        tbl->name = malloc((strlen(table_name)+1)*sizeof(char));
+        tbl->name = calloc(strlen(table_name)+1, sizeof(char));
         strcpy(tbl->name, table_name);
-        tbl->aff_db_name = malloc((strlen(db_name)+1)*sizeof(char));
+        tbl->aff_db_name = calloc(strlen(db_name)+1, sizeof(char));
         strcpy(tbl->aff_db_name, db_name);
         tbl->capacity = num_columns;
         tbl->size = 0;
-        tbl->pricluster_index_col_name = malloc((strlen(pricls_col_name)+1)* sizeof(char));
+        tbl->pricluster_index_col_name = calloc(strlen(pricls_col_name)+1, sizeof(char));
         strcpy(tbl->pricluster_index_col_name, pricls_col_name);
         if(strcmp(pricls_col_name,"NULL") == 0) {
             tbl->has_cluster_index = 0;
@@ -134,9 +134,9 @@ Column* create_column(char* tbl_name, char* col_name) {
             return col;
         }
         col = malloc(sizeof(Column));
-        col->name = malloc((strlen(col_name)+1)* sizeof(char));
+        col->name = calloc(strlen(col_name)+1, sizeof(char));
         strcpy(col->name, col_name);
-        col->aff_tbl_name = malloc((strlen(tbl_name)+1)* sizeof(char));
+        col->aff_tbl_name = calloc(strlen(tbl_name)+1, sizeof(char));
         strcpy(col->aff_tbl_name, tbl_name);
         col->cls_type = UNCLSR;
         col->idx_type = UNIDX;

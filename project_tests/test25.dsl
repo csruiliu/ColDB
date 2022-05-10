@@ -17,7 +17,7 @@ create(idx,db1.tbl4.col2,sorted,unclustered)
 --
 --
 -- Load data immediately in the form of a clustered index
-load("/home/ruiliu/Development/coldb/project_tests/data4.csv")
+load("/home/ruiliu/Develop/ColDB/project_tests/data4.csv")
 --
 -- Testing that the data and their indexes are durable on disk.
 shutdown

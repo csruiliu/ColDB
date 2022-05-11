@@ -117,6 +117,14 @@ void put_column(char* col_name, Column* col) {
 }
 
 void free_column_store() {
+    for (size_t index = 0; index < column_store->size; index++) {
+        kvpair* cur_ikv = &(column_store->kv_pair[index]);
+        if(cur_ikv->key != NULL) {
+            Column* col_ptr = cur_ikv->value;
+            free(col_ptr->data);
+            free(col_ptr->rowId);
+        }
+    }
     if(kv_deallocate(column_store) != 0) {
         log_info("free col kv store failed\n");
     } else {

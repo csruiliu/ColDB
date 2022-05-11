@@ -44,6 +44,7 @@ long* resize_long(long* data, size_t oc, size_t nc) {
     assert(oc <= nc);
     long* ndata = calloc(nc, sizeof(long));
     memcpy(ndata, data, oc * sizeof(long));
+    free(data);
     return ndata;
 }
 
@@ -144,7 +145,7 @@ Column* create_column(char* tbl_name, char* col_name) {
         col->rowId = NULL;
         col->size = 0;
         col->capacity = 0;
-        put_column(col_name,col);
+        put_column(col_name, col);
         cur_tbl->columns[cur_tbl->size] = col;
         cur_tbl->size++;
         return col;
@@ -1370,7 +1371,7 @@ int read_csv(char* data_path) {
         log_err("[db_manager.c:load_data_csv()] read file header failed.\n");
         return 1;
     }
-    char* line_copy = malloc((strlen(line)+1)* sizeof(char));
+    char* line_copy = calloc((strlen(line)+1), sizeof(char));
     strcpy(line_copy,line);
     size_t header_count = 0;
     char* sepTmp = NULL;
@@ -1458,7 +1459,7 @@ int read_csv(char* data_path) {
                     }
                 }
             }
-
+            free(line_copy);
             free(index_name);
 
         }
@@ -1503,10 +1504,11 @@ int read_csv(char* data_path) {
                     return 1;
                 }
             }
-
+            free(line_copy);
             free(index_name);
         }
         else {
+            free(line_copy);
             log_err("the index type is not supported.\n");
             return 1;
         }
@@ -1582,6 +1584,7 @@ int read_csv(char* data_path) {
                         btree_insert(btree_index_cpy, kv_node);
                         put_index(index_name, btree_index_cpy, BTREE);
                     }
+                    free(line_copy);
                     free(index_name);
                 }
                 else if (col_set[i]->idx_type == SORTED) {
@@ -1627,9 +1630,11 @@ int read_csv(char* data_path) {
                         sorted_index_cpy = link_sort(sorted_index_cpy);
                         put_index(index_name, sorted_index_cpy, SORTED);
                     }
+                    free(line_copy);
                     free(index_name);
                 }
                 else {
+                    free(line_copy);
                     log_err("index is not supported\n");
                     return 1;
                 }
@@ -1809,7 +1814,7 @@ int load_database() {
                 Column* setup_col = get_column(col_name);
 
                 // setup the index for each column
-                if(set_column_idx_cls(setup_col,idx_type,cls_type) != 0) {
+                if(set_column_idx_cls(setup_col, idx_type, cls_type) != 0) {
                     log_err("[db_manager.c:setup_db_csv()] setup column index and clustering failed.\n");
                     return 1;
                 }
@@ -1828,16 +1833,12 @@ int load_database() {
                                 setup_col->data = calloc(new_length, sizeof(long));
                                 setup_col->rowId = calloc(new_length, sizeof(long));
                             } else {
-                                long *dd = resize_long(setup_col->data, old_length, new_length);
-                                long *dr = resize_long(setup_col->rowId, old_length, new_length);
-                                free(setup_col->data);
-                                free(setup_col->rowId);
-                                setup_col->data = calloc(new_length, sizeof(long));
-                                setup_col->rowId = calloc(new_length, sizeof(long));
-                                memcpy(setup_col->data, dd, new_length * sizeof(long));
-                                memcpy(setup_col->rowId, dr, new_length * sizeof(long));
+                                setup_col->data = resize_long(setup_col->data, old_length, new_length);
+                                setup_col->rowId = resize_long(setup_col->rowId, old_length, new_length);
                                 if (!setup_col->data || !setup_col->rowId) {
                                     log_err("creating more data space failed.\n");
+                                    free(setup_col->data);
+                                    free(setup_col->rowId);
                                     free(setup_col);
                                 }
                             }
@@ -1847,7 +1848,6 @@ int load_database() {
                     } else {
                         long slv = strtol(slvle, NULL, 0);
                         setup_col->data[setup_col->size] = slv;
-
                         setup_col->size++;
                     }
                     count++;

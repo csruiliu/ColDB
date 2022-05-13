@@ -154,7 +154,7 @@ DbOperator* parse_insert(char* query_command, message* send_message) {
     DbOperator* dbo = malloc(sizeof(DbOperator));
     dbo->type = INSERT;
     dbo->operator_fields.insert_operator.table = insert_table;
-    dbo->operator_fields.insert_operator.values = malloc(sizeof(int) * insert_table->size);
+    dbo->operator_fields.insert_operator.values = calloc(insert_table->size+1, sizeof(int));
     while ((token = strsep(&query_command, ",")) != NULL) {
         int insert_val = atoi(token);
         dbo->operator_fields.insert_operator.values[columns_inserted] = insert_val;

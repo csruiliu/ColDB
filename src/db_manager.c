@@ -30,13 +30,7 @@ void* resize(void* data, size_t oc, size_t nc) {
     assert(oc <= nc);
     void* ndata = calloc(nc, sizeof(char));
     memcpy(ndata, data, oc);
-    return ndata;
-}
-
-size_t* resize_size_t(size_t* data, size_t oc, size_t nc) {
-    assert(oc <= nc);
-    size_t* ndata = calloc(nc, sizeof(size_t));
-    memcpy(ndata, data, oc * sizeof(long));
+    free(data);
     return ndata;
 }
 
@@ -87,10 +81,7 @@ Table* create_table(char* db_name, char* table_name, char* pricls_col_name, size
                 current_db->tables = calloc(more_table_capacity, sizeof(Table*));
             }
             else {
-                void* t = resize(current_db->tables, old_capacity, new_capacity);
-                free(current_db->tables);
-                current_db->tables = calloc(more_table_capacity, sizeof(Table*));
-                memcpy(current_db->tables, t, new_capacity*sizeof(char));
+                current_db->tables = resize(current_db->tables, old_capacity, new_capacity);
                 if(current_db->tables == NULL){
                     log_err("create more table space in database failed.\n", current_db->name);
                     free(tbl);
@@ -170,14 +161,8 @@ int insert_data_column(Column* col, long data, long rowId) {
             col->data = calloc(new_length, sizeof(long));
             col->rowId = calloc(new_length, sizeof(long));
         } else {
-            long* dd = resize_long(col->data, old_length, new_length);
-            long* dr = resize_long(col->rowId, old_length, new_length);
-            free(col->data);
-            free(col->rowId);
-            col->data = calloc(new_length, sizeof(long));
-            col->rowId = calloc(new_length, sizeof(size_t));
-            memcpy(col->data, dd, new_length * sizeof(long));
-            memcpy(col->rowId, dr, new_length * sizeof(size_t));
+            col->data = resize_long(col->data, old_length, new_length);
+            col->rowId = resize_long(col->rowId, old_length, new_length);
             if (!col->data) {
                 log_err("creating more data space failed.\n");
                 return 1;
@@ -1371,11 +1356,12 @@ int read_csv(char* data_path) {
         log_err("[db_manager.c:load_data_csv()] read file header failed.\n");
         return 1;
     }
-    char* line_copy = calloc((strlen(line)+1), sizeof(char));
-    strcpy(line_copy,line);
+    //char* line_copy = malloc((strlen(line)+1) * sizeof(char));
+    //memcpy(line_copy,line, strlen(line)+1)
+    char* line_copy = line;
     size_t header_count = 0;
     char* sepTmp = NULL;
-    while(1) {
+    while(true) {
         sepTmp = next_token_comma(&line_copy,&mes_status);
         if(sepTmp == NULL) {
             break;
@@ -1385,6 +1371,7 @@ int read_csv(char* data_path) {
         }
     }
     log_info("%d columns in the loading file\n", header_count);
+    free(line_copy);
 
     /**
      * load the csv file that only has one column
@@ -1394,7 +1381,6 @@ int read_csv(char* data_path) {
         Column* lcol = get_column(header);
         if (lcol == NULL) {
             log_err("[db_manager.c:load_data_csv] cannot find column %s in database\n", header);
-            free(line_copy);
             fclose(fp);
             return 1;
         }
@@ -1404,7 +1390,6 @@ int read_csv(char* data_path) {
                 char *va = line;
                 long lv = strtol(va, NULL, 0);
                 if(insert_data_column(lcol, lv, rowId_load) != 0) {
-                    free(line_copy);
                     fclose(fp);
                     return 1;
                 }
@@ -1459,7 +1444,6 @@ int read_csv(char* data_path) {
                     }
                 }
             }
-            free(line_copy);
             free(index_name);
 
         }
@@ -1504,11 +1488,9 @@ int read_csv(char* data_path) {
                     return 1;
                 }
             }
-            free(line_copy);
             free(index_name);
         }
         else {
-            free(line_copy);
             log_err("the index type is not supported.\n");
             return 1;
         }
@@ -1524,7 +1506,6 @@ int read_csv(char* data_path) {
             col_set[i] = get_column(col_name);
             if (col_set[i] == NULL) {
                 log_err("[db_manager.c:load_data_csv] cannot find column %s in database\n", col_name);
-                free(line_copy);
                 fclose(fp);
                 return 1;
             }
@@ -1536,7 +1517,6 @@ int read_csv(char* data_path) {
                 long lv = strtol(va, NULL, 0);
                 if (col_set[i]->idx_type == UNIDX) {
                     if (insert_data_column(col_set[i], lv, rowId_load) != 0) {
-                        free(line_copy);
                         fclose(fp);
                         return 1;
                     }
@@ -1548,7 +1528,6 @@ int read_csv(char* data_path) {
                         strcpy(index_name, col_set[i]->name);
                         strcat(index_name, ".unclsr.btree");
                         if (insert_data_column(col_set[i], lv, rowId_load) != 0) {
-                            free(line_copy);
                             fclose(fp);
                             return 1;
                         }
@@ -1584,7 +1563,6 @@ int read_csv(char* data_path) {
                         btree_insert(btree_index_cpy, kv_node);
                         put_index(index_name, btree_index_cpy, BTREE);
                     }
-                    free(line_copy);
                     free(index_name);
                 }
                 else if (col_set[i]->idx_type == SORTED) {
@@ -1594,7 +1572,6 @@ int read_csv(char* data_path) {
                         strcpy(index_name, col_set[i]->name);
                         strcat(index_name, ".unclsr.sorted");
                         if (insert_data_column(col_set[i], lv, rowId_load) != 0) {
-                            free(line_copy);
                             fclose(fp);
                             return 1;
                         }
@@ -1630,11 +1607,9 @@ int read_csv(char* data_path) {
                         sorted_index_cpy = link_sort(sorted_index_cpy);
                         put_index(index_name, sorted_index_cpy, SORTED);
                     }
-                    free(line_copy);
                     free(index_name);
                 }
                 else {
-                    free(line_copy);
                     log_err("index is not supported\n");
                     return 1;
                 }
@@ -1704,6 +1679,7 @@ int read_csv(char* data_path) {
             }
         }
     }
+    free(line);
     return 0;
 }
 
@@ -1923,7 +1899,6 @@ int load_database() {
                     log_err("[db_manager.c:load_database()] the index type or clustered type is not supported\n");
                     return 1;
                 }
-
             }
             free(line);
             free(db_file);

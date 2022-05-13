@@ -43,6 +43,9 @@ void free_query(DbOperator* query) {
     else if (query->type == CREATE_DB){
         free(query->operator_fields.create_db_operator.db_name);
     }
+    else if (query->type == INSERT) {
+        free(query->operator_fields.insert_operator.values);
+    }
     free(query);
 }
 

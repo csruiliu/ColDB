@@ -1757,33 +1757,38 @@ int load_database() {
             char* line = NULL;
             size_t len = 0;
             while ((getline(&line, &len, fp)) != -1) {
-                line = trim_newline(line);
+                char* line_copy = line;
+                line_copy = trim_newline(line_copy);
                 mes_status = OK_DONE;
-                char* db_name = next_token_comma(&line,&mes_status);
-                char* tbl_name = next_token_comma(&line,&mes_status);
-                char* tbl_pricls_col_name = next_token_comma(&line,&mes_status);
-                char* tbl_capacity = next_token_comma(&line,&mes_status);
-                char* col_name = next_token_comma(&line,&mes_status);
-                char* idx_type = next_token_comma(&line,&mes_status);
-                char* cls_type = next_token_comma(&line,&mes_status);
+                char* db_name = next_token_comma(&line_copy,&mes_status);
+                char* tbl_name = next_token_comma(&line_copy,&mes_status);
+                char* tbl_pricls_col_name = next_token_comma(&line_copy,&mes_status);
+                char* tbl_capacity = next_token_comma(&line_copy,&mes_status);
+                char* col_name = next_token_comma(&line_copy,&mes_status);
+                char* idx_type = next_token_comma(&line_copy,&mes_status);
+                char* cls_type = next_token_comma(&line_copy,&mes_status);
                 if(mes_status == INCORRECT_FORMAT) {
                     log_err("[db_manager.c:setup_db_csv()] tokenizing data failed.\n");
+                    free(line);
                     return 1;
                 }
                 current_db = create_db(db_name);
                 if(current_db == NULL) {
                     log_err("[db_manager.c:setup_db_csv()] setup database failed.\n");
+                    free(line);
                     return 1;
                 }
                 Table* setup_tbl = create_table(db_name, tbl_name, tbl_pricls_col_name,
                                                 (size_t) strtol(tbl_capacity, NULL, 0));
                 if(setup_tbl == NULL) {
                     log_err("[db_manager.c:setup_db_csv()] setup table failed.\n");
+                    free(line);
                     return 1;
                 }
                 Column* scol = create_column(tbl_name, col_name);
                 if(scol == NULL) {
                     log_err("[db_manager.c:setup_db_csv()] setup column failed.\n");
+                    free(line);
                     return 1;
                 }
                 log_info("table size:%d\n",setup_tbl->size);
@@ -1792,12 +1797,13 @@ int load_database() {
                 // setup the index for each column
                 if(set_column_idx_cls(setup_col, idx_type, cls_type) != 0) {
                     log_err("[db_manager.c:setup_db_csv()] setup column index and clustering failed.\n");
+                    free(line);
                     return 1;
                 }
 
                 char* slvle = NULL;
                 long count = 0;
-                while ((slvle = next_token_comma(&line,&mes_status))!= NULL) {
+                while ((slvle = next_token_comma(&line_copy,&mes_status))!= NULL) {
                     if (count % 2 == 0) {
                         long rlv = strtol(slvle, NULL, 0);
                         if (setup_col->size >= setup_col->capacity) {
@@ -1852,6 +1858,7 @@ int load_database() {
                     }
                     else {
                         log_err("clustered index is not supported\n");
+                        free(line);
                         return 1;
                     }
                     btree btree_index = btree_init();
@@ -1881,6 +1888,7 @@ int load_database() {
                     }
                     else {
                         log_err("clustered index is not supported\n");
+                        free(line);
                         return 1;
                     }
                     linknode* sorted_index = link_init();
@@ -1897,8 +1905,12 @@ int load_database() {
                 }
                 else {
                     log_err("[db_manager.c:load_database()] the index type or clustered type is not supported\n");
+                    free(line);
                     return 1;
                 }
+                free(line);
+                len = 0;
+                line = NULL;
             }
             free(line);
             free(db_file);

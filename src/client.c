@@ -68,8 +68,12 @@ int main(void)
         exit(1);
     }
 
+    // Create two messages, one from which to read and one from which to receive
     message send_message;
     message recv_message;
+    // force to init messages
+    memset(&send_message, 0, sizeof(message));
+    memset(&recv_message, 0, sizeof(message));
 
     // Always output an interactive marker at the start of each command if the
     // input is from stdin. Do not output if piped in from file or from other fd

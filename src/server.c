@@ -603,6 +603,9 @@ void handle_client(int client_socket) {
     // Create two messages, one from which to read and one from which to receive
     message send_message;
     message recv_message;
+    // force to init messages
+    memset(&send_message, 0, sizeof(message));
+    memset(&recv_message, 0, sizeof(message));
 
     // create the client context here
     ClientContext* client_context = NULL;
@@ -662,7 +665,6 @@ void handle_client(int client_socket) {
                 strcpy(send_buffer, result);
                 send_message.payload = send_buffer;
             }
-
 
             // 3. Send status of the received message (OK, UNKNOWN_QUERY, etc)
             if (send(client_socket, &(send_message), sizeof(message), 0) == -1) {

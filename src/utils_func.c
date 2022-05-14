@@ -31,7 +31,7 @@ bool is_csv(char* filename) {
 /**
  * using period to split string, but actually only return the string after period
  **/
-char* next_token_period(char **tokenizer, message_status *status) {
+char* next_token_period(char** tokenizer, message_status *status) {
     char* token = strsep(tokenizer, ".");
     if (token == NULL) {
         *status= INCORRECT_FORMAT;
@@ -42,7 +42,7 @@ char* next_token_period(char **tokenizer, message_status *status) {
 /**
  * using comma to split string, but actually only return the string after comma
  **/
-char* next_token_comma(char **tokenizer, message_status *status) {
+char* next_token_comma(char** tokenizer, message_status *status) {
     char* token = strsep(tokenizer, ",");
     if (token == NULL) {
         *status = INCORRECT_FORMAT;
@@ -66,7 +66,7 @@ size_t hash_func(const char* s, size_t a, size_t m) {
 /**
  * judge if the string include period
  **/
-bool has_period(char *str) {
+bool has_period(char* str) {
     size_t length = strlen(str);
     for (size_t i = 0; i < length; ++i) {
         if (str[i] == '.') {

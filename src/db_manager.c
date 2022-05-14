@@ -1356,9 +1356,9 @@ int read_csv(char* data_path) {
         log_err("[db_manager.c:load_data_csv()] read file header failed.\n");
         return 1;
     }
-    //char* line_copy = malloc((strlen(line)+1) * sizeof(char));
-    //memcpy(line_copy,line, strlen(line)+1)
-    char* line_copy = line;
+    char* line_copy = malloc((strlen(line)+1) * sizeof(char));
+    memcpy(line_copy,line, strlen(line)+1);
+    char* line_copy_free = line_copy;
     size_t header_count = 0;
     char* sepTmp = NULL;
     while(true) {
@@ -1371,7 +1371,7 @@ int read_csv(char* data_path) {
         }
     }
     log_info("%d columns in the loading file\n", header_count);
-    free(line_copy);
+    free(line_copy_free);
 
     /**
      * load the csv file that only has one column
@@ -1757,7 +1757,9 @@ int load_database() {
             char* line = NULL;
             size_t len = 0;
             while ((getline(&line, &len, fp)) != -1) {
-                char* line_copy = line;
+                char* line_copy = malloc((strlen(line)+1) * sizeof(char));
+                memcpy(line_copy,line, strlen(line)+1);
+                char* line_copy_free = line_copy;
                 line_copy = trim_newline(line_copy);
                 mes_status = OK_DONE;
                 char* db_name = next_token_comma(&line_copy,&mes_status);
@@ -1908,9 +1910,7 @@ int load_database() {
                     free(line);
                     return 1;
                 }
-                free(line);
-                len = 0;
-                line = NULL;
+                free(line_copy_free);
             }
             free(line);
             free(db_file);

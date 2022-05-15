@@ -114,7 +114,7 @@ DbOperator* parse_create_idx(char* query_command, message* send_message) {
     is_cluster[last_char] = '\0';
     dbo = malloc(sizeof(DbOperator));
     dbo->type = CREATE_IDX;
-    dbo->operator_fields.create_idx_operator.idx_col_name = malloc((strlen(col_name)+1)* sizeof(char));
+    dbo->operator_fields.create_idx_operator.idx_col_name = calloc(strlen(col_name)+1, sizeof(char));
     strcpy(dbo->operator_fields.create_idx_operator.idx_col_name,col_name);
 
     if(strcmp(col_idx, "btree") == 0) {
@@ -140,7 +140,6 @@ DbOperator* parse_create_idx(char* query_command, message* send_message) {
  * then passes these arguments to a database function to insert a row.
  **/
 DbOperator* parse_insert(char* query_command, message* send_message) {
-    unsigned int columns_inserted = 0;
     char* token = NULL;
     char* insert_table_name = next_token_comma(&query_command, &send_message->status);
     if (send_message->status == INCORRECT_FORMAT) {
@@ -154,7 +153,8 @@ DbOperator* parse_insert(char* query_command, message* send_message) {
     DbOperator* dbo = malloc(sizeof(DbOperator));
     dbo->type = INSERT;
     dbo->operator_fields.insert_operator.table = insert_table;
-    dbo->operator_fields.insert_operator.values = calloc(insert_table->size+1, sizeof(int));
+    dbo->operator_fields.insert_operator.values = calloc(insert_table->size, sizeof(long));
+    size_t columns_inserted = 0;
     while ((token = strsep(&query_command, ",")) != NULL) {
         int insert_val = atoi(token);
         dbo->operator_fields.insert_operator.values[columns_inserted] = insert_val;
@@ -182,7 +182,7 @@ DbOperator* parse_load(char* query_command) {
     data_path[last_char] = '\0';
     dbo = malloc(sizeof(DbOperator));
     dbo->type = LOAD;
-    dbo->operator_fields.load_operator.data_path = malloc((strlen(data_path)+1)*sizeof(char));
+    dbo->operator_fields.load_operator.data_path = calloc(strlen(data_path)+1, sizeof(char));
     strcpy(dbo->operator_fields.load_operator.data_path,data_path);
     return dbo;
 }

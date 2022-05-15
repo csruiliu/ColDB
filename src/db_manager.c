@@ -1349,14 +1349,14 @@ int read_csv(char* data_path) {
         log_err("[db_manager.c:load_data_csv()] cannot load data %s\n", data_path);
         return 1;
     }
-    char *line = NULL;
+    char* line = NULL;
     size_t len = 0;
     ssize_t read = getline(&line, &len, fp);
     if (read == -1) {
         log_err("[db_manager.c:load_data_csv()] read file header failed.\n");
         return 1;
     }
-    char* line_copy = malloc((strlen(line)+1) * sizeof(char));
+    char* line_copy = calloc(strlen(line)+1, sizeof(char));
     memcpy(line_copy,line, strlen(line)+1);
     char* line_copy_free = line_copy;
     size_t header_count = 0;
@@ -1386,8 +1386,10 @@ int read_csv(char* data_path) {
         }
         if (lcol->idx_type == UNIDX) {
             long rowId_load = 0;
-            while ((getline(&line, &len, fp)) != -1) {
-                char *va = line;
+            char* line_unidx = NULL;
+            size_t len_unidx = 0;
+            while ((getline(&line_unidx, &len_unidx, fp)) != -1) {
+                char *va = line_unidx;
                 long lv = strtol(va, NULL, 0);
                 if(insert_data_column(lcol, lv, rowId_load) != 0) {
                     fclose(fp);
@@ -1395,6 +1397,7 @@ int read_csv(char* data_path) {
                 }
                 rowId_load++;
             }
+            free(line_unidx);
         }
         else if (lcol->idx_type == BTREE) {
             char* index_name;
@@ -1511,6 +1514,7 @@ int read_csv(char* data_path) {
             }
         }
         long rowId_load = 0;
+
         while ((getline(&line, &len, fp)) != -1) {
             for (size_t i = 0; i < header_count; ++i) {
                 char *va = next_token_comma(&line, &mes_status);
@@ -1680,6 +1684,7 @@ int read_csv(char* data_path) {
         }
     }
     free(line);
+    fclose(fp);
     return 0;
 }
 

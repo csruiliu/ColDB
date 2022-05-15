@@ -1349,13 +1349,15 @@ int read_csv(char* data_path) {
         log_err("[db_manager.c:load_data_csv()] cannot load data %s\n", data_path);
         return 1;
     }
-    char* line = NULL;
+    char* line_free = NULL;
     size_t len = 0;
+    char* line = line_free;
     ssize_t read = getline(&line, &len, fp);
     if (read == -1) {
         log_err("[db_manager.c:load_data_csv()] read file header failed.\n");
         return 1;
     }
+
     char* line_copy = calloc(strlen(line)+1, sizeof(char));
     memcpy(line_copy,line, strlen(line)+1);
     char* line_copy_free = line_copy;
@@ -1386,8 +1388,9 @@ int read_csv(char* data_path) {
         }
         if (lcol->idx_type == UNIDX) {
             long rowId_load = 0;
-            char* line_unidx = NULL;
+            char* line_unidx_free = NULL;
             size_t len_unidx = 0;
+            char* line_unidx = line_unidx_free;
             while ((getline(&line_unidx, &len_unidx, fp)) != -1) {
                 char *va = line_unidx;
                 long lv = strtol(va, NULL, 0);
@@ -1398,6 +1401,7 @@ int read_csv(char* data_path) {
                 rowId_load++;
             }
             free(line_unidx);
+            free(line_unidx_free);
         }
         else if (lcol->idx_type == BTREE) {
             char* index_name;
@@ -1514,10 +1518,15 @@ int read_csv(char* data_path) {
             }
         }
         long rowId_load = 0;
-
-        while ((getline(&line, &len, fp)) != -1) {
+        char* line_mc = NULL;
+        size_t len_mc = 0;
+        char* line_mc_free = line_mc;
+        while ((getline(&line_mc, &len_mc, fp)) != -1) {
+            char* line_mc_head = calloc(strlen(line_mc)+1, sizeof(char));
+            memcpy(line_mc_head,line_mc, strlen(line)+1);
+            char* line_mc_head_free = line_mc_head;
             for (size_t i = 0; i < header_count; ++i) {
-                char *va = next_token_comma(&line, &mes_status);
+                char *va = next_token_comma(&line_mc_head, &mes_status);
                 long lv = strtol(va, NULL, 0);
                 if (col_set[i]->idx_type == UNIDX) {
                     if (insert_data_column(col_set[i], lv, rowId_load) != 0) {
@@ -1619,7 +1628,10 @@ int read_csv(char* data_path) {
                 }
             }
             rowId_load++;
+            free(line_mc_head_free);
         }
+        free(line_mc);
+        free(line_mc_free);
         /**
          * store the data according to index
          */
@@ -1682,8 +1694,10 @@ int read_csv(char* data_path) {
                 log_info("no index for this column\n");
             }
         }
+        free(col_set);
     }
     free(line);
+    free(line_free);
     fclose(fp);
     return 0;
 }

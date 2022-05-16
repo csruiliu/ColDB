@@ -25,7 +25,7 @@ DbOperator* parse_create_db(char* query_command) {
     // add new null terminator
     db_name[last_char] = '\0';
     DbOperator* dbo = malloc(sizeof(DbOperator));
-    dbo->operator_fields.create_db_operator.db_name = malloc((strlen(db_name)+1)*sizeof(char));
+    dbo->operator_fields.create_db_operator.db_name = calloc(strlen(db_name)+1, sizeof(char));
     strcpy(dbo->operator_fields.create_db_operator.db_name, db_name);
     dbo->type = CREATE_DB;
     return dbo;
@@ -56,9 +56,9 @@ DbOperator* parse_create_tbl(char* query_command, message* send_message) {
     }
     dbo = malloc(sizeof(DbOperator));
     dbo->type = CREATE_TBL;
-    dbo->operator_fields.create_table_operator.db_name = malloc((strlen(db_name)+1)* sizeof(char));
+    dbo->operator_fields.create_table_operator.db_name = calloc(strlen(db_name)+1, sizeof(char));
     strcpy(dbo->operator_fields.create_table_operator.db_name,db_name);
-    dbo->operator_fields.create_table_operator.table_name = malloc((strlen(table_name)+strlen(db_name)+2)* sizeof(char));
+    dbo->operator_fields.create_table_operator.table_name = calloc(strlen(table_name)+strlen(db_name)+2, sizeof(char));
     strcpy(dbo->operator_fields.create_table_operator.table_name, db_name);
     strcat(dbo->operator_fields.create_table_operator.table_name, ".");
     strcat(dbo->operator_fields.create_table_operator.table_name, table_name);
@@ -86,9 +86,9 @@ DbOperator* parse_create_col(char* query_command, message* send_message) {
     full_tbl_name[last_char] = '\0';
     dbo = malloc(sizeof(DbOperator));
     dbo->type = CREATE_COL;
-    dbo->operator_fields.create_col_operator.tbl_name = malloc((strlen(full_tbl_name)+1)* sizeof(char));
+    dbo->operator_fields.create_col_operator.tbl_name = calloc(strlen(full_tbl_name)+1, sizeof(char));
     strcpy(dbo->operator_fields.create_col_operator.tbl_name, full_tbl_name);
-    dbo->operator_fields.create_col_operator.col_name = malloc((strlen(col_name)+strlen(full_tbl_name)+2)* sizeof(char));
+    dbo->operator_fields.create_col_operator.col_name = calloc(strlen(col_name)+strlen(full_tbl_name)+2, sizeof(char));
     strcpy(dbo->operator_fields.create_col_operator.col_name, full_tbl_name);
     strcat(dbo->operator_fields.create_col_operator.col_name, ".");
     strcat(dbo->operator_fields.create_col_operator.col_name, col_name);
@@ -206,13 +206,13 @@ DbOperator* parse_select(char* query_command, char* handle, message* send_messag
         DbOperator* dbo = malloc(sizeof(DbOperator));
         dbo->type = SELECT;
         dbo->operator_fields.select_operator.selectType = HANDLE_COL;
-        dbo->operator_fields.select_operator.handle = malloc((strlen(handle)+1)* sizeof(char));
+        dbo->operator_fields.select_operator.handle = calloc(strlen(handle)+1, sizeof(char));
         strcpy(dbo->operator_fields.select_operator.handle,handle);
-        dbo->operator_fields.select_operator.pre_range = malloc((strlen(pre_range)+1)* sizeof(char));
+        dbo->operator_fields.select_operator.pre_range = calloc(strlen(pre_range)+1, sizeof(char));
         strcpy(dbo->operator_fields.select_operator.pre_range,pre_range);
-        dbo->operator_fields.select_operator.post_range = malloc((strlen(post_range)+1)* sizeof(char));
+        dbo->operator_fields.select_operator.post_range = calloc(strlen(post_range)+1, sizeof(char));
         strcpy(dbo->operator_fields.select_operator.post_range,post_range);
-        dbo->operator_fields.select_operator.select_col = malloc((strlen(select_name)+1)* sizeof(char));
+        dbo->operator_fields.select_operator.select_col = calloc(strlen(select_name)+1, sizeof(char));
         strcpy(dbo->operator_fields.select_operator.select_col,select_name);
         return dbo;
     }
@@ -231,15 +231,15 @@ DbOperator* parse_select(char* query_command, char* handle, message* send_messag
         DbOperator* dbo = malloc(sizeof(DbOperator));
         dbo->type = SELECT;
         dbo->operator_fields.select_operator.selectType = HANDLE_RSL;
-        dbo->operator_fields.select_operator.handle = malloc((strlen(handle)+1)* sizeof(char));
+        dbo->operator_fields.select_operator.handle = calloc(strlen(handle)+1, sizeof(char));
         strcpy(dbo->operator_fields.select_operator.handle,handle);
-        dbo->operator_fields.select_operator.pre_range = malloc((strlen(pre_range)+1)* sizeof(char));
+        dbo->operator_fields.select_operator.pre_range = calloc(strlen(pre_range)+1, sizeof(char));
         strcpy(dbo->operator_fields.select_operator.pre_range,pre_range);
-        dbo->operator_fields.select_operator.post_range = malloc((strlen(post_range)+1)* sizeof(char));
+        dbo->operator_fields.select_operator.post_range = calloc(strlen(post_range)+1, sizeof(char));
         strcpy(dbo->operator_fields.select_operator.post_range,post_range);
-        dbo->operator_fields.select_operator.select_rsl_pos = malloc((strlen(select_name)+1)* sizeof(char));
+        dbo->operator_fields.select_operator.select_rsl_pos = calloc(strlen(select_name)+1, sizeof(char));
         strcpy(dbo->operator_fields.select_operator.select_rsl_pos,select_name);
-        dbo->operator_fields.select_operator.select_rsl_val = malloc((strlen(select_val)+1)* sizeof(char));
+        dbo->operator_fields.select_operator.select_rsl_val = calloc(strlen(select_val)+1, sizeof(char));
         strcpy(dbo->operator_fields.select_operator.select_rsl_val,select_val);
         return dbo;
     }
@@ -261,11 +261,11 @@ DbOperator* parse_fetch(char* query_command, char* handle, message* send_message
     rsl_vec_pos[last_char] = '\0';
     DbOperator* dbo = malloc(sizeof(DbOperator));
     dbo->type = FETCH;
-    dbo->operator_fields.fetch_operator.col_var_name = malloc((strlen(col_var_name)+1)* sizeof(char));
+    dbo->operator_fields.fetch_operator.col_var_name = calloc(strlen(col_var_name)+1, sizeof(char));
     strcpy(dbo->operator_fields.fetch_operator.col_var_name, col_var_name);
-    dbo->operator_fields.fetch_operator.rsl_vec_pos = malloc((strlen(rsl_vec_pos)+1)* sizeof(char));
+    dbo->operator_fields.fetch_operator.rsl_vec_pos = calloc(strlen(rsl_vec_pos)+1, sizeof(char));
     strcpy(dbo->operator_fields.fetch_operator.rsl_vec_pos, rsl_vec_pos);
-    dbo->operator_fields.fetch_operator.handle = malloc((strlen(handle)+1)* sizeof(char));
+    dbo->operator_fields.fetch_operator.handle = calloc(strlen(handle)+1, sizeof(char));
     strcpy(dbo->operator_fields.fetch_operator.handle, handle);
     return dbo;
 }
@@ -323,8 +323,9 @@ DbOperator* parse_join(char* query_command, char* handle, message* send_message)
  * parse print command
  **/
 DbOperator* parse_print(char* query_command, message* send_message) {
-    char* cmd_copy = malloc((strlen(query_command)+1)* sizeof(char));
+    char* cmd_copy = calloc(strlen(query_command)+1, sizeof(char));
     strcpy(cmd_copy,query_command);
+    char* cmd_copy_free = cmd_copy;
     size_t count = 0;
     while(1) {
         char* tmp = strsep(&cmd_copy, ",");
@@ -335,6 +336,7 @@ DbOperator* parse_print(char* query_command, message* send_message) {
             break;
         }
     }
+    free(cmd_copy_free);
     int last_char = (int)strlen(query_command) - 1;
     if (last_char < 0 || query_command[last_char] != ')') {
         return NULL;
@@ -349,7 +351,7 @@ DbOperator* parse_print(char* query_command, message* send_message) {
         if(send_message->status == INCORRECT_FORMAT) {
             return NULL;
         }
-        dbo->operator_fields.print_operator.print_name[i] = malloc((strlen(pitem)+1)* sizeof(char));
+        dbo->operator_fields.print_operator.print_name[i] = calloc(strlen(pitem)+1, sizeof(char));
         strcpy(dbo->operator_fields.print_operator.print_name[i], pitem);
     }
     return dbo;

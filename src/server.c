@@ -29,24 +29,56 @@
 #include "batch_query.h"
 
 void free_query(DbOperator* query) {
-    if (query->type == CREATE_TBL) {
-        free(query->operator_fields.create_table_operator.db_name);
-        free(query->operator_fields.create_table_operator.table_name);
+    switch (query->type) {
+        case CREATE_DB:
+            free(query->operator_fields.create_db_operator.db_name);
+            free(query);
+            break;
+        case CREATE_TBL:
+            free(query->operator_fields.create_table_operator.db_name);
+            free(query->operator_fields.create_table_operator.table_name);
+            free(query);
+            break;
+        case CREATE_COL:
+            free(query->operator_fields.create_col_operator.col_name);
+            free(query->operator_fields.create_col_operator.tbl_name);
+            free(query);
+            break;
+        case INSERT:
+            free(query->operator_fields.insert_operator.values);
+            free(query);
+            break;
+        case SELECT:
+            free(query->operator_fields.select_operator.handle);
+            free(query->operator_fields.select_operator.pre_range);
+            free(query->operator_fields.select_operator.post_range);
+            free(query->operator_fields.select_operator.select_col);
+            if (query->operator_fields.select_operator.selectType == HANDLE_RSL) {
+                free(query->operator_fields.select_operator.select_rsl_pos);
+                free(query->operator_fields.select_operator.select_rsl_val);
+            }
+            free(query);
+            break;
+        case FETCH:
+            free(query->operator_fields.fetch_operator.handle);
+            free(query->operator_fields.fetch_operator.col_var_name);
+            free(query->operator_fields.fetch_operator.rsl_vec_pos);
+            free(query);
+            break;
+        case LOAD:
+            free(query->operator_fields.load_operator.data_path);
+            free(query);
+            break;
+        case PRINT:
+            for (size_t i = 0; i < query->operator_fields.print_operator.print_num; ++i) {
+                free(query->operator_fields.print_operator.print_name[i]);
+            }
+            free(query->operator_fields.print_operator.print_name);
+            free(query);
+            break;
+        default:
+            free(query);
     }
-    else if (query->type == CREATE_COL) {
-        free(query->operator_fields.create_col_operator.col_name);
-        free(query->operator_fields.create_col_operator.tbl_name);
-    }
-    else if (query->type == LOAD) {
-        free(query->operator_fields.load_operator.data_path);
-    }
-    else if (query->type == CREATE_DB){
-        free(query->operator_fields.create_db_operator.db_name);
-    }
-    else if (query->type == INSERT) {
-        free(query->operator_fields.insert_operator.values);
-    }
-    free(query);
 }
 
 /**

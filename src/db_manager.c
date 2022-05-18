@@ -272,6 +272,7 @@ int select_data_col_unidx(Column* scol, char* handle, char* pre_range, char* pos
         rsl->payload = calloc(count, sizeof(long));
         memcpy(rsl->payload,rsl_data,count* sizeof(long));
         replace_result(handle,rsl);
+        free(rsl_data);
     }
     else if (strncmp(post_range,"null",4) == 0) {
         long pre = strtol(pre_range, NULL, 0);
@@ -289,6 +290,7 @@ int select_data_col_unidx(Column* scol, char* handle, char* pre_range, char* pos
         rsl->payload = calloc(count, sizeof(long));
         memcpy(rsl->payload,rsl_data,count* sizeof(long));
         replace_result(handle,rsl);
+        free(rsl_data);
     }
     else {
         long pre = strtol(pre_range, NULL, 0);
@@ -307,7 +309,9 @@ int select_data_col_unidx(Column* scol, char* handle, char* pre_range, char* pos
         rsl->payload = calloc(count, sizeof(long));
         memcpy(rsl->payload,rsl_data,count* sizeof(long));
         replace_result(handle,rsl);
+        free(rsl_data);
     }
+    free(rsl);
     return 0;
 }
 
@@ -490,6 +494,7 @@ int fetch_col_data(char* col_val_name, char* rsl_vec_pos, char* handle) {
     memcpy(rsl->payload, fetch_payload, rsl_size*sizeof(long));
     replace_result(handle, rsl);
     free(fetch_payload);
+    free(rsl);
     return 0;
 }
 
@@ -1308,9 +1313,8 @@ char* generate_print_result(size_t print_num, char** print_name) {
         Result* rsl = get_result(print_name[i]);
         rsl_total_tuples += rsl->num_tuples;
     }
-    char* print_rsl = malloc(rsl_total_tuples * (sizeof(long)+1));
+    char* print_rsl = calloc(rsl_total_tuples, (sizeof(long)+1));
     strcpy(print_rsl, "");
-    //sprintf(print_rsl,"");
     log_info("[Server results]\n");
     for(size_t i = 0; i< print_num; ++i) {
         Result* rsl = get_result(print_name[i]);
@@ -1320,6 +1324,7 @@ char* generate_print_result(size_t print_num, char** print_name) {
                 char* tmp_payload_data = malloc(sizeof(long)+1);
                 sprintf(tmp_payload_data, "%ld\n", ((long *)rsl->payload)[j]);
                 strcat(print_rsl,tmp_payload_data);
+                free(tmp_payload_data);
             }
         }
         else if(rsl->data_type == FLOAT) {

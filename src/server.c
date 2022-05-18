@@ -90,7 +90,7 @@ void free_query(DbOperator* query) {
 char* parse_table_name(char* full_col_name) {
     char* db_part = strtok(full_col_name, ".");
     char* tbl_part = strtok(NULL, ".");
-    char* table_name = malloc((strlen(db_part)+strlen(tbl_part)+2)* sizeof(char));
+    char* table_name = calloc(strlen(db_part)+strlen(tbl_part)+2, sizeof(char));
     strcpy(table_name, db_part);
     strcat(table_name, ".");
     strcat(table_name, tbl_part);
@@ -682,6 +682,12 @@ void handle_client(int client_socket) {
             // 1. Parse command
             DbOperator* query = parse_command(recv_message.payload, &send_message, client_socket, client_context);
 
+            bool is_print_cmd = false;
+
+            if(query->type == PRINT) {
+                is_print_cmd = true;
+            }
+
             // 2. Handle request
             char* result = execute_DbOperator(query);
 
@@ -701,13 +707,23 @@ void handle_client(int client_socket) {
             // 3. Send status of the received message (OK, UNKNOWN_QUERY, etc)
             if (send(client_socket, &(send_message), sizeof(message), 0) == -1) {
                 log_err("Failed to send message.");
+                if(is_print_cmd) {
+                    free(result);
+                }
                 exit(1);
             }
 
             // 4. Send response of request
             if (send(client_socket, result, send_message.length, 0) == -1) {
                 log_err("Failed to send message.");
+                if(is_print_cmd) {
+                    free(result);
+                }
                 exit(1);
+            }
+
+            if(is_print_cmd) {
+                free(result);
             }
         }
     } while (!done);

@@ -170,6 +170,13 @@ void replace_result(char* result_name, Result* result) {
 }
 
 void free_result_store() {
+    for (size_t index = 0; index < result_store->size; index++) {
+        kvpair* cur_ikv = &(result_store->kv_pair[index]);
+        if(cur_ikv->key != NULL) {
+            Result* rsl_ptr = cur_ikv->value;
+            free(rsl_ptr->payload);
+        }
+    }
     if(kv_deallocate(result_store) != 0) {
         log_info("free result kv store failed\n");
     } else {

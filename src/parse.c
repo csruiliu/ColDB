@@ -303,17 +303,17 @@ DbOperator* parse_join(char* query_command, char* handle, message* send_message)
         log_err("the join type is not supported\n");
         return NULL;
     }
-    dbo->operator_fields.join_operator.vec_val_left = malloc((strlen(vec_val_left)+1)* sizeof(char));
+    dbo->operator_fields.join_operator.vec_val_left = calloc(strlen(vec_val_left)+1, sizeof(char));
     strcpy(dbo->operator_fields.join_operator.vec_val_left, vec_val_left);
-    dbo->operator_fields.join_operator.vec_pos_left = malloc((strlen(vec_pos_left)+1)* sizeof(char));
+    dbo->operator_fields.join_operator.vec_pos_left = calloc(strlen(vec_pos_left)+1, sizeof(char));
     strcpy(dbo->operator_fields.join_operator.vec_pos_left, vec_pos_left);
-    dbo->operator_fields.join_operator.vec_val_right = malloc((strlen(vec_val_right)+1)* sizeof(char));
+    dbo->operator_fields.join_operator.vec_val_right = calloc(strlen(vec_val_right)+1, sizeof(char));
     strcpy(dbo->operator_fields.join_operator.vec_val_right, vec_val_right);
-    dbo->operator_fields.join_operator.vec_pos_right = malloc((strlen(vec_pos_right)+1)* sizeof(char));
+    dbo->operator_fields.join_operator.vec_pos_right = calloc(strlen(vec_pos_right)+1, sizeof(char));
     strcpy(dbo->operator_fields.join_operator.vec_pos_right, vec_pos_right);
-    dbo->operator_fields.join_operator.handle_left = malloc((strlen(handle_left)+1)* sizeof(char));
+    dbo->operator_fields.join_operator.handle_left = calloc(strlen(handle_left)+1, sizeof(char));
     strcpy(dbo->operator_fields.join_operator.handle_left, handle_left);
-    dbo->operator_fields.join_operator.handle_right = malloc((strlen(handle_right)+1)* sizeof(char));
+    dbo->operator_fields.join_operator.handle_right = calloc(strlen(handle_right)+1, sizeof(char));
     strcpy(dbo->operator_fields.join_operator.handle_right, handle_right);
 
     return dbo;
@@ -374,9 +374,9 @@ DbOperator* parse_avg(char* handle, char* query_command) {
     }
     query_command[last_char] = '\0';
     dbo->type = AVG;
-    dbo->operator_fields.avg_operator.avg_name = malloc((strlen(query_command)+1)* sizeof(char));
+    dbo->operator_fields.avg_operator.avg_name = calloc(strlen(query_command)+1, sizeof(char));
     strcpy(dbo->operator_fields.avg_operator.avg_name,query_command);
-    dbo->operator_fields.avg_operator.handle = malloc((strlen(handle)+1)* sizeof(char));
+    dbo->operator_fields.avg_operator.handle = calloc(strlen(handle)+1, sizeof(char));
     strcpy(dbo->operator_fields.avg_operator.handle, handle);
     return dbo;
 }
@@ -398,9 +398,9 @@ DbOperator* parse_sum(char* handle, char* query_command) {
     }
     query_command[last_char] = '\0';
     dbo->type = SUM;
-    dbo->operator_fields.sum_operator.sum_name = malloc((strlen(query_command)+1)* sizeof(char));
+    dbo->operator_fields.sum_operator.sum_name = calloc(strlen(query_command)+1, sizeof(char));
     strcpy(dbo->operator_fields.sum_operator.sum_name,query_command);
-    dbo->operator_fields.sum_operator.handle = malloc((strlen(handle)+1)* sizeof(char));
+    dbo->operator_fields.sum_operator.handle = calloc(strlen(handle)+1, sizeof(char));
     strcpy(dbo->operator_fields.sum_operator.handle, handle);
     return dbo;
 }
@@ -435,11 +435,11 @@ DbOperator* parse_add(char* handle, char* query_command, message* send_message) 
         dbo->operator_fields.add_operator.add_type2 = HANDLE_RSL;
     }
     dbo->type = ADD;
-    dbo->operator_fields.add_operator.add_name1 = malloc((strlen(vec_val1)+1)* sizeof(char));
+    dbo->operator_fields.add_operator.add_name1 = calloc(strlen(vec_val1)+1, sizeof(char));
     strcpy(dbo->operator_fields.add_operator.add_name1,vec_val1);
-    dbo->operator_fields.add_operator.add_name2 = malloc((strlen(vec_val2)+1)* sizeof(char));
+    dbo->operator_fields.add_operator.add_name2 = calloc(strlen(vec_val2)+1, sizeof(char));
     strcpy(dbo->operator_fields.add_operator.add_name2,vec_val2);
-    dbo->operator_fields.add_operator.handle = malloc((strlen(handle)+1)* sizeof(char));
+    dbo->operator_fields.add_operator.handle = calloc(strlen(handle)+1, sizeof(char));
     strcpy(dbo->operator_fields.add_operator.handle, handle);
     return dbo;
 }
@@ -474,11 +474,11 @@ DbOperator* parse_sub(char* handle, char* query_command, message* send_message) 
         dbo->operator_fields.sub_operator.sub_type2 = HANDLE_RSL;
     }
     dbo->type = SUB;
-    dbo->operator_fields.sub_operator.sub_name1 = malloc((strlen(vec_val1)+1)* sizeof(char));
+    dbo->operator_fields.sub_operator.sub_name1 = calloc(strlen(vec_val1)+1, sizeof(char));
     strcpy(dbo->operator_fields.sub_operator.sub_name1,vec_val1);
-    dbo->operator_fields.sub_operator.sub_name2 = malloc((strlen(vec_val2)+1)* sizeof(char));
+    dbo->operator_fields.sub_operator.sub_name2 = calloc(strlen(vec_val2)+1, sizeof(char));
     strcpy(dbo->operator_fields.sub_operator.sub_name2,vec_val2);
-    dbo->operator_fields.sub_operator.handle = malloc((strlen(handle)+1)* sizeof(char));
+    dbo->operator_fields.sub_operator.handle = calloc(strlen(handle)+1, sizeof(char));
     strcpy(dbo->operator_fields.sub_operator.handle, handle);
     return dbo;
 }
@@ -500,13 +500,13 @@ DbOperator* parse_max(char* handle, char* query_command, message* send_message) 
         DbOperator* dbo = malloc(sizeof(DbOperator));
         dbo->type = MAX;
         dbo->operator_fields.max_operator.max_type = MAX_POS_VALUE;
-        dbo->operator_fields.max_operator.handle_value = malloc((strlen(max_handle_value)+1)* sizeof(char));
+        dbo->operator_fields.max_operator.handle_value = calloc(strlen(max_handle_value)+1, sizeof(char));
         strcpy(dbo->operator_fields.max_operator.handle_value,max_handle_value);
-        dbo->operator_fields.max_operator.handle_pos = malloc((strlen(max_handle_pos)+1)* sizeof(char));
+        dbo->operator_fields.max_operator.handle_pos = calloc(strlen(max_handle_pos)+1, sizeof(char));
         strcpy(dbo->operator_fields.max_operator.handle_pos,max_handle_pos);
-        dbo->operator_fields.max_operator.max_vec_pos = malloc((strlen(max_vec_pos)+1)* sizeof(char));
+        dbo->operator_fields.max_operator.max_vec_pos = calloc(strlen(max_vec_pos)+1, sizeof(char));
         strcpy(dbo->operator_fields.max_operator.max_vec_pos,max_vec_pos);
-        dbo->operator_fields.max_operator.max_vec_value = malloc((strlen(max_vec_value)+1)* sizeof(char));
+        dbo->operator_fields.max_operator.max_vec_value = calloc(strlen(max_vec_value)+1, sizeof(char));
         strcpy(dbo->operator_fields.max_operator.max_vec_value,max_vec_value);
         return dbo;
     }
@@ -519,9 +519,9 @@ DbOperator* parse_max(char* handle, char* query_command, message* send_message) 
         DbOperator* dbo = malloc(sizeof(DbOperator));
         dbo->type = MAX;
         dbo->operator_fields.max_operator.max_type = MAX_VALUE;
-        dbo->operator_fields.max_operator.handle_value = malloc((strlen(handle)+1)* sizeof(char));
+        dbo->operator_fields.max_operator.handle_value = calloc(strlen(handle)+1, sizeof(char));
         strcpy(dbo->operator_fields.max_operator.handle_value,handle);
-        dbo->operator_fields.max_operator.max_vec_value = malloc((strlen(query_command)+1)* sizeof(char));
+        dbo->operator_fields.max_operator.max_vec_value = calloc(strlen(query_command)+1, sizeof(char));
         strcpy(dbo->operator_fields.max_operator.max_vec_value,query_command);
         return dbo;
     }
@@ -544,13 +544,13 @@ DbOperator* parse_min(char* handle, char* query_command, message* send_message) 
         DbOperator* dbo = malloc(sizeof(DbOperator));
         dbo->type = MIN;
         dbo->operator_fields.min_operator.min_type = MIN_POS_VALUE;
-        dbo->operator_fields.min_operator.handle_value = malloc((strlen(min_handle_value)+1)* sizeof(char));
+        dbo->operator_fields.min_operator.handle_value = calloc(strlen(min_handle_value)+1, sizeof(char));
         strcpy(dbo->operator_fields.min_operator.handle_value, min_handle_value);
-        dbo->operator_fields.min_operator.handle_pos = malloc((strlen(min_handle_pos)+1)* sizeof(char));
+        dbo->operator_fields.min_operator.handle_pos = calloc(strlen(min_handle_pos)+1, sizeof(char));
         strcpy(dbo->operator_fields.min_operator.handle_pos, min_handle_pos);
-        dbo->operator_fields.min_operator.min_vec_pos = malloc((strlen(min_vec_pos)+1)* sizeof(char));
+        dbo->operator_fields.min_operator.min_vec_pos = calloc(strlen(min_vec_pos)+1, sizeof(char));
         strcpy(dbo->operator_fields.min_operator.min_vec_pos, min_vec_pos);
-        dbo->operator_fields.min_operator.min_vec_value = malloc((strlen(min_vec_value)+1)* sizeof(char));
+        dbo->operator_fields.min_operator.min_vec_value = calloc(strlen(min_vec_value)+1, sizeof(char));
         strcpy(dbo->operator_fields.min_operator.min_vec_value, min_vec_value);
         return dbo;
     }
@@ -563,9 +563,9 @@ DbOperator* parse_min(char* handle, char* query_command, message* send_message) 
         DbOperator* dbo = malloc(sizeof(DbOperator));
         dbo->type = MIN;
         dbo->operator_fields.min_operator.min_type = MIN_VALUE;
-        dbo->operator_fields.min_operator.handle_value = malloc((strlen(handle)+1)* sizeof(char));
+        dbo->operator_fields.min_operator.handle_value = calloc(strlen(handle)+1, sizeof(char));
         strcpy(dbo->operator_fields.min_operator.handle_value,handle);
-        dbo->operator_fields.min_operator.min_vec_value = malloc((strlen(query_command)+1)* sizeof(char));
+        dbo->operator_fields.min_operator.min_vec_value = calloc(strlen(query_command)+1, sizeof(char));
         strcpy(dbo->operator_fields.min_operator.min_vec_value,query_command);
         return dbo;
     }

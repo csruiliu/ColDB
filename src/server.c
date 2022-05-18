@@ -76,6 +76,11 @@ void free_query(DbOperator* query) {
             free(query->operator_fields.print_operator.print_name);
             free(query);
             break;
+        case AVG:
+            free(query->operator_fields.avg_operator.avg_name);
+            free(query->operator_fields.avg_operator.handle);
+            free(query);
+            break;
         default:
             free(query);
     }

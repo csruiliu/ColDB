@@ -42,6 +42,15 @@ long* resize_long(long* data, size_t oc, size_t nc) {
     return ndata;
 }
 
+size_t count_digits(long number){
+    size_t count = 0;
+    while(number != 0) {
+        number /= 10;
+        ++count;
+    }
+    return count;
+}
+
 Db* create_db(char* db_name) {
     Db* db = get_db(db_name);
     if(db != NULL) {
@@ -691,6 +700,7 @@ int avg_column_data(char* avg_col_name, char* handle) {
     arsl->payload = calloc(1, sizeof(double));
     memcpy(arsl->payload, &avg, sizeof(double));
     replace_result(handle,arsl);
+    free(arsl);
     return 0;
 }
 
@@ -730,6 +740,7 @@ int avg_result_data(char* avg_rsl_name, char* handle) {
     rsl->payload = calloc(1, sizeof(double));
     memcpy(rsl->payload, &avg, sizeof(double));
     replace_result(handle,rsl);
+    free(rsl);
     return 0;
 }
 
@@ -1309,11 +1320,28 @@ int min_rsl_value_pos(char* min_vec_pos, char* min_vec_value, char* handle_pos, 
  **/
 char* generate_print_result(size_t print_num, char** print_name) {
     size_t rsl_total_tuples = 0;
+    size_t rsl_total_size = 0;
     for(size_t i = 0; i< print_num; ++i) {
         Result* rsl = get_result(print_name[i]);
         rsl_total_tuples += rsl->num_tuples;
+        if(rsl->data_type == LONG) {
+            for(size_t j = 0; j < rsl->num_tuples; ++j) {
+                log_info("%ld\n",((long *)rsl->payload)[j]);
+                rsl_total_size += count_digits(((long *)rsl->payload)[j]) + 1;
+            }
+
+        }
+        else if(rsl->data_type == FLOAT) {
+            for(size_t j = 0; j < rsl->num_tuples; ++j) {
+                log_info("%0.2f\n",((double *)rsl->payload)[j]);
+                rsl_total_size += count_digits(((long *)rsl->payload)[j]) + 4;
+            }
+        }
+        else {
+            log_err("[generate_print_result]:the data type is not supported\n");
+        }
     }
-    char* print_rsl = calloc(rsl_total_tuples, (sizeof(long)+1));
+    char* print_rsl = malloc(rsl_total_size);
     strcpy(print_rsl, "");
     log_info("[Server results]\n");
     for(size_t i = 0; i< print_num; ++i) {
@@ -1321,18 +1349,22 @@ char* generate_print_result(size_t print_num, char** print_name) {
         if(rsl->data_type == LONG) {
             for(size_t j = 0; j < rsl->num_tuples; ++j) {
                 log_info("%ld\n",((long *)rsl->payload)[j]);
-                char* tmp_payload_data = malloc(sizeof(long)+1);
+                size_t num_digit = count_digits(((long *)rsl->payload)[j]);
+                char* tmp_payload_data = malloc(num_digit+1);
                 sprintf(tmp_payload_data, "%ld\n", ((long *)rsl->payload)[j]);
                 strcat(print_rsl,tmp_payload_data);
                 free(tmp_payload_data);
             }
+
         }
         else if(rsl->data_type == FLOAT) {
             for(size_t j = 0; j < rsl->num_tuples; ++j) {
                 log_info("%0.2f\n",((double *)rsl->payload)[j]);
-                char* tmp_payload_data = malloc(sizeof(double)+1);
+                size_t num_digit = count_digits(((long *)rsl->payload)[j]);
+                char* tmp_payload_data = malloc(num_digit+4);
                 sprintf(tmp_payload_data, "%0.2f\n", ((double *)rsl->payload)[j]);
                 strcat(print_rsl,tmp_payload_data);
+                free(tmp_payload_data);
             }
         }
         else {

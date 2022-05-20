@@ -768,6 +768,7 @@ int sum_column_data(char* sum_col_name, char* handle) {
     rsl->payload = calloc(1, sizeof(long));
     memcpy(rsl->payload, &sum, sizeof(long));
     replace_result(handle,rsl);
+    free(rsl);
     return 0;
 }
 
@@ -796,6 +797,7 @@ int sum_result_data(char* sum_rsl_name, char* handle) {
         rsl->payload = calloc(1, sizeof(double));
         memcpy(rsl->payload, &sum, sizeof(double));
         replace_result(handle,rsl);
+        free(rsl);
     }
     else if (sum_rsl->data_type == LONG) {
         long sum = 0;
@@ -813,6 +815,7 @@ int sum_result_data(char* sum_rsl_name, char* handle) {
         rsl->payload = calloc(1, sizeof(long));
         memcpy(rsl->payload, &sum, sizeof(long));
         replace_result(handle,rsl);
+        free(rsl);
     }
     else {
         log_err("[sum_result_data]:the data type of result is not supported\n");
@@ -1327,21 +1330,21 @@ char* generate_print_result(size_t print_num, char** print_name) {
         if(rsl->data_type == LONG) {
             for(size_t j = 0; j < rsl->num_tuples; ++j) {
                 log_info("%ld\n",((long *)rsl->payload)[j]);
-                rsl_total_size += count_digits(((long *)rsl->payload)[j]) + 1;
+                rsl_total_size += count_digits(((long *)rsl->payload)[j]) + 2;
             }
 
         }
         else if(rsl->data_type == FLOAT) {
             for(size_t j = 0; j < rsl->num_tuples; ++j) {
                 log_info("%0.2f\n",((double *)rsl->payload)[j]);
-                rsl_total_size += count_digits(((long *)rsl->payload)[j]) + 4;
+                rsl_total_size += count_digits(((long *)rsl->payload)[j]) + 5;
             }
         }
         else {
             log_err("[generate_print_result]:the data type is not supported\n");
         }
     }
-    char* print_rsl = malloc(rsl_total_size);
+    char* print_rsl = calloc(rsl_total_size, sizeof(char));
     strcpy(print_rsl, "");
     log_info("[Server results]\n");
     for(size_t i = 0; i< print_num; ++i) {
@@ -1350,7 +1353,7 @@ char* generate_print_result(size_t print_num, char** print_name) {
             for(size_t j = 0; j < rsl->num_tuples; ++j) {
                 log_info("%ld\n",((long *)rsl->payload)[j]);
                 size_t num_digit = count_digits(((long *)rsl->payload)[j]);
-                char* tmp_payload_data = malloc(num_digit+1);
+                char* tmp_payload_data = calloc(num_digit+2, sizeof(char));
                 sprintf(tmp_payload_data, "%ld\n", ((long *)rsl->payload)[j]);
                 strcat(print_rsl,tmp_payload_data);
                 free(tmp_payload_data);
@@ -1361,7 +1364,7 @@ char* generate_print_result(size_t print_num, char** print_name) {
             for(size_t j = 0; j < rsl->num_tuples; ++j) {
                 log_info("%0.2f\n",((double *)rsl->payload)[j]);
                 size_t num_digit = count_digits(((long *)rsl->payload)[j]);
-                char* tmp_payload_data = malloc(num_digit+4);
+                char* tmp_payload_data = calloc(num_digit+5, sizeof(char));
                 sprintf(tmp_payload_data, "%0.2f\n", ((double *)rsl->payload)[j]);
                 strcat(print_rsl,tmp_payload_data);
                 free(tmp_payload_data);

@@ -81,6 +81,11 @@ void free_query(DbOperator* query) {
             free(query->operator_fields.avg_operator.handle);
             free(query);
             break;
+        case SUM:
+            free(query->operator_fields.sum_operator.sum_name);
+            free(query->operator_fields.sum_operator.handle);
+            free(query);
+            break;
         default:
             free(query);
     }

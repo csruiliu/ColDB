@@ -14,7 +14,7 @@ int kv_allocate(kvstore** kv_store, size_t size) {
     }
     (*kv_store)->size = size;
     (*kv_store)->count = 0;
-    (*kv_store)->kv_pair = calloc(size,sizeof(kvpair));
+    (*kv_store)->kv_pair = calloc(size, sizeof(kvpair));
     if((*kv_store)->kv_pair == NULL) {
         return 1;
     }
@@ -61,7 +61,7 @@ int put(kvstore* kv_store, char* key, void* value, size_t value_size) {
         return 1;
     }
     strcpy(kv_store->kv_pair[index].key,key);
-    memcpy(kv_store->kv_pair[index].value, value, value_size);
+    memmove(kv_store->kv_pair[index].value, value, value_size);
     kv_store->count++;
     return 0;
 }
@@ -82,30 +82,17 @@ int delete(kvstore* kv_store, char* key) {
     return 0;
 }
 
-int put_replace(kvstore* kv_store, char* key, void* value, size_t value_size) {
+int update(kvstore* kv_store, char* key, void* value, size_t value_size) {
     size_t index = hash_func(key, PRIME, kv_store->size);
-    kvpair* cur_ikv = &(kv_store->kv_pair[index]);
-    if(cur_ikv->key == NULL) {
-        kv_store->kv_pair[index].key = calloc(strlen(key)+1, sizeof(char));
-        kv_store->kv_pair[index].value = malloc(value_size);
-        if(kv_store->kv_pair[index].key == NULL || kv_store->kv_pair[index].value == NULL) {
-            return 1;
-        }
-        strcpy(kv_store->kv_pair[index].key, key);
-        memmove(kv_store->kv_pair[index].value, value, value_size);
-        kv_store->count++;
+    free(kv_store->kv_pair[index].key);
+    free(kv_store->kv_pair[index].value);
+    kv_store->kv_pair[index].key = malloc((strlen(key)+1)*sizeof(char));
+    kv_store->kv_pair[index].value = malloc(value_size);
+    if(kv_store->kv_pair[index].key == NULL || kv_store->kv_pair[index].value == NULL) {
+        return 1;
     }
-    else {
-        free(kv_store->kv_pair[index].key);
-        free(kv_store->kv_pair[index].value);
-        kv_store->kv_pair[index].key = calloc(strlen(key)+1, sizeof(char));
-        kv_store->kv_pair[index].value = malloc(value_size);
-        if(kv_store->kv_pair[index].key == NULL || kv_store->kv_pair[index].value == NULL) {
-            return 1;
-        }
-        strcpy(kv_store->kv_pair[index].key, key);
-        memmove(kv_store->kv_pair[index].value, value, value_size);
-    }
+    strcpy(kv_store->kv_pair[index].key, key);
+    memmove(kv_store->kv_pair[index].value, value, value_size);
     return 0;
 }
 

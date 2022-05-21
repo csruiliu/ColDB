@@ -110,7 +110,7 @@ typedef struct Db {
 typedef struct Result {
     size_t num_tuples;
     DataType data_type;
-    void *payload;
+    void* payload;
 } Result;
 
 /**
@@ -163,7 +163,7 @@ Result* get_result(char* result_name);
 
 void put_result(char* result_name, Result* result);
 
-void replace_result(char* result_name, Result* result);
+void update_result(char* result_name, Result* result);
 
 void free_result_store();
 

@@ -149,31 +149,41 @@ Result* get_result(char* result_name) {
 void put_result(char* result_name, Result* result) {
     int flag = put(result_store, result_name, result, sizeof(Result));
     if(flag == 1) {
-        log_err("persistent result %s failed", result_name);
+        log_err("put result %s failed", result_name);
     }
     else if(flag == 2) {
         log_info("a rehash has been done, re-put column into kv store\n");
         if(put(result_store, result_name, result, sizeof(Result)) == 1) {
-            log_err("persistent result %s failed", result_name);
+            log_err("put result %s failed", result_name);
         }
     }
     else {
-        log_info("persistent result %s successfully\n", result_name);
+        log_info("put result %s successfully\n", result_name);
     }
 }
 
-void replace_result(char* result_name, Result* result) {
-    int flag = put_replace(result_store, result_name, result, sizeof(Result));
-    if(flag != 0) {
-        log_err("replace result %s failed", result_name);
+void update_result(char* result_name, Result* result) {
+    Result* old_result = get(result_store, result_name);
+    if(old_result == NULL) {
+        put_result(result_name, result);
+    }
+    else {
+        free(old_result->payload);
+        int flag = update(result_store, result_name, result, sizeof(Result));
+        if(flag != 0) {
+            log_err("update result %s failed", result_name);
+        }
+        else {
+            log_info("update result %s successfully\n", result_name);
+        }
     }
 }
 
 void free_result_store() {
     for (size_t index = 0; index < result_store->size; index++) {
         kvpair* cur_ikv = &(result_store->kv_pair[index]);
-        if(cur_ikv->value != NULL) {
-            Result* rsl_ptr = cur_ikv->value;
+        if(cur_ikv->value != 0) {
+            Result* rsl_ptr = result_store->kv_pair[index].value;
             free(rsl_ptr->payload);
         }
     }

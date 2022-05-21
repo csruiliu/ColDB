@@ -29,7 +29,7 @@ Db* current_db;
 void* resize(void* data, size_t oc, size_t nc) {
     assert(oc <= nc);
     void* ndata = calloc(nc, sizeof(char));
-    memcpy(ndata, data, oc);
+    memmove(ndata, data, oc);
     free(data);
     return ndata;
 }
@@ -37,7 +37,7 @@ void* resize(void* data, size_t oc, size_t nc) {
 long* resize_long(long* data, size_t oc, size_t nc) {
     assert(oc <= nc);
     long* ndata = calloc(nc, sizeof(long));
-    memcpy(ndata, data, oc * sizeof(long));
+    memmove(ndata, data, oc * sizeof(long));
     free(data);
     return ndata;
 }
@@ -211,52 +211,42 @@ int select_data_result(Result* srsl_pos, Result* srsl_val, char* handle, char* p
     long* srsl_val_payload = srsl_val->payload;
     long* rsl_payload = calloc(rsl_size, sizeof(long));
     Result* rsl = malloc(sizeof(Result));
+    size_t size = 0;
     if (strncmp(pre_range,"null",4) == 0) {
         long post = strtol(post_range, NULL, 0);
-        size_t size = 0;
         for(size_t i = 0; i < rsl_size; ++i) {
             if(srsl_val_payload[i] < post) {
                 rsl_payload[size] = srsl_pos_payload[i];
                 size++;
             }
         }
-        rsl->num_tuples = size;
-        rsl->data_type = LONG;
-        rsl->payload = calloc(size, sizeof(long));
-        memcpy(rsl->payload, rsl_payload, size*sizeof(long));
-        replace_result(handle,rsl);
     }
     else if (strncmp(post_range,"null",4) == 0) {
         long pre = strtol(post_range, NULL, 0);
-        size_t size = 0;
         for(size_t i = 0; i < rsl_size; ++i) {
             if(srsl_val_payload[i] >= pre) {
                 rsl_payload[size] = srsl_pos_payload[i];
                 size++;
             }
         }
-        rsl->num_tuples = size;
-        rsl->data_type = LONG;
-        rsl->payload = calloc(size, sizeof(long));
-        memcpy(rsl->payload, rsl_payload, size*sizeof(long));
-        replace_result(handle,rsl);
     }
     else {
         long pre = strtol(post_range, NULL, 0);
         long post = strtol(post_range, NULL, 0);
-        size_t size = 0;
         for(size_t i = 0; i < rsl_size; ++i) {
             if(srsl_val_payload[i] < post && srsl_val_payload[i] >= pre) {
                 rsl_payload[size] = srsl_pos_payload[i];
                 size++;
             }
         }
-        rsl->num_tuples = size;
-        rsl->data_type = LONG;
-        rsl->payload = calloc(size, sizeof(long));
-        memcpy(rsl->payload, rsl_payload, size*sizeof(long));
-        replace_result(handle,rsl);
     }
+
+    rsl->num_tuples = size;
+    rsl->data_type = LONG;
+    rsl->payload = calloc(size, sizeof(long));
+    memmove(rsl->payload, rsl_payload, size*sizeof(long));
+    update_result(handle,rsl);
+
     free(rsl_payload);
     free(rsl);
     return 0;
@@ -267,61 +257,46 @@ int select_data_result(Result* srsl_pos, Result* srsl_val, char* handle, char* p
  **/
 int select_data_col_unidx(Column* scol, char* handle, char* pre_range, char* post_range) {
     Result* rsl = malloc(sizeof(Result));
+    size_t count = 0;
+    long* scol_data = scol->data;
+    long* rsl_data = calloc(scol->size, sizeof(long));
+
     if (strncmp(pre_range,"null",4) == 0) {
         long post = strtol(post_range, NULL, 0);
-        long* scol_data = scol->data;
-        long* rsl_data = calloc(scol->size, sizeof(long));
-        size_t count = 0;
         for(size_t i = 0; i < scol->size; ++i) {
             if(scol_data[i] < post) {
                 rsl_data[count] = (long) i;
                 count++;
             }
         }
-        rsl->num_tuples = count;
-        rsl->data_type = LONG;
-        rsl->payload = calloc(count, sizeof(long));
-        memcpy(rsl->payload,rsl_data,count* sizeof(long));
-        replace_result(handle,rsl);
-        free(rsl_data);
     }
     else if (strncmp(post_range,"null",4) == 0) {
         long pre = strtol(pre_range, NULL, 0);
-        long* scol_data = scol->data;
-        long* rsl_data = calloc(scol->size, sizeof(long));
-        size_t count = 0;
         for(size_t i = 0; i < scol->size; ++i) {
             if(scol_data[i] >= pre) {
                 rsl_data[count] = (long) i;
                 count++;
             }
         }
-        rsl->num_tuples = count;
-        rsl->data_type = LONG;
-        rsl->payload = calloc(count, sizeof(long));
-        memcpy(rsl->payload,rsl_data,count* sizeof(long));
-        replace_result(handle,rsl);
-        free(rsl_data);
     }
     else {
         long pre = strtol(pre_range, NULL, 0);
         long post = strtol(post_range, NULL, 0);
-        long* scol_data = scol->data;
-        long* rsl_data = calloc(scol->size, sizeof(long));
-        size_t count = 0;
         for(size_t i = 0; i < scol->size; ++i) {
             if(scol_data[i] >= pre && scol_data[i] < post) {
                 rsl_data[count] = (long) i;
                 count++;
             }
         }
-        rsl->num_tuples = count;
-        rsl->data_type = LONG;
-        rsl->payload = calloc(count, sizeof(long));
-        memcpy(rsl->payload,rsl_data,count* sizeof(long));
-        replace_result(handle,rsl);
-        free(rsl_data);
     }
+
+    rsl->num_tuples = count;
+    rsl->data_type = LONG;
+    rsl->payload = calloc(count, sizeof(long));
+    memmove(rsl->payload,rsl_data,count*sizeof(long));
+    update_result(handle,rsl);
+
+    free(rsl_data);
     free(rsl);
     return 0;
 }
@@ -331,7 +306,6 @@ int select_data_col_unidx(Column* scol, char* handle, char* pre_range, char* pos
  **/
 int select_data_col_btree(Column* scol, char* handle, char* pre_range, char* post_range) {
     Result* rsl = malloc(sizeof(Result));
-
     char* index_name;
 
     if (scol->cls_type == CLSR) {
@@ -376,18 +350,16 @@ int select_data_col_btree(Column* scol, char* handle, char* pre_range, char* pos
         rsl->num_tuples = count;
         rsl->data_type = LONG;
         rsl->payload = calloc(count, sizeof(long));
-        memcpy(rsl->payload,rsl_data,count* sizeof(long));
-        replace_result(handle,rsl);
+        memmove(rsl->payload,rsl_data,count* sizeof(long));
+        update_result(handle,rsl);
     }
     else {
         long pre = strtol(pre_range, NULL, 0);
         long post = strtol(post_range, NULL, 0);
         long* rsl_data = calloc(scol->size, sizeof(long));
-
         btree btree_index = get_index(index_name);
         btree_kvpair kvpair_pre = btree_search(btree_index, pre);
         btree_kvpair kvpair_post = btree_search(btree_index, post);
-
         size_t count = 0;
         for(long i = kvpair_pre.row_id; i < kvpair_post.row_id; ++i) {
                 rsl_data[count] = i;
@@ -396,8 +368,8 @@ int select_data_col_btree(Column* scol, char* handle, char* pre_range, char* pos
         rsl->num_tuples = count;
         rsl->data_type = LONG;
         rsl->payload = calloc(count, sizeof(long));
-        memcpy(rsl->payload,rsl_data,count* sizeof(long));
-        replace_result(handle,rsl);
+        memmove(rsl->payload,rsl_data,count* sizeof(long));
+        update_result(handle,rsl);
     }
     return 0;
 }
@@ -452,8 +424,8 @@ int select_data_col_sorted(Column* scol, char* handle, char* pre_range, char* po
         rsl->num_tuples = count;
         rsl->data_type = LONG;
         rsl->payload = calloc(count, sizeof(long));
-        memcpy(rsl->payload,rsl_data,count* sizeof(long));
-        replace_result(handle,rsl);
+        memmove(rsl->payload,rsl_data,count* sizeof(long));
+        update_result(handle,rsl);
         free(rsl_data);
     }
     else {
@@ -471,8 +443,8 @@ int select_data_col_sorted(Column* scol, char* handle, char* pre_range, char* po
         rsl->num_tuples = count;
         rsl->data_type = LONG;
         rsl->payload = calloc(count, sizeof(long));
-        memcpy(rsl->payload,rsl_data,count* sizeof(long));
-        replace_result(handle,rsl);
+        memmove(rsl->payload,rsl_data,count* sizeof(long));
+        update_result(handle,rsl);
         free(rsl_data);
     }
     return 0;
@@ -502,8 +474,9 @@ int fetch_col_data(char* col_val_name, char* rsl_vec_pos, char* handle) {
     for(size_t i = 0; i < rsl_size; ++i) {
         fetch_payload[i] = col_val->data[row_id[i]];
     }
-    memcpy(rsl->payload, fetch_payload, rsl_size*sizeof(long));
-    replace_result(handle, rsl);
+    memmove(rsl->payload, fetch_payload, rsl_size*sizeof(long));
+    update_result(handle, rsl);
+
     free(fetch_payload);
     free(rsl);
     return 0;
@@ -567,9 +540,9 @@ int nested_loop_join(char* vec_val_left,
     rsl_left->num_tuples = count;
     rsl_right->num_tuples = count;
     rsl_left->payload = calloc(count, sizeof(long));
-    memcpy(rsl_left->payload, payload_left, count*sizeof(long));
+    memmove(rsl_left->payload, payload_left, count*sizeof(long));
     rsl_right->payload = calloc(count, sizeof(long));
-    memcpy(rsl_right->payload, payload_right, count*sizeof(long));
+    memmove(rsl_right->payload, payload_right, count*sizeof(long));
 
     put_result(handle_left, rsl_left);
     put_result(handle_right, rsl_right);
@@ -664,9 +637,9 @@ int hash_join(char* vec_val_left,
     rsl_left->num_tuples = count;
     rsl_right->num_tuples = count;
     rsl_left->payload = calloc(count, sizeof(long));
-    memcpy(rsl_left->payload, payload_left, count*sizeof(long));
+    memmove(rsl_left->payload, payload_left, count*sizeof(long));
     rsl_right->payload = calloc(count, sizeof(long));
-    memcpy(rsl_right->payload, payload_right, count*sizeof(long));
+    memmove(rsl_right->payload, payload_right, count*sizeof(long));
 
     put_result(handle_left, rsl_left);
     put_result(handle_right, rsl_right);
@@ -700,8 +673,8 @@ int avg_column_data(char* avg_col_name, char* handle) {
     arsl->data_type = FLOAT;
     arsl->num_tuples = 1;
     arsl->payload = calloc(1, sizeof(double));
-    memcpy(arsl->payload, &avg, sizeof(double));
-    replace_result(handle,arsl);
+    memmove(arsl->payload, &avg, sizeof(double));
+    update_result(handle,arsl);
     free(arsl);
     return 0;
 }
@@ -740,8 +713,8 @@ int avg_result_data(char* avg_rsl_name, char* handle) {
     rsl->data_type = FLOAT;
     rsl->num_tuples = 1;
     rsl->payload = calloc(1, sizeof(double));
-    memcpy(rsl->payload, &avg, sizeof(double));
-    replace_result(handle,rsl);
+    memmove(rsl->payload, &avg, sizeof(double));
+    update_result(handle,rsl);
     free(rsl);
     return 0;
 }
@@ -768,8 +741,8 @@ int sum_column_data(char* sum_col_name, char* handle) {
     rsl->data_type = LONG;
     rsl->num_tuples = 1;
     rsl->payload = calloc(1, sizeof(long));
-    memcpy(rsl->payload, &sum, sizeof(long));
-    replace_result(handle,rsl);
+    memmove(rsl->payload, &sum, sizeof(long));
+    update_result(handle,rsl);
     free(rsl);
     return 0;
 }
@@ -797,8 +770,8 @@ int sum_result_data(char* sum_rsl_name, char* handle) {
         rsl->data_type = FLOAT;
         rsl->num_tuples = 1;
         rsl->payload = calloc(1, sizeof(double));
-        memcpy(rsl->payload, &sum, sizeof(double));
-        replace_result(handle,rsl);
+        memmove(rsl->payload, &sum, sizeof(double));
+        update_result(handle,rsl);
         free(rsl);
     }
     else if (sum_rsl->data_type == LONG) {
@@ -815,8 +788,8 @@ int sum_result_data(char* sum_rsl_name, char* handle) {
         rsl->data_type = LONG;
         rsl->num_tuples = 1;
         rsl->payload = calloc(1, sizeof(long));
-        memcpy(rsl->payload, &sum, sizeof(long));
-        replace_result(handle,rsl);
+        memmove(rsl->payload, &sum, sizeof(long));
+        update_result(handle,rsl);
         free(rsl);
     }
     else {
@@ -847,8 +820,8 @@ int add_col_col(char* add_name1, char* add_name2, char* handle) {
     rsl->num_tuples = count;
     rsl->data_type = LONG;
     rsl->payload = calloc(count, sizeof(long));
-    memcpy(rsl->payload, add_sum, count* sizeof(long));
-    replace_result(handle,rsl);
+    memmove(rsl->payload, add_sum, count* sizeof(long));
+    update_result(handle,rsl);
     return 0;
 }
 
@@ -876,8 +849,8 @@ int add_rsl_rsl(char* add_name1, char* add_name2, char* handle) {
         rsl->num_tuples = count;
         rsl->data_type = LONG;
         rsl->payload = calloc(count, sizeof(long));
-        memcpy(rsl->payload, add_sum, count* sizeof(long));
-        replace_result(handle,rsl);
+        memmove(rsl->payload, add_sum, count* sizeof(long));
+        update_result(handle,rsl);
         free(add_sum);
         free(rsl);
         return 0;
@@ -893,8 +866,8 @@ int add_rsl_rsl(char* add_name1, char* add_name2, char* handle) {
         rsl->num_tuples = count;
         rsl->data_type = FLOAT;
         rsl->payload = calloc(count, sizeof(double));
-        memcpy(rsl->payload, add_sum, count* sizeof(double));
-        replace_result(handle,rsl);
+        memmove(rsl->payload, add_sum, count* sizeof(double));
+        update_result(handle,rsl);
         free(add_sum);
         free(rsl);
         return 0;
@@ -929,8 +902,8 @@ int add_col_rsl(char* add_name1, char* add_name2, char* handle) {
         rsl->num_tuples = count;
         rsl->data_type = LONG;
         rsl->payload = calloc(count, sizeof(long));
-        memcpy(rsl->payload, add_sum, count* sizeof(long));
-        replace_result(handle,rsl);
+        memmove(rsl->payload, add_sum, count* sizeof(long));
+        update_result(handle,rsl);
         return 0;
     }
     else if (add2->data_type == FLOAT) {
@@ -944,8 +917,8 @@ int add_col_rsl(char* add_name1, char* add_name2, char* handle) {
         rsl->num_tuples = count;
         rsl->data_type = FLOAT;
         rsl->payload = calloc(count, sizeof(double));
-        memcpy(rsl->payload, add_sum, count* sizeof(double));
-        replace_result(handle,rsl);
+        memmove(rsl->payload, add_sum, count* sizeof(double));
+        update_result(handle,rsl);
         return 0;
     }
     else {
@@ -978,8 +951,8 @@ int add_rsl_col(char* add_name1, char* add_name2, char* handle) {
         rsl->num_tuples = count;
         rsl->data_type = LONG;
         rsl->payload = calloc(count, sizeof(long));
-        memcpy(rsl->payload, add_sum, count* sizeof(long));
-        replace_result(handle,rsl);
+        memmove(rsl->payload, add_sum, count* sizeof(long));
+        update_result(handle,rsl);
         return 0;
     }
     else if (add1->data_type == FLOAT) {
@@ -993,8 +966,8 @@ int add_rsl_col(char* add_name1, char* add_name2, char* handle) {
         rsl->num_tuples = count;
         rsl->data_type = FLOAT;
         rsl->payload = calloc(count, sizeof(double));
-        memcpy(rsl->payload, add_sum, count* sizeof(double));
-        replace_result(handle,rsl);
+        memmove(rsl->payload, add_sum, count* sizeof(double));
+        update_result(handle,rsl);
         return 0;
     }
     else {
@@ -1024,8 +997,8 @@ int sub_col_col(char* sub_name1, char* sub_name2, char* handle) {
     rsl->num_tuples = count;
     rsl->data_type = LONG;
     rsl->payload = calloc(count, sizeof(long));
-    memcpy(rsl->payload, sub_sum, count* sizeof(long));
-    replace_result(handle,rsl);
+    memmove(rsl->payload, sub_sum, count* sizeof(long));
+    update_result(handle,rsl);
     return 0;
 }
 
@@ -1053,8 +1026,8 @@ int sub_rsl_rsl(char* sub_name1, char* sub_name2, char* handle) {
         rsl->num_tuples = count;
         rsl->data_type = LONG;
         rsl->payload = calloc(count, sizeof(long));
-        memcpy(rsl->payload, sub_sum, count* sizeof(long));
-        replace_result(handle,rsl);
+        memmove(rsl->payload, sub_sum, count* sizeof(long));
+        update_result(handle,rsl);
         free(sub_sum);
         free(rsl);
         return 0;
@@ -1070,8 +1043,8 @@ int sub_rsl_rsl(char* sub_name1, char* sub_name2, char* handle) {
         rsl->num_tuples = count;
         rsl->data_type = FLOAT;
         rsl->payload = calloc(count, sizeof(double));
-        memcpy(rsl->payload, sub_sum, count* sizeof(double));
-        replace_result(handle,rsl);
+        memmove(rsl->payload, sub_sum, count* sizeof(double));
+        update_result(handle,rsl);
         free(sub_sum);
         free(rsl);
         return 0;
@@ -1104,8 +1077,8 @@ int max_rsl_value(char* max_vec, char* handle) {
         rsl->data_type = LONG;
         rsl->num_tuples = 1;
         rsl->payload = calloc(1, sizeof(long));
-        memcpy(rsl->payload, &max, sizeof(long));
-        replace_result(handle,rsl);
+        memmove(rsl->payload, &max, sizeof(long));
+        update_result(handle,rsl);
         return 0;
     }
     else if (vrsl->data_type == FLOAT) {
@@ -1121,8 +1094,8 @@ int max_rsl_value(char* max_vec, char* handle) {
         rsl->data_type = FLOAT;
         rsl->num_tuples = 1;
         rsl->payload = calloc(1, sizeof(double));
-        memcpy(rsl->payload, &max, sizeof(double));
-        replace_result(handle,rsl);
+        memmove(rsl->payload, &max, sizeof(double));
+        update_result(handle,rsl);
         return 0;
     }
     else {
@@ -1159,15 +1132,15 @@ int max_rsl_value_pos(char* max_vec_pos, char* max_vec_value, char* handle_pos, 
         vrsl->data_type = LONG;
         vrsl->num_tuples = 1;
         vrsl->payload = calloc(1, sizeof(long));
-        memcpy(vrsl->payload, &max, sizeof(long));
-        replace_result(handle_value,vrsl);
+        memmove(vrsl->payload, &max, sizeof(long));
+        update_result(handle_value,vrsl);
 
         Result* prsl = malloc(sizeof(Result));
         prsl->data_type = LONG;
         prsl->num_tuples = 1;
         prsl->payload = calloc(1, sizeof(long));
-        memcpy(prsl->payload, &max_pos, sizeof(long));
-        replace_result(handle_pos,prsl);
+        memmove(prsl->payload, &max_pos, sizeof(long));
+        update_result(handle_pos,prsl);
         return 0;
     }
     else if (rsl_value->data_type == FLOAT) {
@@ -1188,15 +1161,15 @@ int max_rsl_value_pos(char* max_vec_pos, char* max_vec_value, char* handle_pos, 
         vrsl->data_type = FLOAT;
         vrsl->num_tuples = 1;
         vrsl->payload = calloc(1, sizeof(double));
-        memcpy(vrsl->payload, &max, sizeof(double));
-        replace_result(handle_value,vrsl);
+        memmove(vrsl->payload, &max, sizeof(double));
+        update_result(handle_value,vrsl);
 
         Result* prsl = malloc(sizeof(Result));
         prsl->data_type = LONG;
         prsl->num_tuples = 1;
         prsl->payload = calloc(1, sizeof(long));
-        memcpy(prsl->payload, &max_pos, sizeof(long));
-        replace_result(handle_pos,prsl);
+        memmove(prsl->payload, &max_pos, sizeof(long));
+        update_result(handle_pos,prsl);
         return 0;
     }
     else {
@@ -1227,8 +1200,8 @@ int min_rsl_value(char* min_vec,char* handle) {
         rsl->data_type = LONG;
         rsl->num_tuples = 1;
         rsl->payload = calloc(1, sizeof(long));
-        memcpy(rsl->payload, &min, sizeof(long));
-        replace_result(handle,rsl);
+        memmove(rsl->payload, &min, sizeof(long));
+        update_result(handle,rsl);
         return 0;
     }
     else if (vrsl->data_type == FLOAT) {
@@ -1244,8 +1217,8 @@ int min_rsl_value(char* min_vec,char* handle) {
         rsl->data_type = FLOAT;
         rsl->num_tuples = 1;
         rsl->payload = calloc(1, sizeof(double));
-        memcpy(rsl->payload, &min, sizeof(double));
-        replace_result(handle,rsl);
+        memmove(rsl->payload, &min, sizeof(double));
+        update_result(handle,rsl);
         return 0;
     }
     else {
@@ -1282,15 +1255,15 @@ int min_rsl_value_pos(char* min_vec_pos, char* min_vec_value, char* handle_pos, 
         vrsl->data_type = LONG;
         vrsl->num_tuples = 1;
         vrsl->payload = calloc(1, sizeof(long));
-        memcpy(vrsl->payload, &min, sizeof(long));
-        replace_result(handle_value,vrsl);
+        memmove(vrsl->payload, &min, sizeof(long));
+        update_result(handle_value,vrsl);
 
         Result* prsl = malloc(sizeof(Result));
         prsl->data_type = LONG;
         prsl->num_tuples = 1;
         prsl->payload = calloc(1, sizeof(long));
-        memcpy(prsl->payload, &min_pos, sizeof(long));
-        replace_result(handle_pos,prsl);
+        memmove(prsl->payload, &min_pos, sizeof(long));
+        update_result(handle_pos,prsl);
         return 0;
     }
     else if (rsl_value->data_type == FLOAT) {
@@ -1311,15 +1284,15 @@ int min_rsl_value_pos(char* min_vec_pos, char* min_vec_value, char* handle_pos, 
         vrsl->data_type = FLOAT;
         vrsl->num_tuples = 1;
         vrsl->payload = calloc(1, sizeof(double));
-        memcpy(vrsl->payload, &min, sizeof(double));
-        replace_result(handle_value,vrsl);
+        memmove(vrsl->payload, &min, sizeof(double));
+        update_result(handle_value,vrsl);
 
         Result* prsl = malloc(sizeof(Result));
         prsl->data_type = LONG;
         prsl->num_tuples = 1;
         prsl->payload = calloc(1, sizeof(long));
-        memcpy(prsl->payload, &min_pos, sizeof(long));
-        replace_result(handle_pos,prsl);
+        memmove(prsl->payload, &min_pos, sizeof(long));
+        update_result(handle_pos,prsl);
         return 0;
     }
     else {
@@ -1408,7 +1381,7 @@ int read_csv(char* data_path) {
     }
 
     char* line_copy = calloc(strlen(line)+1, sizeof(char));
-    memcpy(line_copy,line, strlen(line)+1);
+    memmove(line_copy,line, strlen(line)+1);
     char* line_copy_free = line_copy;
     size_t header_count = 0;
     char* sepTmp = NULL;
@@ -1572,7 +1545,7 @@ int read_csv(char* data_path) {
         char* line_mc_free = line_mc;
         while ((getline(&line_mc, &len_mc, fp)) != -1) {
             char* line_mc_head = calloc(strlen(line_mc)+1, sizeof(char));
-            memcpy(line_mc_head,line_mc, strlen(line)+1);
+            memmove(line_mc_head,line_mc, strlen(line)+1);
             char* line_mc_head_free = line_mc_head;
             for (size_t i = 0; i < header_count; ++i) {
                 char *va = next_token_comma(&line_mc_head, &mes_status);
@@ -1826,7 +1799,7 @@ int load_database() {
             size_t len = 0;
             while ((getline(&line, &len, fp)) != -1) {
                 char* line_copy = malloc((strlen(line)+1) * sizeof(char));
-                memcpy(line_copy,line, strlen(line)+1);
+                memmove(line_copy,line, strlen(line)+1);
                 char* line_copy_free = line_copy;
                 line_copy = trim_newline(line_copy);
                 mes_status = OK_DONE;

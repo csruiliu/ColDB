@@ -172,7 +172,7 @@ void replace_result(char* result_name, Result* result) {
 void free_result_store() {
     for (size_t index = 0; index < result_store->size; index++) {
         kvpair* cur_ikv = &(result_store->kv_pair[index]);
-        if(cur_ikv->key != NULL) {
+        if(cur_ikv->value != NULL) {
             Result* rsl_ptr = cur_ikv->value;
             free(rsl_ptr->payload);
         }
@@ -247,8 +247,8 @@ void put_index(char* index_name, void* index, IndexType index_type) {
 
 void free_index_store() {
     if(kv_deallocate(index_store) != 0) {
-        log_info("free result kv store failed\n");
+        log_info("free index kv store failed\n");
     } else {
-        log_info("free result kv store successfully\n");
+        log_info("free index kv store successfully\n");
     }
 }

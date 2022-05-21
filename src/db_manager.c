@@ -257,6 +257,8 @@ int select_data_result(Result* srsl_pos, Result* srsl_val, char* handle, char* p
         memcpy(rsl->payload, rsl_payload, size*sizeof(long));
         replace_result(handle,rsl);
     }
+    free(rsl_payload);
+    free(rsl);
     return 0;
 }
 
@@ -876,6 +878,8 @@ int add_rsl_rsl(char* add_name1, char* add_name2, char* handle) {
         rsl->payload = calloc(count, sizeof(long));
         memcpy(rsl->payload, add_sum, count* sizeof(long));
         replace_result(handle,rsl);
+        free(add_sum);
+        free(rsl);
         return 0;
     }
     else if (add1->data_type == FLOAT || add2->data_type == FLOAT) {
@@ -891,6 +895,8 @@ int add_rsl_rsl(char* add_name1, char* add_name2, char* handle) {
         rsl->payload = calloc(count, sizeof(double));
         memcpy(rsl->payload, add_sum, count* sizeof(double));
         replace_result(handle,rsl);
+        free(add_sum);
+        free(rsl);
         return 0;
     }
     else {
@@ -1049,6 +1055,8 @@ int sub_rsl_rsl(char* sub_name1, char* sub_name2, char* handle) {
         rsl->payload = calloc(count, sizeof(long));
         memcpy(rsl->payload, sub_sum, count* sizeof(long));
         replace_result(handle,rsl);
+        free(sub_sum);
+        free(rsl);
         return 0;
     }
     else if (sub1->data_type == FLOAT || sub2->data_type == FLOAT) {
@@ -1064,6 +1072,8 @@ int sub_rsl_rsl(char* sub_name1, char* sub_name2, char* handle) {
         rsl->payload = calloc(count, sizeof(double));
         memcpy(rsl->payload, sub_sum, count* sizeof(double));
         replace_result(handle,rsl);
+        free(sub_sum);
+        free(rsl);
         return 0;
     }
     else {
@@ -1330,14 +1340,13 @@ char* generate_print_result(size_t print_num, char** print_name) {
         if(rsl->data_type == LONG) {
             for(size_t j = 0; j < rsl->num_tuples; ++j) {
                 log_info("%ld\n",((long *)rsl->payload)[j]);
-                rsl_total_size += count_digits(((long *)rsl->payload)[j]) + 2;
+                rsl_total_size += count_digits(((long *)rsl->payload)[j]) + 3;
             }
-
         }
         else if(rsl->data_type == FLOAT) {
             for(size_t j = 0; j < rsl->num_tuples; ++j) {
                 log_info("%0.2f\n",((double *)rsl->payload)[j]);
-                rsl_total_size += count_digits(((long *)rsl->payload)[j]) + 5;
+                rsl_total_size += count_digits(((long *)rsl->payload)[j]) + 6;
             }
         }
         else {
@@ -1353,7 +1362,7 @@ char* generate_print_result(size_t print_num, char** print_name) {
             for(size_t j = 0; j < rsl->num_tuples; ++j) {
                 log_info("%ld\n",((long *)rsl->payload)[j]);
                 size_t num_digit = count_digits(((long *)rsl->payload)[j]);
-                char* tmp_payload_data = calloc(num_digit+2, sizeof(char));
+                char* tmp_payload_data = calloc(num_digit+3, sizeof(char));
                 sprintf(tmp_payload_data, "%ld\n", ((long *)rsl->payload)[j]);
                 strcat(print_rsl,tmp_payload_data);
                 free(tmp_payload_data);
@@ -1364,7 +1373,7 @@ char* generate_print_result(size_t print_num, char** print_name) {
             for(size_t j = 0; j < rsl->num_tuples; ++j) {
                 log_info("%0.2f\n",((double *)rsl->payload)[j]);
                 size_t num_digit = count_digits(((long *)rsl->payload)[j]);
-                char* tmp_payload_data = calloc(num_digit+5, sizeof(char));
+                char* tmp_payload_data = calloc(num_digit+6, sizeof(char));
                 sprintf(tmp_payload_data, "%0.2f\n", ((double *)rsl->payload)[j]);
                 strcat(print_rsl,tmp_payload_data);
                 free(tmp_payload_data);

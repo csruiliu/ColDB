@@ -86,6 +86,18 @@ void free_query(DbOperator* query) {
             free(query->operator_fields.sum_operator.handle);
             free(query);
             break;
+        case ADD:
+            free(query->operator_fields.add_operator.add_name1);
+            free(query->operator_fields.add_operator.add_name2);
+            free(query->operator_fields.add_operator.handle);
+            free(query);
+            break;
+        case SUB:
+            free(query->operator_fields.sub_operator.sub_name1);
+            free(query->operator_fields.sub_operator.sub_name2);
+            free(query->operator_fields.sub_operator.handle);
+            free(query);
+            break;
         default:
             free(query);
     }
@@ -440,6 +452,7 @@ char* exec_aggr_sub(DbOperator* query) {
             return "get subtraction of data failed.\n";
         }
     }
+    free_query(query);
     return "get subtraction of data successfully.\n";
 }
 
@@ -454,6 +467,7 @@ char* exec_aggr_max(DbOperator* query) {
             free_query(query);
             return "get max of data failed.\n";
         }
+        free_query(query);
         return "get max of data successfully.\n";
     }
     else {
@@ -465,6 +479,7 @@ char* exec_aggr_max(DbOperator* query) {
             free_query(query);
             return "get max of data and regarding position failed.\n";
         }
+        free_query(query);
         return "get max of data and regarding position successfully.\n";
     }
 }
@@ -480,6 +495,7 @@ char* exec_aggr_min(DbOperator* query) {
             free_query(query);
             return "get min of data failed.\n";
         }
+        free_query(query);
         return "get min of data successfully.\n";
     }
     else {
@@ -491,6 +507,7 @@ char* exec_aggr_min(DbOperator* query) {
             free_query(query);
             return "get min of data and regarding position failed.\n";
         }
+        free_query(query);
         return "get min of data and regarding position successfully.\n";
     }
 }

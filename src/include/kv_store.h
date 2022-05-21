@@ -20,7 +20,7 @@ int put(kvstore* kv_store, char* key, void* value, size_t value_size);
 
 int delete(kvstore* kv_store, char* key);
 
-int put_replace(kvstore* kv_store, char* key, void* value, size_t value_size);
+int update(kvstore* kv_store, char* key, void* value, size_t value_size);
 
 void* get(kvstore* kv_store, char* key);
 

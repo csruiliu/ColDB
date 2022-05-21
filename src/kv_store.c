@@ -86,7 +86,7 @@ int put_replace(kvstore* kv_store, char* key, void* value, size_t value_size) {
     size_t index = hash_func(key, PRIME, kv_store->size);
     kvpair* cur_ikv = &(kv_store->kv_pair[index]);
     if(cur_ikv->key == NULL) {
-        kv_store->kv_pair[index].key = malloc(sizeof(char)*(strlen(key)+1));
+        kv_store->kv_pair[index].key = calloc(strlen(key)+1, sizeof(char));
         kv_store->kv_pair[index].value = malloc(value_size);
         if(kv_store->kv_pair[index].key == NULL || kv_store->kv_pair[index].value == NULL) {
             return 1;
@@ -98,7 +98,7 @@ int put_replace(kvstore* kv_store, char* key, void* value, size_t value_size) {
     else {
         free(kv_store->kv_pair[index].key);
         free(kv_store->kv_pair[index].value);
-        kv_store->kv_pair[index].key = malloc(sizeof(char)*(strlen(key)+1));
+        kv_store->kv_pair[index].key = calloc(strlen(key)+1, sizeof(char));
         kv_store->kv_pair[index].value = malloc(value_size);
         if(kv_store->kv_pair[index].key == NULL || kv_store->kv_pair[index].value == NULL) {
             return 1;
@@ -157,7 +157,7 @@ int kv_rehash(kvstore** kv_store, size_t nc, size_t value_size) {
                 }
                 nikv = &(new_store->kv_pair[index]);
             }
-            new_store->kv_pair[index].key = malloc((strlen(oikv->key)+1)* sizeof(char));
+            new_store->kv_pair[index].key = calloc(strlen(oikv->key)+1, sizeof(char));
             strcpy(new_store->kv_pair[index].key, oikv->key);
             new_store->kv_pair[index].value = malloc(value_size);
             memmove(new_store->kv_pair[index].value, oikv->value, value_size);

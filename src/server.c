@@ -98,6 +98,24 @@ void free_query(DbOperator* query) {
             free(query->operator_fields.sub_operator.handle);
             free(query);
             break;
+        case MIN:
+            if(query->operator_fields.min_operator.min_type == MIN_POS_VALUE) {
+                free(query->operator_fields.min_operator.handle_pos);
+                free(query->operator_fields.min_operator.min_vec_pos);
+            }
+            free(query->operator_fields.min_operator.handle_value);
+            free(query->operator_fields.min_operator.min_vec_value);
+            free(query);
+            break;
+        case MAX:
+            if(query->operator_fields.max_operator.max_type == MAX_POS_VALUE) {
+                free(query->operator_fields.max_operator.handle_pos);
+                free(query->operator_fields.max_operator.max_vec_pos);
+            }
+            free(query->operator_fields.max_operator.handle_value);
+            free(query->operator_fields.max_operator.max_vec_value);
+            free(query);
+            break;
         default:
             free(query);
     }

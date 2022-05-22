@@ -1079,6 +1079,7 @@ int max_rsl_value(char* max_vec, char* handle) {
         rsl->payload = calloc(1, sizeof(long));
         memmove(rsl->payload, &max, sizeof(long));
         update_result(handle,rsl);
+        free(rsl);
         return 0;
     }
     else if (vrsl->data_type == FLOAT) {
@@ -1096,6 +1097,7 @@ int max_rsl_value(char* max_vec, char* handle) {
         rsl->payload = calloc(1, sizeof(double));
         memmove(rsl->payload, &max, sizeof(double));
         update_result(handle,rsl);
+        free(rsl);
         return 0;
     }
     else {
@@ -1202,6 +1204,7 @@ int min_rsl_value(char* min_vec,char* handle) {
         rsl->payload = calloc(1, sizeof(long));
         memmove(rsl->payload, &min, sizeof(long));
         update_result(handle,rsl);
+        free(rsl);
         return 0;
     }
     else if (vrsl->data_type == FLOAT) {
@@ -1219,6 +1222,7 @@ int min_rsl_value(char* min_vec,char* handle) {
         rsl->payload = calloc(1, sizeof(double));
         memmove(rsl->payload, &min, sizeof(double));
         update_result(handle,rsl);
+        free(rsl);
         return 0;
     }
     else {

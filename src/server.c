@@ -52,10 +52,12 @@ void free_query(DbOperator* query) {
             free(query->operator_fields.select_operator.handle);
             free(query->operator_fields.select_operator.pre_range);
             free(query->operator_fields.select_operator.post_range);
-            free(query->operator_fields.select_operator.select_col);
             if (query->operator_fields.select_operator.selectType == HANDLE_RSL) {
                 free(query->operator_fields.select_operator.select_rsl_pos);
                 free(query->operator_fields.select_operator.select_rsl_val);
+            }
+            else {
+                free(query->operator_fields.select_operator.select_col);
             }
             free(query);
             break;

@@ -1549,7 +1549,7 @@ int read_csv(char* data_path) {
         char* line_mc_free = line_mc;
         while ((getline(&line_mc, &len_mc, fp)) != -1) {
             char* line_mc_head = calloc(strlen(line_mc)+1, sizeof(char));
-            memmove(line_mc_head,line_mc, strlen(line)+1);
+            memmove(line_mc_head,line_mc, (strlen(line_mc)+1)*sizeof(char));
             char* line_mc_head_free = line_mc_head;
             for (size_t i = 0; i < header_count; ++i) {
                 char *va = next_token_comma(&line_mc_head, &mes_status);
@@ -1803,7 +1803,7 @@ int load_database() {
             size_t len = 0;
             while ((getline(&line, &len, fp)) != -1) {
                 char* line_copy = malloc((strlen(line)+1) * sizeof(char));
-                memmove(line_copy,line, strlen(line)+1);
+                memmove(line_copy,line, (strlen(line)+1)*sizeof(char));
                 char* line_copy_free = line_copy;
                 line_copy = trim_newline(line_copy);
                 mes_status = OK_DONE;

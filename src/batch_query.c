@@ -61,18 +61,23 @@ void* exec_query() {
                     char* post_range = query->operator_fields.select_operator.post_range;
                     Column* scol = get_column(select_col_name);
                     if(scol == NULL) {
+                        free_batch_query(node->query);
+                        free(node->share_query_handle);
+                        free(node);
                         log_err("[server.c:execute_DbOperator()] column didn't exist in the database.\n");
                         break;
                     }
                     else {
                         if (scol->idx_type == UNIDX) {
                             if(select_data_col_unidx(scol, handle, pre_range, post_range) != 0) {
-                                free(query);
+                                free_batch_query(node->query);
+                                free(node->share_query_handle);
+                                free(node);
                                 log_err("[server.c:execute_DbOperator()] select data from column in database failed.\n");
+                                break;
                             }
                         }
                     }
-                    free(query);
                     log_info("select data from column in database successfully.\n");
                 }
                 else if (query->operator_fields.select_operator.selectType == HANDLE_RSL){
@@ -84,16 +89,25 @@ void* exec_query() {
                     Result* srsl_pos = get_result(select_rsl_pos);
                     Result* srsl_val = get_result(select_rsl_val);
                     if(select_data_result(srsl_pos, srsl_val, handle, pre_range, post_range) != 0) {
-                        free(query);
+                        free_batch_query(node->query);
+                        free(node->share_query_handle);
+                        free(node);
                         log_err("[server.c:execute_DbOperator()] select data from result in database failed.\n");
+                        break;
                     }
-                    free(query);
                     log_info("select data from result in database successfully.\n");
                 }
                 else {
+                    free_batch_query(node->query);
+                    free(node->share_query_handle);
+                    free(node);
                     log_err("Cannot identify the select type[COL/RSL].\n");
+                    break;
                 }
             }
+            free_batch_query(node->query);
+            free(node->share_query_handle);
+            free(node);
         }
     }
     return 0;
@@ -160,101 +174,103 @@ int exec_batch_query() {
     return 0;
 }
 
-void free_batch_query() {
-    while(!is_empty_bq()) {
-        bqNode *node = pop_head_bq();
-        switch (node->query->type) {
-            case CREATE_DB:
-                free(node->query->operator_fields.create_db_operator.db_name);
-                free(node->query);
-                break;
-            case CREATE_TBL:
-                free(node->query->operator_fields.create_table_operator.db_name);
-                free(node->query->operator_fields.create_table_operator.table_name);
-                free(node->query);
-                break;
-            case CREATE_COL:
-                free(node->query->operator_fields.create_col_operator.col_name);
-                free(node->query->operator_fields.create_col_operator.tbl_name);
-                free(node->query);
-                break;
-            case INSERT:
-                free(node->query->operator_fields.insert_operator.values);
-                free(node->query);
-                break;
-            case SELECT:
-                free(node->query->operator_fields.select_operator.handle);
-                free(node->query->operator_fields.select_operator.pre_range);
-                free(node->query->operator_fields.select_operator.post_range);
-                if (node->query->operator_fields.select_operator.selectType == HANDLE_RSL) {
-                    free(node->query->operator_fields.select_operator.select_rsl_pos);
-                    free(node->query->operator_fields.select_operator.select_rsl_val);
-                } else {
-                    free(node->query->operator_fields.select_operator.select_col);
-                }
-                break;
-            case FETCH:
-                free(node->query->operator_fields.fetch_operator.handle);
-                free(node->query->operator_fields.fetch_operator.col_var_name);
-                free(node->query->operator_fields.fetch_operator.rsl_vec_pos);
-                free(node->query);
-                break;
-            case LOAD:
-                free(node->query->operator_fields.load_operator.data_path);
-                free(node->query);
-                break;
-            case PRINT:
-                for (size_t i = 0; i < node->query->operator_fields.print_operator.print_num; ++i) {
-                    free(node->query->operator_fields.print_operator.print_name[i]);
-                }
-                free(node->query->operator_fields.print_operator.print_name);
-                free(node->query);
-                break;
-            case AVG:
-                free(node->query->operator_fields.avg_operator.avg_name);
-                free(node->query->operator_fields.avg_operator.handle);
-                free(node->query);
-                break;
-            case SUM:
-                free(node->query->operator_fields.sum_operator.sum_name);
-                free(node->query->operator_fields.sum_operator.handle);
-                free(node->query);
-                break;
-            case ADD:
-                free(node->query->operator_fields.add_operator.add_name1);
-                free(node->query->operator_fields.add_operator.add_name2);
-                free(node->query->operator_fields.add_operator.handle);
-                free(node->query);
-                break;
-            case SUB:
-                free(node->query->operator_fields.sub_operator.sub_name1);
-                free(node->query->operator_fields.sub_operator.sub_name2);
-                free(node->query->operator_fields.sub_operator.handle);
-                free(node->query);
-                break;
-            case MIN:
-                if (node->query->operator_fields.min_operator.min_type == MIN_POS_VALUE) {
-                    free(node->query->operator_fields.min_operator.handle_pos);
-                    free(node->query->operator_fields.min_operator.min_vec_pos);
-                }
-                free(node->query->operator_fields.min_operator.handle_value);
-                free(node->query->operator_fields.min_operator.min_vec_value);
-                free(node->query);
-                break;
-            case MAX:
-                if (node->query->operator_fields.max_operator.max_type == MAX_POS_VALUE) {
-                    free(node->query->operator_fields.max_operator.handle_pos);
-                    free(node->query->operator_fields.max_operator.max_vec_pos);
-                }
-                free(node->query->operator_fields.max_operator.handle_value);
-                free(node->query->operator_fields.max_operator.max_vec_value);
-                free(node->query);
-                break;
-            default:
-                free(node->query);
-        }
-        free(node->query);
+void free_batch_query(DbOperator* query) {
+    switch (query->type) {
+        case CREATE_DB:
+            free(query->operator_fields.create_db_operator.db_name);
+            free(query);
+            break;
+        case CREATE_TBL:
+            free(query->operator_fields.create_table_operator.db_name);
+            free(query->operator_fields.create_table_operator.table_name);
+            free(query);
+            break;
+        case CREATE_COL:
+            free(query->operator_fields.create_col_operator.col_name);
+            free(query->operator_fields.create_col_operator.tbl_name);
+            free(query);
+            break;
+        case INSERT:
+            free(query->operator_fields.insert_operator.values);
+            free(query);
+            break;
+        case SELECT:
+            free(query->operator_fields.select_operator.handle);
+            free(query->operator_fields.select_operator.pre_range);
+            free(query->operator_fields.select_operator.post_range);
+            if (query->operator_fields.select_operator.selectType == HANDLE_RSL) {
+                free(query->operator_fields.select_operator.select_rsl_pos);
+                free(query->operator_fields.select_operator.select_rsl_val);
+            }
+            else {
+                free(query->operator_fields.select_operator.select_col);
+            }
+            free(query);
+            break;
+        case FETCH:
+            free(query->operator_fields.fetch_operator.handle);
+            free(query->operator_fields.fetch_operator.col_var_name);
+            free(query->operator_fields.fetch_operator.rsl_vec_pos);
+            free(query);
+            break;
+        case LOAD:
+            free(query->operator_fields.load_operator.data_path);
+            free(query);
+            break;
+        case PRINT:
+            for (size_t i = 0; i < query->operator_fields.print_operator.print_num; ++i) {
+                free(query->operator_fields.print_operator.print_name[i]);
+            }
+            free(query->operator_fields.print_operator.print_name);
+            free(query);
+            break;
+        case AVG:
+            free(query->operator_fields.avg_operator.avg_name);
+            free(query->operator_fields.avg_operator.handle);
+            free(query);
+            break;
+        case SUM:
+            free(query->operator_fields.sum_operator.sum_name);
+            free(query->operator_fields.sum_operator.handle);
+            free(query);
+            break;
+        case ADD:
+            free(query->operator_fields.add_operator.add_name1);
+            free(query->operator_fields.add_operator.add_name2);
+            free(query->operator_fields.add_operator.handle);
+            free(query);
+            break;
+        case SUB:
+            free(query->operator_fields.sub_operator.sub_name1);
+            free(query->operator_fields.sub_operator.sub_name2);
+            free(query->operator_fields.sub_operator.handle);
+            free(query);
+            break;
+        case MIN:
+            if(query->operator_fields.min_operator.min_type == MIN_POS_VALUE) {
+                free(query->operator_fields.min_operator.handle_pos);
+                free(query->operator_fields.min_operator.min_vec_pos);
+            }
+            free(query->operator_fields.min_operator.handle_value);
+            free(query->operator_fields.min_operator.min_vec_value);
+            free(query);
+            break;
+        case MAX:
+            if(query->operator_fields.max_operator.max_type == MAX_POS_VALUE) {
+                free(query->operator_fields.max_operator.handle_pos);
+                free(query->operator_fields.max_operator.max_vec_pos);
+            }
+            free(query->operator_fields.max_operator.handle_value);
+            free(query->operator_fields.max_operator.max_vec_value);
+            free(query);
+            break;
+        default:
+            free(query);
     }
+}
+
+int destroy_batch_query_queue() {
+    return destroy_bq();
 }
 
 int batch_schedule_convoy() {

@@ -23,6 +23,8 @@ bqNode* create_node(DbOperator *query);
  */
 int create_bq();
 
+int destroy_bq();
+
 int push_node_bq(bqNode *node);
 
 bqNode* pop_head_bq();

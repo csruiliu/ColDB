@@ -562,6 +562,7 @@ char* exec_batch(DbOperator *query) {
         return "exec batch queries failed.\n";
     }
     free(query);
+    destroy_batch_query_queue();
     return "schedule and execute batch queries successfully.\n";
 }
 

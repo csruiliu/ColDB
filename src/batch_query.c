@@ -113,64 +113,31 @@ void* exec_query() {
     return 0;
 }
 
-pthread_t* create_thread(size_t thread_id) {
-    pthread_t* new_thread = malloc(sizeof(pthread_t));
-    if (new_thread == NULL) {
-        return NULL;
-    }
-    char* thread_name = "thread" + thread_id;
-    // char* thread_message = malloc((sizeof(thread_name)+1)* sizeof(char));
-    int ret_thread = pthread_create(new_thread, NULL, exec_query, (void *)thread_name);
-    if(ret_thread == 0) {
-        log_info("Thread %d create successfully.\n", thread_id);
-    }
-    else {
-        log_info("Thread %d create failed.\n", thread_id);
-        return NULL;
-    }
-    return new_thread;
-    /*
-    pths = calloc(size_p, sizeof(pthread_t*));
-    pth_messages = calloc(size_p, sizeof(char*));
-
-    for(size_t i = 0; i < size_p; ++i) {
-        pths[i] = malloc(sizeof(pthread_t));
-
-        char* pth_name = "thread" + i;
-        pth_messages[i] = malloc((sizeof(pth_name)+1)* sizeof(char));
-        strcpy(pth_messages[i],pth_name);
-        int ret_thread = pthread_create(pths[i], NULL, exec_query, (void *)pth_messages[i]);
-        if(ret_thread == 0) {
-            log_info("Thread %d create successfully.\n", i);
-        }
-        else {
-            log_info("Thread %d create failed.\n", i);
-        }
-    }
-    */
-}
-
 int exec_batch_query() {
     void *status;
     //nprocs = get_nprocs() - 1;
     log_info("current available process number: %d\n", nprocs);
     size_t query_batch_size = get_length_bq();
+    pthread_t* thread_pool = malloc(query_batch_size * sizeof(pthread_t));
 
-    while(true) {
-        if (query_batch_size == 0) {
-            break;
-        }
-        pthread_t* cur_thread = create_thread(query_batch_size);
-        if (cur_thread != NULL) {
-            query_batch_size--;
-            pthread_join(*cur_thread, &status);
+    for(size_t i = 0; i < query_batch_size; i++){
+        char* thread_name = "thread" + i;
+        int rc = pthread_create(&thread_pool[i], NULL, exec_query, (void *)thread_name);
+        if(rc) {
+            log_err("fail to create the thread\n");
+            return 1;
         }
     }
+    for(size_t i = 0; i < query_batch_size; i++) {
+        pthread_join(thread_pool[i], &status);
+    }
+
     if (pthread_mutex_destroy(&mutex) != 0) {
         perror("pthread_mutex_destroy failed\n");
         log_err("pthread_mutex_destroy failed\n");
         return 1;
     }
+    free(thread_pool);
     return 0;
 }
 

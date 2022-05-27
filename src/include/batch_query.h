@@ -24,6 +24,4 @@ int destroy_batch_query_queue();
 
 int batch_schedule_convoy();
 
-pthread_t* create_thread(size_t thread_id);
-
 #endif //BATCH_QUERY_H

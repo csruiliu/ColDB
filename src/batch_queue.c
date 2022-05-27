@@ -42,6 +42,7 @@ int create_bq() {
 
 int destroy_bq() {
     if (bq->length == 0) {
+        free(bq->head);
         free(bq);
         log_info("The batch queue has been destroyed\n");
         return 0;
@@ -84,7 +85,7 @@ bqNode* pop_head_bq() {
     memcpy(pop_node, node, sizeof(bqNode));
     if(bq->length == 1) {
         bq->head->next = NULL;
-        bq->head = bq->tail;
+        bq->tail = bq->head;
         bq->length = 0;
     }
     else {

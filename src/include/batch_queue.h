@@ -31,7 +31,7 @@ void show_bq();
 
 batchQueue* get_bq();
 
-int is_empty_bq();
+bool is_empty_bq();
 
 size_t get_length_bq();
 
@@ -48,7 +48,7 @@ bqNode* pop_head_bq_opt();
 
 batchQueue* get_bq_opt();
 
-int is_empty_bq_opt();
+bool is_empty_bq_opt();
 
 size_t get_length_bq_opt();
 

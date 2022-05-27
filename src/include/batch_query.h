@@ -18,7 +18,9 @@ int batch_add(DbOperator *query);
 
 int exec_batch_query();
 
-void free_batch_query();
+void free_batch_query(DbOperator* query);
+
+int destroy_batch_query_queue();
 
 int batch_schedule_convoy();
 

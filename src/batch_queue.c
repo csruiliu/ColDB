@@ -40,8 +40,16 @@ int create_bq() {
     return 0;
 }
 
-batchQueue* get_bq() {
-    return bq;
+int destroy_bq() {
+    if (bq->length == 0) {
+        free(bq);
+        log_info("The batch queue has been destroyed\n");
+        return 0;
+    }
+    else {
+        log_err("The batch queue has some nodes inside and is not ready for destruction\n");
+        return 1;
+    }
 }
 
 bool is_empty_bq() {

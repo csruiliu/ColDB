@@ -18,6 +18,8 @@ int batch_add(DbOperator *query);
 
 int exec_batch_query();
 
+void free_batch_query();
+
 int batch_schedule_convoy();
 
 pthread_t* create_thread(size_t thread_id);

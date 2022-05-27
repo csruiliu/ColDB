@@ -44,15 +44,15 @@ batchQueue* get_bq() {
     return bq;
 }
 
-int is_empty_bq() {
+bool is_empty_bq() {
     if(bq == NULL) {
-        return 0;
+        return true;
     }
     else if(bq->length == 0) {
-        return 0;
+        return true;
     }
     else {
-        return 1;
+        return false;
     }
 }
 
@@ -68,7 +68,7 @@ int push_node_bq(bqNode *node) {
 }
 
 bqNode* pop_head_bq() {
-    if (is_empty_bq() == 0) {
+    if (is_empty_bq()) {
         return NULL;
     }
     bqNode* pop_node = malloc(sizeof(bqNode));
@@ -88,7 +88,7 @@ bqNode* pop_head_bq() {
 }
 
 void show_bq() {
-    if (is_empty_bq() == 0) {
+    if (is_empty_bq()) {
         log_info("The bqr is empty\n");
         return;
     }
@@ -136,7 +136,7 @@ int push_node_bq_opt(bqNode *node) {
 }
 
 bqNode* pop_head_bq_opt() {
-    if (is_empty_bq_opt() == 0) {
+    if (is_empty_bq_opt()) {
         return NULL;
     }
     bqNode* pop_node = malloc(sizeof(bqNode));
@@ -159,15 +159,15 @@ batchQueue* get_bq_opt() {
     return bq_opt;
 }
 
-int is_empty_bq_opt() {
+bool is_empty_bq_opt() {
     if(bq_opt == NULL) {
-        return 0;
+        return true;
     }
     else if(bq_opt->length == 0) {
-        return 0;
+        return true;
     }
     else {
-        return 1;
+        return false;
     }
 }
 
@@ -176,7 +176,7 @@ size_t get_length_bq_opt() {
 }
 
 void show_bq_opt() {
-    if (is_empty_bq_opt() == 0) {
+    if (is_empty_bq_opt()) {
         log_info("The bqr is empty\n");
         return;
     }
@@ -199,7 +199,7 @@ int push_node_convoy(bqNode* ref_node) {
         log_err("The refined queue or the adding node is null.\n");
         return 1;
     }
-    if(is_empty_bq_opt() == 0) {
+    if(is_empty_bq_opt()) {
         bq_opt->tail->next = ref_node;
         bq_opt->tail = ref_node;
         bq_opt->length++;

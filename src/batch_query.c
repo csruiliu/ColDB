@@ -105,8 +105,8 @@ pthread_t* create_thread(size_t thread_id) {
         return NULL;
     }
     char* thread_name = "thread" + thread_id;
-    char* thread_message = malloc((sizeof(thread_name)+1)* sizeof(char));
-    int ret_thread = pthread_create(new_thread, NULL, exec_query, (void *)thread_message);
+    // char* thread_message = malloc((sizeof(thread_name)+1)* sizeof(char));
+    int ret_thread = pthread_create(new_thread, NULL, exec_query, (void *)thread_name);
     if(ret_thread == 0) {
         log_info("Thread %d create successfully.\n", thread_id);
     }
@@ -158,6 +158,103 @@ int exec_batch_query() {
         return 1;
     }
     return 0;
+}
+
+void free_batch_query() {
+    while(!is_empty_bq()) {
+        bqNode *node = pop_head_bq();
+        switch (node->query->type) {
+            case CREATE_DB:
+                free(node->query->operator_fields.create_db_operator.db_name);
+                free(node->query);
+                break;
+            case CREATE_TBL:
+                free(node->query->operator_fields.create_table_operator.db_name);
+                free(node->query->operator_fields.create_table_operator.table_name);
+                free(node->query);
+                break;
+            case CREATE_COL:
+                free(node->query->operator_fields.create_col_operator.col_name);
+                free(node->query->operator_fields.create_col_operator.tbl_name);
+                free(node->query);
+                break;
+            case INSERT:
+                free(node->query->operator_fields.insert_operator.values);
+                free(node->query);
+                break;
+            case SELECT:
+                free(node->query->operator_fields.select_operator.handle);
+                free(node->query->operator_fields.select_operator.pre_range);
+                free(node->query->operator_fields.select_operator.post_range);
+                if (node->query->operator_fields.select_operator.selectType == HANDLE_RSL) {
+                    free(node->query->operator_fields.select_operator.select_rsl_pos);
+                    free(node->query->operator_fields.select_operator.select_rsl_val);
+                } else {
+                    free(node->query->operator_fields.select_operator.select_col);
+                }
+                break;
+            case FETCH:
+                free(node->query->operator_fields.fetch_operator.handle);
+                free(node->query->operator_fields.fetch_operator.col_var_name);
+                free(node->query->operator_fields.fetch_operator.rsl_vec_pos);
+                free(node->query);
+                break;
+            case LOAD:
+                free(node->query->operator_fields.load_operator.data_path);
+                free(node->query);
+                break;
+            case PRINT:
+                for (size_t i = 0; i < node->query->operator_fields.print_operator.print_num; ++i) {
+                    free(node->query->operator_fields.print_operator.print_name[i]);
+                }
+                free(node->query->operator_fields.print_operator.print_name);
+                free(node->query);
+                break;
+            case AVG:
+                free(node->query->operator_fields.avg_operator.avg_name);
+                free(node->query->operator_fields.avg_operator.handle);
+                free(node->query);
+                break;
+            case SUM:
+                free(node->query->operator_fields.sum_operator.sum_name);
+                free(node->query->operator_fields.sum_operator.handle);
+                free(node->query);
+                break;
+            case ADD:
+                free(node->query->operator_fields.add_operator.add_name1);
+                free(node->query->operator_fields.add_operator.add_name2);
+                free(node->query->operator_fields.add_operator.handle);
+                free(node->query);
+                break;
+            case SUB:
+                free(node->query->operator_fields.sub_operator.sub_name1);
+                free(node->query->operator_fields.sub_operator.sub_name2);
+                free(node->query->operator_fields.sub_operator.handle);
+                free(node->query);
+                break;
+            case MIN:
+                if (node->query->operator_fields.min_operator.min_type == MIN_POS_VALUE) {
+                    free(node->query->operator_fields.min_operator.handle_pos);
+                    free(node->query->operator_fields.min_operator.min_vec_pos);
+                }
+                free(node->query->operator_fields.min_operator.handle_value);
+                free(node->query->operator_fields.min_operator.min_vec_value);
+                free(node->query);
+                break;
+            case MAX:
+                if (node->query->operator_fields.max_operator.max_type == MAX_POS_VALUE) {
+                    free(node->query->operator_fields.max_operator.handle_pos);
+                    free(node->query->operator_fields.max_operator.max_vec_pos);
+                }
+                free(node->query->operator_fields.max_operator.handle_value);
+                free(node->query->operator_fields.max_operator.max_vec_value);
+                free(node->query);
+                break;
+            default:
+                free(node->query);
+        }
+        free(node->query);
+    }
 }
 
 int batch_schedule_convoy() {

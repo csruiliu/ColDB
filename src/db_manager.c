@@ -1593,6 +1593,7 @@ int read_csv(char* data_path) {
                         btree_insert(btree_index, kv_node);
                         log_info("create a btree index:%s \n",index_name);
                         put_index(index_name, btree_index, BTREE);
+                        free(btree_index);
                     }
                     else {
                         btree btree_index_cpy = btree_init();
@@ -1601,6 +1602,7 @@ int read_csv(char* data_path) {
                         btree_kvpair kv_node = {rowId_load, lv};
                         btree_insert(btree_index_cpy, kv_node);
                         put_index(index_name, btree_index_cpy, BTREE);
+                        free(btree_index_cpy);
                     }
                     free(index_name);
                 }
@@ -1636,6 +1638,7 @@ int read_csv(char* data_path) {
                         sorted_index = link_sort(sorted_index);
                         log_info("create a sorted index:%s \n", index_name);
                         put_index(index_name, sorted_index, SORTED);
+                        free(sorted_index);
                     }
                     else {
                         //log_info("find the sorted index:%s \n", index_name);
@@ -1645,6 +1648,7 @@ int read_csv(char* data_path) {
                         sorted_index_cpy = link_insert_head(sorted_index_cpy, rowId_load, lv);
                         sorted_index_cpy = link_sort(sorted_index_cpy);
                         put_index(index_name, sorted_index_cpy, SORTED);
+                        free(sorted_index_cpy);
                     }
                     free(index_name);
                 }
@@ -1695,12 +1699,12 @@ int read_csv(char* data_path) {
             }
             else if (col_set[col_idx]->idx_type == SORTED) {
                 if (col_set[col_idx]->cls_type == CLSR) {
-                    index_name = malloc((strlen(col_set[col_idx]->name)+strlen(".clsr.sorted")+1)*sizeof(char));
+                    index_name = calloc(strlen(col_set[col_idx]->name)+strlen(".clsr.sorted")+1, sizeof(char));
                     strcpy(index_name, col_set[col_idx]->name);
                     strcat(index_name, ".clsr.sorted");
                 }
                 else if (col_set[col_idx]->cls_type == PRICLSR) {
-                    index_name = malloc((strlen(col_set[col_idx]->name)+strlen(".priclsr.sorted")+1)*sizeof(char));
+                    index_name = calloc(strlen(col_set[col_idx]->name)+strlen(".priclsr.sorted")+1, sizeof(char));
                     strcpy(index_name, col_set[col_idx]->name);
                     strcat(index_name, ".priclsr.sorted");
                 }

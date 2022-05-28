@@ -44,6 +44,10 @@ void free_query(DbOperator* query) {
             free(query->operator_fields.create_col_operator.tbl_name);
             free(query);
             break;
+        case CREATE_IDX:
+            free(query->operator_fields.create_idx_operator.idx_col_name);
+            free(query);
+            break;
         case INSERT:
             free(query->operator_fields.insert_operator.values);
             free(query);
@@ -208,7 +212,7 @@ char* exec_create_idx(DbOperator* query) {
         }
         if(tbl_aff->has_cluster_index == 0) {
             tbl_aff->has_cluster_index = 1;
-            tbl_aff->pricluster_index_col_name = (char *) realloc(tbl_aff->pricluster_index_col_name, strlen(col_name));
+            tbl_aff->pricluster_index_col_name = (char *) realloc(tbl_aff->pricluster_index_col_name, strlen(col_name)+1);
             strcpy(tbl_aff->pricluster_index_col_name, col_name);
             col->cls_type = PRICLSR;
             log_info("the table take the cluster index on column %s as the primary cluster index\n", col_name);
@@ -217,12 +221,13 @@ char* exec_create_idx(DbOperator* query) {
             log_info("the table already has a primary cluster index on column %s\n", tbl_aff->pricluster_index_col_name);
             col->cls_type = CLSR;
         }
+        free(tbl_name);
     }
     else {
         col->cls_type = UNCLSR;
     }
-    free_query(query);
     log_info("created [%d,%d] index for [%s] successfully.\n", col->idx_type, col->cls_type, col_name);
+    free_query(query);
     return "create column index successfully.\n";
 }
 

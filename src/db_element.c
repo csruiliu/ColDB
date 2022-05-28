@@ -79,6 +79,15 @@ void put_table(char* table_name, Table* table) {
 }
 
 void free_table_store() {
+    for (size_t index = 0; index < table_store->size; index++) {
+        kvpair* cur_ikv = &(table_store->kv_pair[index]);
+        if(cur_ikv->value != 0) {
+            Table* table_ptr = table_store->kv_pair[index].value;
+            if(table_ptr->pricluster_index_col_name != NULL) {
+                free(table_ptr->pricluster_index_col_name);
+            }
+        }
+    }
     if(kv_deallocate(table_store) != 0) {
         log_info("free tbl kv store failed\n");
     } else {

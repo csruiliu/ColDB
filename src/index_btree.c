@@ -125,7 +125,7 @@ static btree btree_insert_internal(btree t, btree_kvpair kv_node, btree_kvpair *
         memmove(b_new->keys, &t->keys[mid.value+1], sizeof(*(t->keys)) * b_new->num_keys);
 
         if(!t->is_leaf) {
-            memmove(b_new->kids, &t->kids[mid.value+1], sizeof(*(t->keys)) * (b_new->num_keys + 1));
+            memcpy(b_new->kids, &t->kids[mid.value+1], sizeof(*(t->keys)) * (b_new->num_keys+1));
         }
         t->num_keys = mid.value;
         return b_new;

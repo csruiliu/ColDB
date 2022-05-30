@@ -71,18 +71,16 @@ linknode* link_delete(linknode* head, long row_id) {
  * sort the list [asc]
  */
 linknode* link_sort(linknode* head) {
-    long i, j, k, tmp_row_id, tmp_data;
+    long i, j, tmp_row_id, tmp_data;
     linknode* current;
     linknode* next;
-
     long size = link_length(head);
-    k = size;
 
-    for (i = 0; i < size - 1; i++, k--) {
+    for (i = 0; i < size - 1; i++) {
         current = head;
         next = head->next;
 
-        for (j = 1; j < k; j++) {
+        for (j = 0; j < size - 1 - i; j++) {
             if (current->data > next->data) {
                 tmp_data = current->data;
                 current->data = next->data;
@@ -98,6 +96,7 @@ linknode* link_sort(linknode* head) {
         }
     }
     return head;
+
 }
 
 /**

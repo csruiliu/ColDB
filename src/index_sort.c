@@ -128,9 +128,9 @@ linknode* link_search(linknode* head, long data) {
  * iterate the linked list
  */
 long link_traversal(linknode* head, long value_array[], long row_id_array[]){
-    int index = 0;
+    long index = 0;
     linknode* ptr = head;
-    printf("\n[ ");
+    // printf("\n[ ");
 
     //start from the beginning
     while(ptr != NULL) {
@@ -152,5 +152,6 @@ long link_length(linknode* head) {
     for(current = head; current != NULL; current = current->next) {
         length++;
     }
-    return length;
+    // minus 1 since there is an empty head node
+    return length - 1;
 }

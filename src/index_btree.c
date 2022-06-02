@@ -11,7 +11,6 @@ btree btree_init() {
     assert(b);
     b->is_leaf = true;
     b->num_keys = 0;
-
     return b;
 }
 
@@ -116,7 +115,7 @@ static btree btree_insert_internal(btree t, btree_kvpair kv_node, btree_kvpair *
     }
 
     //we waste a tiny bit of space by splitting now instead of on next insert
-    if(t->num_keys >= MAX_KEYS) {
+    if(t->num_keys == MAX_KEYS) {
         mid.value = t->num_keys / 2;
         *median = t->keys[mid.value];
         b_new = malloc(sizeof(*b_new));
@@ -125,7 +124,7 @@ static btree btree_insert_internal(btree t, btree_kvpair kv_node, btree_kvpair *
         memmove(b_new->keys, &t->keys[mid.value+1], sizeof(*(t->keys)) * b_new->num_keys);
 
         if(!t->is_leaf) {
-            memcpy(b_new->kids, &t->kids[mid.value+1], sizeof(*(t->keys)) * (b_new->num_keys+1));
+            memmove(b_new->kids, &t->kids[mid.value+1], sizeof(struct bt_node*) * (b_new->num_keys+1));
         }
         t->num_keys = mid.value;
         return b_new;
@@ -154,6 +153,7 @@ void btree_insert(btree t, btree_kvpair kv_node) {
         t->num_keys = 1;
         t->is_leaf = false;
         t->keys[0] = median;
+
         t->kids[0] = b_left;
         t->kids[1] = b_right;
     }

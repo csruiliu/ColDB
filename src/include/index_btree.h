@@ -17,7 +17,7 @@ struct bt_node {
     long num_keys;
     // the keys in the node
     btree_kvpair keys[MAX_KEYS];
-    //kids[i] holds nodes < keys[i]
+    // kids[i] holds keys[i-1] < nodes < keys[i]
     struct bt_node* kids[MAX_KEYS+1];
 };
 

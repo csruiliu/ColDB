@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "db_element.h"
 #include "kv_store.h"
 #include "utils_func.h"
@@ -79,7 +81,7 @@ void put_table(char* table_name, Table* table) {
 }
 
 void free_table_store() {
-    for (size_t index = 0; index < table_store->size; index++) {
+    for(size_t index = 0; index < table_store->size; index++) {
         kvpair* cur_ikv = &(table_store->kv_pair[index]);
         if(cur_ikv->value != 0) {
             Table* table_ptr = table_store->kv_pair[index].value;
@@ -126,7 +128,7 @@ void put_column(char* col_name, Column* col) {
 }
 
 void free_column_store() {
-    for (size_t index = 0; index < column_store->size; index++) {
+    for(size_t index = 0; index < column_store->size; index++) {
         kvpair* cur_ikv = &(column_store->kv_pair[index]);
         if(cur_ikv->key != NULL) {
             Column* col_ptr = cur_ikv->value;
@@ -189,7 +191,7 @@ void update_result(char* result_name, Result* result) {
 }
 
 void free_result_store() {
-    for (size_t index = 0; index < result_store->size; index++) {
+    for(size_t index = 0; index < result_store->size; index++) {
         kvpair* cur_ikv = &(result_store->kv_pair[index]);
         if(cur_ikv->value != 0) {
             Result* rsl_ptr = result_store->kv_pair[index].value;
@@ -265,6 +267,26 @@ void put_index(char* index_name, void* index, IndexType index_type) {
 }
 
 void free_index_store() {
+    for(size_t index = 0; index < index_store->size; index++) {
+        kvpair* cur_ikv = &(index_store->kv_pair[index]);
+        if(cur_ikv->value != NULL) {
+            char* index_name = index_store->kv_pair[index].key;
+            char* dot = strrchr(index_name, '.');
+            if(dot && strcmp(dot, ".btree") == 0) {
+                btree btree_ptr = malloc(sizeof(*btree_ptr));
+                memcpy(btree_ptr, index_store->kv_pair[index].value, sizeof(*btree_ptr));
+                btree_destroy(btree_ptr);
+            }
+            else if (dot && strcmp(dot, ".sorted") == 0) {
+                //linknode* sorted_ptr = index_store->kv_pair[index].value;
+                log_info("Found a sorted index: %s", index_name);
+            }
+            else {
+                log_info("Found a index not recognized: %s", index_name);
+            }
+        }
+    }
+
     if(kv_deallocate(index_store) != 0) {
         log_info("free index kv store failed\n");
     } else {

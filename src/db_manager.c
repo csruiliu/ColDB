@@ -1920,6 +1920,7 @@ int load_database() {
                     }
                     put_index(index_name, btree_index, BTREE);
                     free(index_name);
+                    free(btree_index);
                 }
                 else if(setup_col->idx_type == SORTED) {
                     if (setup_col->cls_type == UNCLSR) {

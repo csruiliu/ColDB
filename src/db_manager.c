@@ -1951,6 +1951,7 @@ int load_database() {
                     }
                     put_index(index_name, sorted_index, SORTED);
                     free(index_name);
+                    free(sorted_index);
                 }
                 else if (setup_col->idx_type == UNIDX) {
                     log_info("the column is un-index. \n");

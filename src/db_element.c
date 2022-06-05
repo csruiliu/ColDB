@@ -273,13 +273,16 @@ void free_index_store() {
             char* index_name = index_store->kv_pair[index].key;
             char* dot = strrchr(index_name, '.');
             if(dot && strcmp(dot, ".btree") == 0) {
+                log_info("Found a sorted index: %s\n", index_name);
                 btree btree_ptr = malloc(sizeof(*btree_ptr));
                 memcpy(btree_ptr, index_store->kv_pair[index].value, sizeof(*btree_ptr));
                 btree_destroy(btree_ptr);
             }
             else if (dot && strcmp(dot, ".sorted") == 0) {
-                //linknode* sorted_ptr = index_store->kv_pair[index].value;
-                log_info("Found a sorted index: %s", index_name);
+                log_info("Found a sorted index: %s\n", index_name);
+                linknode* sorted_ptr = malloc(sizeof(linknode));
+                memcpy(sorted_ptr, index_store->kv_pair[index].value, sizeof(linknode));
+                link_destroy(sorted_ptr);
             }
             else {
                 log_info("Found a index not recognized: %s", index_name);

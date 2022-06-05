@@ -16,6 +16,15 @@ linknode* link_init() {
     return head;
 }
 
+void link_destroy(linknode* head) {
+    linknode* current = head;
+    do {
+        linknode* next = current->next;
+        free(current);
+        current = next;
+    } while (current != NULL);
+}
+
 /**
  * insert link at the head location
  */

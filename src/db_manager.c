@@ -142,7 +142,7 @@ Column* create_column(char* tbl_name, char* col_name) {
         col->cls_type = UNCLSR;
         col->idx_type = UNIDX;
         col->data = NULL;
-        col->rowId = NULL;
+        col->rowId = calloc(1, sizeof(long));
         col->size = 0;
         col->capacity = 0;
         put_column(col_name, col);
@@ -1714,11 +1714,13 @@ int read_csv(char* data_path) {
                 }
                 linknode* sorted_index = get_index(index_name);
                 long max_idx = link_traversal(sorted_index, value_array, row_id_array);
-                for(size_t k = 0; k < (size_t) max_idx; ++k) {
+                // using `k < (size_t) max_idx - 1` to avoid the last empty node in sorted link-chain.
+                for(size_t k = 0; k < (size_t) max_idx - 1; ++k) {
                     if(insert_data_column(col_set[col_idx], value_array[k], row_id_array[k]) != 0) {
                         return 1;
                     }
                 }
+                free(index_name);
             }
             else {
                 log_info("no index for this column\n");
@@ -1857,7 +1859,7 @@ int load_database() {
                 while ((slvle = next_token_comma(&line_copy,&mes_status))!= NULL) {
                     if (count % 2 == 0) {
                         long rlv = strtol(slvle, NULL, 0);
-                        if (setup_col->size >= setup_col->capacity) {
+                        if (setup_col->size == setup_col->capacity) {
                             size_t new_column_length = RESIZE * setup_col->capacity + 1;
                             size_t new_length = new_column_length;
                             size_t old_length = setup_col->capacity;
@@ -2022,7 +2024,8 @@ int save_database() {
             else if(scol->cls_type == UNCLSR) {
                 fprintf(fp, ",unclsr");
             }
-            for(size_t k = 0; k < scol->size; ++k) {
+            for(size_t k = 0; k < scol->size; k++) {
+                log_info("this is %u\n", k);
                 fprintf(fp, ",%ld", scol->rowId[k]);
                 fprintf(fp, ",%ld", scol->data[k]);
             }

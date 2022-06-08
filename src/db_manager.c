@@ -373,6 +373,7 @@ int select_data_col_btree(Column* scol, char* handle, char* pre_range, char* pos
         update_result(handle,rsl);
         free(rsl_data);
     }
+    free(index_name);
     free(rsl);
     return 0;
 }

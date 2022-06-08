@@ -352,6 +352,7 @@ int select_data_col_btree(Column* scol, char* handle, char* pre_range, char* pos
         rsl->payload = calloc(count, sizeof(long));
         memmove(rsl->payload,rsl_data,count*sizeof(long));
         update_result(handle,rsl);
+        free(rsl_data);
     }
     else {
         long pre = strtol(pre_range, NULL, 0);
@@ -370,7 +371,9 @@ int select_data_col_btree(Column* scol, char* handle, char* pre_range, char* pos
         rsl->payload = calloc(count, sizeof(long));
         memmove(rsl->payload,rsl_data,count*sizeof(long));
         update_result(handle,rsl);
+        free(rsl_data);
     }
+    free(rsl);
     return 0;
 }
 
@@ -447,6 +450,8 @@ int select_data_col_sorted(Column* scol, char* handle, char* pre_range, char* po
         update_result(handle,rsl);
         free(rsl_data);
     }
+    free(index_name);
+    free(rsl);
     return 0;
 }
 
@@ -2025,7 +2030,6 @@ int save_database() {
                 fprintf(fp, ",unclsr");
             }
             for(size_t k = 0; k < scol->size; k++) {
-                log_info("this is %u\n", k);
                 fprintf(fp, ",%ld", scol->rowId[k]);
                 fprintf(fp, ",%ld", scol->data[k]);
             }

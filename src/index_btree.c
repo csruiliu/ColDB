@@ -162,7 +162,7 @@ void btree_insert(btree t, btree_kvpair kv_node) {
 void btree_inorder_traversal(btree t, long value_array[], long row_id_array[], long* index) {
     if (t->is_leaf) {
         for(long i = 0; i < t->num_keys; ++i) {
-            log_info("row_id:%ld, value:%ld \n", t->keys[i].row_id, t->keys[i].value);
+            // log_info("row_id:%ld, value:%ld \n", t->keys[i].row_id, t->keys[i].value);
             value_array[*index] = t->keys[i].value;
             row_id_array[*index] = t->keys[i].row_id;
             (*index)++;
@@ -171,7 +171,7 @@ void btree_inorder_traversal(btree t, long value_array[], long row_id_array[], l
     else {
         for (long j = 0; j < t->num_keys; j++) {
             btree_inorder_traversal(t->kids[j], value_array, row_id_array, index);
-            log_info("row_id:%ld, value:%ld \n", t->keys[j].row_id, t->keys[j].value);
+            // log_info("row_id:%ld, value:%ld \n", t->keys[j].row_id, t->keys[j].value);
             value_array[*index] = t->keys[j].value;
             row_id_array[*index] = t->keys[j].row_id;
             (*index)++;

@@ -1702,6 +1702,7 @@ int read_csv(char* data_path) {
                         return 1;
                     }
                 }
+                free(index_name);
             }
             else if (col_set[col_idx]->idx_type == SORTED) {
                 if (col_set[col_idx]->cls_type == CLSR) {

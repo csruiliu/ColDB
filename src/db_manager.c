@@ -552,6 +552,8 @@ int nested_loop_join(char* vec_val_left,
 
     put_result(handle_left, rsl_left);
     put_result(handle_right, rsl_right);
+    free(rsl_left);
+    free(rsl_right);
     free(payload_right);
     free(payload_left);
     return 0;

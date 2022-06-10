@@ -122,6 +122,15 @@ void free_query(DbOperator* query) {
             free(query->operator_fields.max_operator.max_vec_value);
             free(query);
             break;
+        case JOIN:
+            free(query->operator_fields.join_operator.vec_val_left);
+            free(query->operator_fields.join_operator.vec_pos_left);
+            free(query->operator_fields.join_operator.vec_val_right);
+            free(query->operator_fields.join_operator.vec_pos_right);
+            free(query->operator_fields.join_operator.handle_left);
+            free(query->operator_fields.join_operator.handle_right);
+            free(query);
+            break;
         default:
             free(query);
     }

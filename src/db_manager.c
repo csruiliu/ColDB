@@ -20,6 +20,7 @@
 #define DIRLEN 256
 #define MAX_COLUMN_SIZE 1024
 #define RAND_PRIME 6108689
+//#define RAND_PRIME 666667
 
 /**
  * there will always be only one active database at a time
@@ -623,6 +624,7 @@ int hash_join(char* vec_val_left,
         for (size_t k = 0; k < rsl_val_right->num_tuples; ++k) {
             if (hash_table_join[hash_function_join(val_payload_right[k])] != -1) {
                 long left_index = hash_table_join[hash_function_join(val_payload_right[k])];
+                log_info("sss:%d\n", pos_payload_left[left_index]);
                 payload_left[count] = pos_payload_left[left_index];
                 payload_right[count] = pos_payload_right[k];
                 count++;

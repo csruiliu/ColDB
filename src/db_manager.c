@@ -264,18 +264,18 @@ int select_data_col_unidx(Column* scol, char* handle, char* pre_range, char* pos
 
     if (strncmp(pre_range,"null",4) == 0) {
         long post = strtol(post_range, NULL, 0);
-        for(size_t i = 0; i < scol->size; ++i) {
+        for(long i = 0; i < (long) scol->size; ++i) {
             if(scol_data[i] < post) {
-                rsl_data[count] = (long) i;
+                rsl_data[count] = i;
                 count++;
             }
         }
     }
     else if (strncmp(post_range,"null",4) == 0) {
         long pre = strtol(pre_range, NULL, 0);
-        for(size_t i = 0; i < scol->size; ++i) {
+        for(long i = 0; i < (long) scol->size; ++i) {
             if(scol_data[i] >= pre) {
-                rsl_data[count] = (long) i;
+                rsl_data[count] = i;
                 count++;
             }
         }
@@ -283,9 +283,9 @@ int select_data_col_unidx(Column* scol, char* handle, char* pre_range, char* pos
     else {
         long pre = strtol(pre_range, NULL, 0);
         long post = strtol(post_range, NULL, 0);
-        for(size_t i = 0; i < scol->size; ++i) {
+        for(long i = 0; i < (long) scol->size; ++i) {
             if(scol_data[i] >= pre && scol_data[i] < post) {
-                rsl_data[count] = (long) i;
+                rsl_data[count] = i;
                 count++;
             }
         }
@@ -562,7 +562,7 @@ int nested_loop_join(char* vec_val_left,
 
 long hash_function_join(long hash_input){
     long c1 = 3;
-    long c2 = 10000;
+    long c2 = 6666;
     long hash_output = (c1*hash_input + c2) % RAND_PRIME;
     return hash_output;
 }
@@ -605,10 +605,12 @@ int hash_join(char* vec_val_left,
 
     Result* rsl_left = malloc(sizeof(Result));
     rsl_left->data_type = LONG;
+    log_info("rsl_pos_left->num_tuples:%d\n", rsl_pos_left->num_tuples);
     long* payload_left = calloc(rsl_pos_left->num_tuples, sizeof(long));
 
     Result* rsl_right = malloc(sizeof(Result));
     rsl_right->data_type = LONG;
+    log_info("rsl_pos_right->num_tuples:%d\n", rsl_pos_right->num_tuples);
     long* payload_right = calloc(rsl_pos_right->num_tuples, sizeof(long));
 
     long* hash_table_join = calloc(RAND_PRIME, sizeof(long));
@@ -617,33 +619,34 @@ int hash_join(char* vec_val_left,
     }
 
     size_t count = 0;
+
+    // right table/column has more tuples than the left one
     if(rsl_val_right->num_tuples > rsl_val_left->num_tuples) {
         for (size_t j = 0; j < rsl_val_left->num_tuples; ++j) {
             hash_table_join[hash_function_join(val_payload_left[j])] = pos_payload_left[j];
         }
         for (size_t k = 0; k < rsl_val_right->num_tuples; ++k) {
             if (hash_table_join[hash_function_join(val_payload_right[k])] != -1) {
-                long left_index = hash_table_join[hash_function_join(val_payload_right[k])];
-                log_info("sss:%d\n", pos_payload_left[left_index]);
-                payload_left[count] = pos_payload_left[left_index];
+                payload_left[count] = pos_payload_left[hash_table_join[hash_function_join(val_payload_right[k])]];
                 payload_right[count] = pos_payload_right[k];
                 count++;
             }
         }
     }
+    // left table/column has more tuples than the right one
     else {
         for (size_t j = 0; j < rsl_val_right->num_tuples; ++j) {
             hash_table_join[hash_function_join(val_payload_right[j])] = pos_payload_right[j];
         }
         for (size_t k = 0; k < rsl_val_left->num_tuples; ++k) {
             if (hash_table_join[hash_function_join(val_payload_left[k])] != -1) {
-                long right_index = hash_table_join[hash_function_join(val_payload_left[k])];
                 payload_left[count] = pos_payload_left[k];
-                payload_right[count] = pos_payload_right[right_index];
+                payload_right[count] = pos_payload_right[hash_table_join[hash_function_join(val_payload_left[k])]];
                 count++;
             }
         }
     }
+
     rsl_left->num_tuples = count;
     rsl_right->num_tuples = count;
     rsl_left->payload = calloc(count, sizeof(long));

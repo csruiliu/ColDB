@@ -660,6 +660,8 @@ int hash_join(char* vec_val_left,
 
     put_result(handle_left, rsl_left);
     put_result(handle_right, rsl_right);
+    free(rsl_left);
+    free(rsl_right);
     free(hash_table_join);
     free(payload_left);
     free(payload_right);

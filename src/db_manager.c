@@ -613,6 +613,7 @@ int hash_join(char* vec_val_left,
     log_info("rsl_pos_right->num_tuples:%d\n", rsl_pos_right->num_tuples);
     long* payload_right = calloc(rsl_pos_right->num_tuples, sizeof(long));
 
+
     long* hash_table_join = calloc(RAND_PRIME, sizeof(long));
     for (size_t i = 0; i < RAND_PRIME; ++i) {
         hash_table_join[i] = -1;
@@ -623,11 +624,13 @@ int hash_join(char* vec_val_left,
     // right table/column has more tuples than the left one
     if(rsl_val_right->num_tuples > rsl_val_left->num_tuples) {
         for (size_t j = 0; j < rsl_val_left->num_tuples; ++j) {
+            // mapping hash value of val_payload_left[j] to pos_payload_left[j]
             hash_table_join[hash_function_join(val_payload_left[j])] = pos_payload_left[j];
         }
         for (size_t k = 0; k < rsl_val_right->num_tuples; ++k) {
-            if (hash_table_join[hash_function_join(val_payload_right[k])] != -1) {
-                payload_left[count] = pos_payload_left[hash_table_join[hash_function_join(val_payload_right[k])]];
+            long val_payload_right_hash = hash_table_join[hash_function_join(val_payload_right[k])];
+            if (val_payload_right_hash != -1) {
+                payload_left[count] = val_payload_right_hash;
                 payload_right[count] = pos_payload_right[k];
                 count++;
             }
@@ -639,9 +642,10 @@ int hash_join(char* vec_val_left,
             hash_table_join[hash_function_join(val_payload_right[j])] = pos_payload_right[j];
         }
         for (size_t k = 0; k < rsl_val_left->num_tuples; ++k) {
-            if (hash_table_join[hash_function_join(val_payload_left[k])] != -1) {
+            long val_payload_left_hash = hash_table_join[hash_function_join(val_payload_left[k])];
+            if (val_payload_left_hash != -1) {
                 payload_left[count] = pos_payload_left[k];
-                payload_right[count] = pos_payload_right[hash_table_join[hash_function_join(val_payload_left[k])]];
+                payload_right[count] = val_payload_left_hash;
                 count++;
             }
         }

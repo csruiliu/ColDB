@@ -1328,10 +1328,11 @@ int min_rsl_value_pos(char* min_vec_pos, char* min_vec_value, char* handle_pos, 
  * print result
  **/
 char* generate_print_result(size_t print_num, char** print_name) {
-    size_t rsl_total_tuples = 0;
-    size_t rsl_total_size = 0;
-    for(size_t i = 0; i< print_num; ++i) {
-        Result* rsl = get_result(print_name[i]);
+    char* print_rsl;
+    if(print_num == 1) {
+        size_t rsl_total_tuples = 0;
+        size_t rsl_total_size = 0;
+        Result* rsl = get_result(print_name[0]);
         rsl_total_tuples += rsl->num_tuples;
         if(rsl->data_type == LONG) {
             for(size_t j = 0; j < rsl->num_tuples; ++j) {
@@ -1348,12 +1349,11 @@ char* generate_print_result(size_t print_num, char** print_name) {
         else {
             log_err("[generate_print_result]:the data type is not supported\n");
         }
-    }
-    char* print_rsl = calloc(rsl_total_size, sizeof(char));
-    strcpy(print_rsl, "");
-    log_info("[Server results]\n");
-    for(size_t i = 0; i< print_num; ++i) {
-        Result* rsl = get_result(print_name[i]);
+
+        print_rsl = calloc(rsl_total_size, sizeof(char));
+        strcpy(print_rsl, "");
+        log_info("[Server results]\n");
+
         if(rsl->data_type == LONG) {
             for(size_t j = 0; j < rsl->num_tuples; ++j) {
                 log_info("%ld\n",((long *)rsl->payload)[j]);
@@ -1363,7 +1363,6 @@ char* generate_print_result(size_t print_num, char** print_name) {
                 strcat(print_rsl,tmp_payload_data);
                 free(tmp_payload_data);
             }
-
         }
         else if(rsl->data_type == FLOAT) {
             for(size_t j = 0; j < rsl->num_tuples; ++j) {
@@ -1378,7 +1377,98 @@ char* generate_print_result(size_t print_num, char** print_name) {
         else {
             log_err("[generate_print_result]:the data type is not supported\n");
         }
+
     }
+    else if(print_num > 1){
+        size_t rsl_total_line = 0;
+        size_t rsl_line_length = 0;
+
+        for(size_t i = 0; i< print_num; ++i) {
+            Result* rsl = get_result(print_name[i]);
+            if(rsl_total_line == 0) {
+                rsl_total_line = rsl->num_tuples;
+            }
+            else {
+                if (rsl_total_line != rsl->num_tuples) {
+                    log_err("[generate_print_result]:the multiple printout items have different lines\n");
+                }
+            }
+            if(rsl->data_type == LONG) {
+                size_t max_tuple_size = 0;
+                for(size_t j = 0; j < rsl->num_tuples; ++j) {
+                    log_info("%ld\n",((long *)rsl->payload)[j]);
+                    size_t current_tuple_size = count_digits(((long *)rsl->payload)[j]) + 3;
+                    if(current_tuple_size > max_tuple_size) {
+                       max_tuple_size = current_tuple_size;
+                    }
+                }
+                // +1 because there will be a comma
+                rsl_line_length += max_tuple_size + 1;
+            }
+            else if(rsl->data_type == FLOAT) {
+                size_t max_tuple_size = 0;
+                for(size_t j = 0; j < rsl->num_tuples; ++j) {
+                    log_info("%0.2f\n",((double *)rsl->payload)[j]);
+                    size_t current_tuple_size = count_digits(((long *)rsl->payload)[j]) + 6;
+                    if(current_tuple_size > max_tuple_size) {
+                        max_tuple_size = current_tuple_size;
+                    }
+                }
+                // +1 because there will be a comma
+                rsl_line_length += max_tuple_size + 1;
+            }
+            else {
+                log_err("[generate_print_result]:the data type is not supported\n");
+            }
+        }
+
+        print_rsl = calloc(rsl_total_line, rsl_line_length+1);
+        strcpy(print_rsl, "");
+        log_info("[Server results]\n");
+
+        Result **rsl_set = calloc(print_num, sizeof(Result));
+        for(size_t i = 0; i < print_num; ++i) {
+            rsl_set[i] = get_result(print_name[i]);
+        }
+
+        for(size_t j = 0; j < rsl_total_line; ++j) {
+            for(size_t i = 0; i < print_num; ++i) {
+                if(rsl_set[i]->data_type == LONG) {
+                    size_t num_digit = count_digits(((long *)rsl_set[i]->payload)[j]);
+                    char* tmp_payload_data = calloc(num_digit+3, sizeof(char));
+                    sprintf(tmp_payload_data, "%ld", ((long *)rsl_set[i]->payload)[j]);
+                    strcat(print_rsl,tmp_payload_data);
+                    if(i != print_num - 1) {
+                        strcat(print_rsl, ",");
+                    }
+                    free(tmp_payload_data);
+                }
+                else if(rsl_set[i]->data_type == FLOAT) {
+                    size_t num_digit = count_digits(((long *)rsl_set[i]->payload)[j]);
+                    char* tmp_payload_data = calloc(num_digit+6, sizeof(char));
+                    sprintf(tmp_payload_data, "%0.2f", ((double *)rsl_set[i]->payload)[j]);
+                    strcat(print_rsl,tmp_payload_data);
+                    if(i != print_num - 1) {
+                        strcat(print_rsl, ",");
+                    }
+                    free(tmp_payload_data);
+                }
+                else {
+                    log_err("[generate_print_result]:the data type is not supported\n");
+                }
+
+            }
+            strcat(print_rsl,"\n");
+        }
+
+        free(rsl_set);
+
+    }
+    else {
+        print_rsl = "";
+        log_err("[generate_print_result]:number of data for printing is less than 1 [print_num < 1] \n");
+    }
+
     log_info("\n");
     return print_rsl;
 }
